@@ -14,6 +14,7 @@
 body[data-mode="short"], body[data-mode="long"] { --accent: #2f8f86; }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; } /* gizlenen öğeler kendi display kuralına rağmen gizli kalsın */
 
 body {
   margin: 0;
