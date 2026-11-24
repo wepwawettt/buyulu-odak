@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Büyülü Odak</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-mode="focus">
+  <div class="app">
+    <header class="top">
+      <h1>✦ Büyülü Odak</h1>
+      <div class="coins" title="Her 10 dakika odak = 1 altın">
+        <span class="coin"></span><b id="coins">0</b>
+      </div>
+    </header>
+
+    <div class="frame">
+      <canvas id="scene" width="160" height="120"></canvas>
+      <div id="toast" class="toast"></div>
+      <div id="friendTag" class="friend-tag" hidden></div>
+    </div>
+
+    <section class="panel">
+      <nav class="tabs">
+        <button data-mode="focus">Odak</button>
+        <button data-mode="short">Kısa Mola</button>
+        <button data-mode="long">Uzun Mola</button>
+      </nav>
+
+      <div id="current" class="current"></div>
+      <div id="time" class="time">25:00</div>
+      <div class="mana" title="Oturum ilerlemesi"><div id="manaFill"></div></div>
+
+      <div id="roomNote" class="room-note" hidden></div>
+      <div class="controls">
+        <button id="reset" class="btn ghost" title="Sıfırla">↺</button>
+        <button id="start" class="btn primary">Başla</button>
+        <button id="skip" class="btn ghost" title="Atla">»</button>
+      </div>
+
+      <div id="cycle" class="cycle" title="Uzun molaya kalan odak oturumları"></div>
+
+      <div class="goal">
+        <div class="goal-row"><span>Bugünkü hedef</span><span id="goalText">0 / 120 dk</span></div>
+        <div class="bar"><div id="goalFill"></div></div>
+        <small id="coinNext"></small>
+        <small id="friendLine" class="friend-line" hidden></small>
+      </div>
+
+      <div class="foot">
+        <button id="openRoom" class="btn small">Ortak Oda</button>
+        <button id="openShop" class="btn small">Dükkan</button>
+        <button id="openChar" class="btn small">Karakter</button>
+        <button id="openSettings" class="btn small">Ayarlar</button>
+      </div>
+    </section>
+
+    <section class="panel tasks">
+      <h2>Görevler</h2>
+      <form id="taskForm" class="task-form">
+        <input id="taskInput" maxlength="80" placeholder="Ne üzerinde çalışacaksın?" autocomplete="off">
+        <button class="btn small add">Ekle</button>
+      </form>
+      <ul id="taskList" class="task-list"></ul>
+      <button id="clearDone" class="link" hidden>Tamamlananları temizle</button>
+    </section>
+
+    <section class="panel stats">
+      <div class="stats-head">
+        <button id="weekPrev" class="btn small ghost" title="Önceki hafta">‹</button>
+        <h2 id="weekTitle">Bu hafta</h2>
+        <button id="weekNext" class="btn small ghost" title="Sonraki hafta">›</button>
+      </div>
+      <div class="tiles">
+        <div class="tile"><b id="stTotal">0 dk</b><span>Toplam odak</span></div>
+        <div class="tile"><b id="stAvg">0 dk</b><span>Günlük ortalama</span></div>
+        <div class="tile"><b id="stPomos">0</b><span>Oturum</span></div>
+        <div class="tile"><b id="stStreak">0 gün</b><span>Seri</span></div>
+      </div>
+      <div class="chart">
+        <div id="bars" class="bars"></div>
+        <div id="days" class="days"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Karakter paneli (sahne görünür kalsın diye modal değil) -->
+  <dialog id="charDlg" class="side">
+    <h2>Karakterin</h2>
+    <h3>Bina</h3>
+    <div id="houseOpts" class="opts"></div>
+    <h3>Saç</h3>
+    <div id="hairOpts" class="opts"></div>
+    <h3>Ten</h3>
+    <div id="skinOpts" class="opts"></div>
+    <h3>Kıyafet</h3>
+    <div id="outfitOpts" class="opts"></div>
+    <button class="btn small close" data-close>Tamam</button>
+  </dialog>
+
+  <dialog id="shopDlg" class="side">
+    <h2>Sihir Dükkanı</h2>
+    <p class="shop-coins">Kesende <b id="shopCoins">0</b> altın var</p>
+    <div id="shopList" class="shop"></div>
+    <button class="btn small close" data-close>Kapat</button>
+  </dialog>
+
+  <dialog id="roomDlg" class="side">
+    <h2>Ortak Oda</h2>
+    <label class="room-name">Adın <input id="roomName" maxlength="16" placeholder="Büyücü" autocomplete="off"></label>
+    <p id="roomMsg" class="room-msg"></p>
+    <div id="roomIdle">
+      <button id="roomHost" class="btn small add">Oda kur</button>
+      <p class="room-or">ya da arkadaşının odasına katıl:</p>
+      <form id="roomJoinForm" class="task-form">
+        <input id="roomCode" placeholder="Oda kodu ya da bağlantı" autocomplete="off">
+        <button class="btn small">Katıl</button>
+      </form>
+    </div>
+    <div id="roomHosting" hidden>
+      <div class="room-code" id="roomCodeShow"></div>
+      <button id="roomCopy" class="btn small">Bağlantıyı kopyala</button>
+      <div id="roomRequest" class="room-request" hidden>
+        <p id="roomRequestText"></p>
+        <div class="row">
+          <button id="roomAccept" class="btn small add">Kabul et</button>
+          <button id="roomReject" class="btn small">Reddet</button>
+        </div>
+      </div>
+    </div>
+    <div id="roomLive" hidden>
+      <p id="roomFriend" class="room-friend"></p>
+      <div id="chatLog" class="chat-log"></div>
+      <form id="chatForm" class="task-form">
+        <input id="chatInput" maxlength="200" placeholder="Mesaj yaz…" autocomplete="off">
+        <button class="btn small add">Gönder</button>
+      </form>
+    </div>
+    <div class="row room-actions">
+      <button id="roomLeave" class="btn small" hidden>Odadan ayrıl</button>
+      <button class="btn small" data-close>Kapat</button>
+    </div>
+  </dialog>
+
+  <dialog id="setDlg">
+    <form id="setForm" method="dialog">
+      <h2>Ayarlar</h2>
+      <label>Odak (dk) <input type="number" name="focus" min="1" max="180"></label>
+      <label>Kısa mola (dk) <input type="number" name="short" min="1" max="60"></label>
+      <label>Uzun mola (dk) <input type="number" name="long" min="1" max="90"></label>
+      <label>Günlük hedef (dk) <input type="number" name="goal" min="10" max="1440" step="10"></label>
+      <label class="check"><input type="checkbox" name="sound"> Bitince sihirli ses çal</label>
+      <label class="check"><input type="checkbox" name="autoBreak"> Molayı otomatik başlat</label>
+      <label class="check"><input type="checkbox" name="autoFocus"> Moladan sonra odağı otomatik başlat</label>
+      <div class="row">
+        <button class="btn small ghost" value="cancel">Vazgeç</button>
+        <button class="btn small primary" value="save">Kaydet</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="scene.js"></script>
+  <script src="room.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
