@@ -393,3 +393,4 @@ body.deep .frame { box-shadow: 0 0 0 4px var(--ink), 0 0 0 8px var(--gold-dark),
 .room-members li { color: #a0e8ff; font-size: 18px; }
 .room-members li:first-child { color: var(--gold); }
 #roomRequests { display: flex; flex-direction: column; gap: 8px; }
+.btn.danger { background: #6a3040; color: #ffd8d8; align-self: flex-start; margin-top: 6px; }

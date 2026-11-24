@@ -68,7 +68,8 @@ function load() {
   }
 }
 const data = load();
-const save = () => localStorage.setItem(STORE, JSON.stringify(data));
+let resetting = false; // sıfırlarken sayfa kapanırken eski veriyi geri yazmasın
+const save = () => { if (!resetting) localStorage.setItem(STORE, JSON.stringify(data)); };
 
 const todayKey = () => new Date().toLocaleDateString('sv'); // YYYY-AA-GG
 function today() {
@@ -550,6 +551,14 @@ for (const d of [charDlg, shopDlg, roomDlg]) d.querySelector('[data-close]').onc
 $('openRoom').onclick = () => togglePanel(roomDlg, Room.renderPanel);
 
 const setDlg = $('setDlg'), form = $('setForm');
+// Tüm ilerlemeyi sıfırla (sadece bu tarayıcı ve bu adres)
+$('resetAll').onclick = () => {
+  if (!confirm('Bütün ilerlemen silinecek: altın, eşyalar, kıyafetler, görevler, istatistikler, iksirler ve malzemeler. Bu geri alınamaz. Emin misin?')) return;
+  resetting = true;
+  localStorage.removeItem(STORE);
+  location.reload();
+};
+
 $('openSettings').onclick = () => {
   for (const [k, v] of Object.entries(data.settings)) {
     const input = form.elements[k];
