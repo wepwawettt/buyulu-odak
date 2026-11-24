@@ -790,6 +790,21 @@ const Castle = (() => {
       if (!player.seated) faceTo(player, n);
       return;
     }
+    if (n.name === 'Professor Ashdown' && !focusing()) {
+      const next = Odam.nextRecipe();
+      if (next === 'gold' || next === 'wisdom') {
+        const p = Odam.learnRecipe();
+        say(n.name, `Sana ${p.name} tarifini öğreteyim! Odandaki iksir şişesinde demleyebilirsin.`, n, 5);
+        toast(`Yeni tarif öğrendin: ${p.name}`);
+        if (!player.seated) faceTo(player, n);
+        return;
+      }
+      if (next === 'wait' && Math.random() < 0.5) {
+        say(n.name, 'Önce bir iksiri sonuna kadar demleyip iç; sonra sana Bilgelik İksiri tarifini öğretirim.', n, 5);
+        if (!player.seated) faceTo(player, n);
+        return;
+      }
+    }
     if (q && (!quests().seen[q.id] || Math.random() < 0.5)) {
       quests().seen[q.id] = true; save();
       const [cur, need] = progress(q);
@@ -804,6 +819,34 @@ const Castle = (() => {
       .replace('{min}', Math.floor(d.sec / 60)).replace('{pomos}', d.pomos);
     say(n.name, text, n);
     if (!player.seated) faceTo(player, n);
+  }
+
+  // ---------- İksir malzemeleri ----------
+  // Her nokta günde bir kez toplanır; odak sırasında toplanamaz. Malzemeler odadaki iksirlerde kullanılır.
+  const INGREDIENTS = { leaf: 'Ay Yaprağı', dust: 'Kristal Toz', feather: 'Baykuş Tüyü' };
+  const GATHER = [
+    { id: 'g1', kind: 'leaf', x: 24, y: 14 }, { id: 'g2', kind: 'leaf', x: 30, y: 14 },
+    { id: 'g3', kind: 'leaf', x: 25, y: 17 }, { id: 'g4', kind: 'leaf', x: 31, y: 17 },
+    { id: 'g5', kind: 'dust', x: 2, y: 13 }, { id: 'g6', kind: 'dust', x: 7, y: 13 },
+    { id: 'g7', kind: 'feather', x: 26, y: 2 }, { id: 'g8', kind: 'feather', x: 30, y: 2 },
+  ];
+  function gatherDay() {
+    const key = todayKey();
+    if (!data.gather || data.gather.date !== key) data.gather = { date: key, done: {} };
+    return data.gather;
+  }
+  const canGather = g => !gatherDay().done[g.id];
+  const gatherNear = () => GATHER.find(g => canGather(g) && Math.hypot(player.x - g.x * T - 8, player.y - g.y * T - 8) < 26);
+  function gather(g) {
+    const at = { x: g.x * T + 8, y: g.y * T };
+    if (focusing()) return say(INGREDIENTS[g.kind], 'Odak bitince topla; şimdi çalışma zamanı!', at);
+    gatherDay().done[g.id] = true;
+    data.pantry ||= { leaf: 0, dust: 0, feather: 0 };
+    data.pantry[g.kind]++;
+    save();
+    say('Malzeme', `+1 ${INGREDIENTS[g.kind]} (sende ${data.pantry[g.kind]})`, at);
+    toast(`+1 ${INGREDIENTS[g.kind]}: odandaki kazanda kullanabilirsin`);
+    Odam.renderBrew();
   }
 
   function waterRoot(r) {
@@ -1028,6 +1071,19 @@ const Castle = (() => {
       sprite(ctx, OWL, { K: '#4e4260', b: o.col, W: '#f0d890', E: '#3a2a3e', Y: '#e8a030', l: '#e8d8c0' }, X + 4, Y + 2,
         Math.sin(t * 0.5 + o.p) > 0.6, (t + o.p) % 3.3 < 0.15 ? OWL_BLINK : null);
     }
+    // Toplanabilir malzemeler parıldar
+    if (!focusing()) for (const g of GATHER) {
+      if (!canGather(g)) continue;
+      const X = g.x * T - cam.x, Y = g.y * T - cam.y;
+      if (X < -T || X > VW || Y < -T || Y > VH) continue;
+      const k = Math.sin(t * 4 + g.x);
+      const col = { leaf: '#c8ff90', dust: '#a8e0ff', feather: '#ffe890' }[g.kind];
+      const sx = X + 8, sy = Y + 2 + Math.round(Math.sin(t * 2 + g.y));
+      ctx.fillStyle = 'rgba(255,250,210,' + (0.18 + 0.12 * k) + ')'; ctx.fillRect(sx - 4, sy - 4, 9, 9);
+      px(ctx, sx, sy - 3, 1, 7, col); px(ctx, sx - 3, sy, 7, 1, col);
+      px(ctx, sx - 1, sy - 1, 3, 3, col); px(ctx, sx, sy, 1, 1, '#ffffff');
+      if (k > 0.3) { px(ctx, sx - 3, sy - 3, 1, 1, '#ffffff'); px(ctx, sx + 3, sy + 3, 1, 1, '#ffffff'); }
+    }
     // Çığlık kökleri
     for (const r of roots) {
       if (t > r.pop) continue;
@@ -1048,8 +1104,9 @@ const Castle = (() => {
   function drawQuestMarks() {
     for (const n of NPCS) {
       const q = questOf(n);
-      if (!q) continue;
-      const ready = isDone(q);
+      const teach = n.name === 'Professor Ashdown' && ['gold', 'wisdom'].includes(Odam.nextRecipe());
+      if (!q && !teach) continue;
+      const ready = teach || isDone(q);
       const x = Math.round(n.x - cam.x), y = Math.round(n.y - cam.y) - 24 - (Math.floor(t * 2) % 2);
       if (x < -8 || x > VW + 8 || y < -8 || y > VH) continue;
       px(ctx, x - 3, y - 1, 7, 9, '#4a3a4e'); px(ctx, x - 2, y, 5, 7, ready ? '#f2d27a' : '#f4eee4');
@@ -1153,7 +1210,9 @@ const Castle = (() => {
     } else b.hidden = true;
     const npc = !bubble && !player.seated && nearestNpc();
     const pic = !bubble && !player.seated && !npc && nearPortrait();
-    hint.hidden = !npc && !pic;
+    const spot = !bubble && !player.seated && !npc && !focusing() && gatherNear();
+    hint.hidden = !npc && !pic && !spot;
+    if (spot && !pic) placeAt(hint, spot.x * T + 8, spot.y * T - 2);
     if (npc) placeAt(hint, npc.x, npc.y - 20);
     else if (pic) placeAt(hint, pic.x, pic.Y + 2);
   }
@@ -1178,6 +1237,10 @@ const Castle = (() => {
     if (down && e.code === 'KeyE' && !e.repeat) {
       const root = roots.find(r => Math.hypot(player.x - r.x, player.y - r.y) < 24);
       if (root) return waterRoot(root);
+      const g = gatherNear();
+      if (g) return gather(g);
+      const pot = cauldrons.find(k => Math.hypot(player.x - k.X - 8, player.y - k.Y - 10) < 24);
+      if (pot && !nearestNpc()) return say('Kazan', Odam.brewStatus(), { x: pot.X + 8, y: pot.Y });
       const n = nearestNpc();
       if (n) talk(n);
       else { const p = nearPortrait(); if (p) talkPortrait(p); }
@@ -1202,6 +1265,10 @@ const Castle = (() => {
     if (pic) return Math.hypot(player.x - pic.x, player.y - pic.y - 10) < 40 ? talkPortrait(pic) : toast('Portreyle konuşmak için yanına git.');
     const root = roots.find(r => Math.abs(r.x - mx) < 8 && Math.abs(r.y - my) < 10);
     if (root && Math.hypot(player.x - root.x, player.y - root.y) < 30) return waterRoot(root);
+    const spot = GATHER.find(g => canGather(g) && mx >= g.x * T && mx < g.x * T + T && my >= g.y * T && my < g.y * T + T);
+    if (spot) return Math.hypot(player.x - spot.x * T - 8, player.y - spot.y * T - 8) < 40 ? gather(spot) : toast('Toplamak için yanına git.');
+    const pot = cauldrons.find(k => mx >= k.X && mx < k.X + T && my >= k.Y && my < k.Y + T);
+    if (pot && Math.hypot(player.x - pot.X - 8, player.y - pot.Y - 10) < 40) return say('Kazan', Odam.brewStatus(), { x: pot.X + 8, y: pot.Y });
     if (player.seated || player.toSeat) return toast('Odak bitince gezebilirsin!');
     const tx = Math.floor(mx / T), ty = Math.floor(my / T);
     const p = walkable(tx, ty) && findPath(...tileOf(player), tx, ty);

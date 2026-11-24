@@ -94,12 +94,38 @@ const Odam = (() => {
   }
 
   // ---------- İksir demleme (odak dakikalarıyla dolar) ----------
+  // İksir = kalede molada toplanan malzemeler + odadaki odak süresi
   const POTIONS = [
-    { id: 'wake', name: 'Uyanıklık İksiri', min: 25, color: '#7ae0c0', desc: '25 dk odakla demlenir. Bitince +2 altın.' },
-    { id: 'gold', name: 'Sıvı Altın', min: 60, color: '#f0c040', desc: '60 dk odakla demlenir. Bitince +6 altın.' },
-    { id: 'wisdom', name: 'Bilgelik İksiri', min: 90, color: '#b08ae0', desc: '90 dk odakla demlenir. Sonraki kale görevi ödülün 2 katı olur.' },
+    { id: 'wake', name: 'Uyanıklık İksiri', min: 25, color: '#7ae0c0', needs: { leaf: 1 }, desc: '25 dk odak · Bitince +2 altın.' },
+    { id: 'gold', name: 'Sıvı Altın', min: 60, color: '#f0c040', needs: { leaf: 2, dust: 1 }, desc: '60 dk odak · Bitince +6 altın.' },
+    { id: 'wisdom', name: 'Bilgelik İksiri', min: 90, color: '#b08ae0', needs: { leaf: 1, dust: 1, feather: 1 }, desc: '90 dk odak · Sonraki kale görevi ödülün 2 katı.' },
   ];
+  const ING = { leaf: 'Ay Yaprağı', dust: 'Kristal Toz', feather: 'Baykuş Tüyü' };
+  const pantry = () => (data.pantry ||= { leaf: 0, dust: 0, feather: 0 });
+  const hasAll = p => Object.entries(p.needs).every(([k, n]) => pantry()[k] >= n);
+  const needText = p => 'Gerekli: ' + Object.entries(p.needs).map(([k, n]) => `${ING[k]} ×${n} (${Math.min(pantry()[k], n)}/${n})`).join(', ');
   const potion = () => data.brew && POTIONS.find(p => p.id === data.brew.id);
+  const known = () => (data.recipes ||= ['wake']);
+  // Sıradaki öğrenilebilir tarif: 'gold' | 'wisdom' | 'wait' (önce bir iksir içmeli) | null (hepsi biliniyor)
+  function nextRecipe() {
+    if (!known().includes('gold')) return 'gold';
+    if (!known().includes('wisdom')) return (data.potionsMade || 0) >= 1 ? 'wisdom' : 'wait';
+    return null;
+  }
+  function learnRecipe() {
+    const id = nextRecipe();
+    if (id !== 'gold' && id !== 'wisdom') return null;
+    known().push(id);
+    save(); renderBrew();
+    return POTIONS.find(p => p.id === id);
+  }
+  // Kaledeki kazanların söylediği: odadaki demlemenin durumu
+  function brewStatus() {
+    const p = potion();
+    if (!p) return 'Bu kazanlar ders için. Kendi iksirini odandaki şişede demle!';
+    if (brewDone()) return `Odandaki ${p.name} hazır! Odana dönüp iç.`;
+    return `Odandaki ${p.name} %${Math.round(100 * data.brew.sec / (p.min * 60))} demlendi. Odaklandıkça dolar.`;
+  }
   const brewDone = () => potion() && data.brew.sec >= potion().min * 60;
 
   function onFocus(sec) {
@@ -109,6 +135,9 @@ const Odam = (() => {
     syncScene();
   }
   function startBrew(id) {
+    const p = POTIONS.find(q => q.id === id);
+    if (!hasAll(p)) return toast('Malzemen eksik: molada kalede parıldayan yerlerden topla.');
+    for (const [k, n] of Object.entries(p.needs)) pantry()[k] -= n;
     data.brew = { id, sec: 0 };
     save(); renderBrew(); syncScene();
     toast(`${potion().name} demlenmeye başladı. Odaklandıkça dolacak.`);
@@ -121,6 +150,7 @@ const Odam = (() => {
     if (p.id === 'gold') { data.coins += 6; msg = '+6 altın'; }
     if (p.id === 'wisdom') { data.wisdom = true; msg = 'Sonraki kale görevi ödülün 2 katı!'; }
     data.brew = null;
+    data.potionsMade = (data.potionsMade || 0) + 1;
     save(); render(); renderBrew(); syncScene();
     toast(`${p.name} içildi: ${msg}`);
   }
@@ -150,16 +180,26 @@ const Odam = (() => {
       box.appendChild(b);
       return;
     }
-    box.insertAdjacentHTML('beforeend', '<p class="room-msg">Bir iksir seç; sadece odak süresiyle demlenir. Aynı anda bir iksir demlenebilir.</p>');
+    const pan = document.createElement('div');
+    pan.className = 'pantry';
+    pan.innerHTML = '<b>Malzemelerin</b><span></span><small>Molada kalede parıldayan yerlerden topla: seradaki saksılar (Ay Yaprağı), zindandaki kavanozlar (Kristal Toz), baykuşhanedeki tünekler (Baykuş Tüyü). Her nokta günde bir kez.</small>';
+    pan.querySelector('span').textContent = Object.keys(ING).map(k => `${ING[k]} ${pantry()[k]}`).join(' · ');
+    box.appendChild(pan);
+    box.insertAdjacentHTML('beforeend', '<p class="room-msg">Malzemeleri kazana koy; iksir odak süresiyle demlenir. Aynı anda bir iksir.</p>');
     for (const q of POTIONS) {
+      const ok = known().includes(q.id);
       const row = document.createElement('div');
-      row.className = 'item';
+      row.className = 'item' + (ok ? '' : ' locked');
       row.innerHTML = `<i class="potion-dot" style="background:${q.color}"></i><div><b></b><small></small></div>`;
       row.querySelector('b').textContent = q.name;
-      row.querySelector('small').textContent = q.desc;
+      row.querySelector('small').textContent = ok ? `${q.desc} ${needText(q)}`
+        : q.id === 'wisdom' && nextRecipe() !== 'wisdom'
+          ? 'Kilitli: önce bir iksiri demleyip iç, sonra kaledeki iksir zindanında Professor Ashdown öğretir.'
+          : 'Kilitli: tarifini kaledeki iksir zindanında Professor Ashdown öğretir (molada uğra).';
       const b = document.createElement('button');
       b.className = 'btn';
-      b.textContent = 'Demle';
+      b.textContent = !ok ? 'Kilitli' : hasAll(q) ? 'Demle' : 'Malzeme eksik';
+      b.disabled = !ok || !hasAll(q);
       b.onclick = () => startBrew(q.id);
       row.appendChild(b);
       box.appendChild(row);
@@ -247,5 +287,5 @@ const Odam = (() => {
     renderBar();
   }
 
-  return { init, sync, onFocus, renderBrew };
+  return { init, sync, onFocus, renderBrew, nextRecipe, learnRecipe, brewStatus };
 })();

@@ -44,7 +44,7 @@
       <div id="sceneTip" class="scene-tip" hidden></div>
     </div>
     <div id="mapHelp" class="map-help" hidden>
-      <p>Yürü: ok tuşları / WASD ya da tıkla · Konuş: E · Odak başlayınca en yakın masaya (kütüphane ya da salon) oturursun</p>
+      <p>Yürü: ok tuşları / WASD ya da tıkla · Konuş: E · Odak başlayınca en yakın masaya oturursun · Molada parıldayan yerlerden iksir malzemesi topla</p>
       <div class="quests"><h3>Günün görevleri</h3><ul id="questList"></ul></div>
     </div>
     <div id="roomBar" class="room-bar">
@@ -128,6 +128,7 @@
 
   <!-- Karakter paneli (sahne görünür kalsın diye modal değil) -->
   <dialog id="charDlg" class="side">
+    <button class="x-close" data-close aria-label="Kapat" title="Kapat">×</button>
     <h2>Karakterin</h2>
     <h3>Bina</h3>
     <div id="houseOpts" class="opts"></div>
@@ -143,6 +144,7 @@
   </dialog>
 
   <dialog id="shopDlg" class="side">
+    <button class="x-close" data-close aria-label="Kapat" title="Kapat">×</button>
     <h2>Sihir Dükkanı</h2>
     <p class="shop-coins">Kesende <b id="shopCoins">0</b> altın var</p>
     <div id="shopList" class="shop"></div>
@@ -150,6 +152,7 @@
   </dialog>
 
   <dialog id="roomDlg" class="side">
+    <button class="x-close" data-close aria-label="Kapat" title="Kapat">×</button>
     <h2>Ortak Oda</h2>
     <label class="room-name">Adın <input id="roomName" maxlength="16" placeholder="Büyücü" autocomplete="off"></label>
     <p id="roomMsg" class="room-msg"></p>
@@ -187,6 +190,7 @@
   </dialog>
 
   <dialog id="brewDlg" class="side">
+    <button class="x-close" data-close aria-label="Kapat" title="Kapat">×</button>
     <h2>İksir Kazanı</h2>
     <div id="brewBody"></div>
     <button class="btn small close" data-close>Kapat</button>

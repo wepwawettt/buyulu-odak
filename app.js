@@ -18,6 +18,10 @@ const DEFAULTS = {
   deep: false,  // derin odak modu
   brew: null,   // demlenen iksir { id, sec }
   wisdom: false, // bilgelik iksiri: sonraki kale görevi ödülü 2 kat
+  recipes: ['wake'], // bilinen iksir tarifleri (diğerleri kalede öğrenilir)
+  pantry: { leaf: 0, dust: 0, feather: 0 }, // kalede toplanan iksir malzemeleri
+  gather: null, // bugün hangi toplama noktalarından alındı
+  potionsMade: 0,    // içilen iksir sayısı
   view: 'room', // 'room' (odam) | 'castle' (kale haritası)
 };
 
@@ -600,3 +604,9 @@ setInterval(renderStats, 30000); // odak sürerken bugünkü çubuk büyüsün
 setInterval(save, 5000);
 addEventListener('visibilitychange', save);
 addEventListener('beforeunload', save);
+
+// Herhangi bir paneldeki "Kapat" / × düğmesi kendi panelini kapatır
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-close]');
+  if (b && b.closest('dialog')) b.closest('dialog').close();
+});
