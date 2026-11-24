@@ -394,3 +394,11 @@ body.deep .frame { box-shadow: 0 0 0 4px var(--ink), 0 0 0 8px var(--gold-dark),
 .room-members li:first-child { color: var(--gold); }
 #roomRequests { display: flex; flex-direction: column; gap: 8px; }
 .btn.danger { background: #6a3040; color: #ffd8d8; align-self: flex-start; margin-top: 6px; }
+
+/* ---------- Nasıl oynanır? rehberi ---------- */
+#guideDlg { width: min(560px, 92vw); max-height: 85vh; overflow-y: auto; overflow-x: hidden; }
+.guide h3 { color: var(--gold); margin: 16px 0 4px; font-size: 21px; }
+.guide ul, .guide ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; }
+.guide li { font-size: 19px; line-height: 1.1; }
+.guide b { font-weight: normal; color: #f2d27a; }
+.guide-note { margin: 6px 0 0; color: var(--muted); font-size: 18px; line-height: 1.1; }

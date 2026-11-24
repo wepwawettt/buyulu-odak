@@ -527,7 +527,7 @@ $('reset').onclick = reset;
 $('skip').onclick = skip;
 document.querySelectorAll('.tabs button').forEach(b => (b.onclick = () => switchTo(b.dataset.mode, false)));
 
-const spaceIsOurs = e => e.code === 'Space' && !Room.isGuest() && !$('setDlg').open &&
+const spaceIsOurs = e => e.code === 'Space' && !Room.isGuest() && !$('setDlg').open && !$('guideDlg').open &&
   !e.target.closest('input, textarea, select, [contenteditable]');
 document.addEventListener('keydown', e => {
   if (!spaceIsOurs(e)) return;
@@ -551,6 +551,15 @@ for (const d of [charDlg, shopDlg, roomDlg]) d.querySelector('[data-close]').onc
 $('openRoom').onclick = () => togglePanel(roomDlg, Room.renderPanel);
 
 const setDlg = $('setDlg'), form = $('setForm');
+// Nasıl oynanır? rehberi: düğmeyle her zaman, ilk girişte bir kez kendiliğinden
+$('openGuide').onclick = () => $('guideDlg').showModal();
+function showGuideOnce() {
+  if (data.seenGuide) return;
+  data.seenGuide = true;
+  save();
+  $('guideDlg').showModal();
+}
+
 // Tüm ilerlemeyi sıfırla (sadece bu tarayıcı ve bu adres)
 $('resetAll').onclick = () => {
   if (!confirm('Bütün ilerlemen silinecek: altın, eşyalar, kıyafetler, görevler, istatistikler, iksirler ve malzemeler. Bu geri alınamaz. Emin misin?')) return;

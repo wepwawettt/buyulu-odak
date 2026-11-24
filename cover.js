@@ -133,6 +133,7 @@
     try { audio()?.resume(); } catch {}
     cover.classList.add('hide');
     setTimeout(() => cover.remove(), 650);
+    setTimeout(() => { if (typeof showGuideOnce === 'function') showGuideOnce(); }, 700); // ilk girişte rehber
   }
 
   buildCastle();

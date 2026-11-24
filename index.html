@@ -6,11 +6,11 @@
   <title>Büyülü Odak</title>
   <meta name="description" content="Büyücü okulu temalı piksel art pomodoro: odaklan, mola ver, kaleyi keşfet.">
   <meta name="theme-color" content="#1e1a2e">
-  <link rel="icon" href="icon.svg?v=202611242308" type="image/svg+xml">
+  <link rel="icon" href="icon.svg?v=202611242313" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=202611242308">
+  <link rel="stylesheet" href="style.css?v=202611242313">
 </head>
 <body data-mode="focus">
   <!-- Giriş kapağı (cover.js çizer ve kapatır) -->
@@ -95,6 +95,7 @@
         <button id="openShop" class="btn small">Dükkan</button>
         <button id="openChar" class="btn small">Karakter</button>
         <button id="openSettings" class="btn small">Ayarlar</button>
+        <button id="openGuide" class="btn small">Nasıl oynanır?</button>
       </div>
     </section>
 
@@ -184,6 +185,56 @@
     </div>
   </dialog>
 
+  <dialog id="guideDlg" class="guide">
+    <button class="x-close" data-close aria-label="Kapat" title="Kapat">×</button>
+    <h2>Nasıl oynanır?</h2>
+
+    <h3>⏳ Odaklan, mola ver</h3>
+    <ul>
+      <li><b>Başla</b>'ya bas (ya da <b>Boşluk</b>). 25 dk odak, sonra 5 dk kısa mola; her 4 odakta bir uzun mola. Süreleri <b>Ayarlar</b>'dan değiştirebilirsin.</li>
+      <li>Her <b>10 dakika odak = 1 altın</b>. Günlük hedef çubuğu ve haftalık istatistik ilerlemeni gösterir.</li>
+      <li><b>Görevler</b> listesine işlerini yaz. Birini seçersen biten oturumlar o göreve sayılır.</li>
+    </ul>
+
+    <h3>🏠 Odam: kişisel çalışma alanın</h3>
+    <ul>
+      <li>Eşyalara tıkla: <b>pencere</b> yağmur sesi, <b>mumlar</b> şömine sesi, <b>kitaplık</b> istatistik, <b>masa</b> görevler, <b>baykuş</b> ortak oda, <b>sen</b> karakter paneli.</li>
+      <li>Sahnenin altındaki şeritte <b>ambiyans sesleri</b> ve <b>Derin odak</b> var. Derin odak açıkken odak sırasında her şey kararır, sadece sahne ve sayaç kalır (Esc ile o oturum için çıkarsın).</li>
+      <li><b>İksir demleme</b> burada yapılır (aşağıya bak).</li>
+    </ul>
+
+    <h3>🏰 Kale: keşif ve görevler</h3>
+    <ul>
+      <li><b>Ok tuşları / WASD</b> ya da tıklayarak yürü, <b>E</b> ile konuş.</li>
+      <li>Odak başlayınca karakterin en yakın masaya oturur (kütüphane ya da Büyük Salon); molada serbestçe gezersin.</li>
+      <li><b>Günün görevleri</b>: her gün 3 görev gelir (haritanın altında). Başında <b>?</b> olan karakterin görevi var, <b>!</b> çıkınca görev bitmiştir: yanına gidip konuş, altın ödülünü al.</li>
+      <li>Portrelerle E ile konuşabilir, molada seradaki çığlık köklerini sulayabilirsin.</li>
+    </ul>
+
+    <h3>⚗️ İksirler</h3>
+    <ol>
+      <li><b>Malzeme topla</b> (molada, kalede): parıldayan yerlerden; serada <b>Ay Yaprağı</b>, zindanda <b>Kristal Toz</b>, baykuşhanede <b>Baykuş Tüyü</b>. Her nokta günde bir kez.</li>
+      <li><b>Demle</b> (Odam'da): masadaki iksir şişesine tıkla, iksiri seç. Malzemeler kazana girer.</li>
+      <li><b>Odaklan</b>: iksir sadece odak süresiyle dolar; şişede sıvının yükseldiğini görürsün.</li>
+      <li><b>İç</b>: dolunca şişeye tıkla ve ödülü al.</li>
+    </ol>
+    <p class="guide-note">Uyanıklık İksiri +2 altın · Sıvı Altın +6 altın · Bilgelik İksiri sonraki kale görevi ödülünü 2 kat yapar. Yeni tarifleri zindanda <b>Professor Ashdown</b> öğretir.</p>
+
+    <h3>🛍️ Dükkan ve karakter</h3>
+    <ul>
+      <li>Altınla <b>Dükkan</b>'dan odana eşya, karakterine kıyafet al.</li>
+      <li><b>Karakter</b> panelinden bina rengi, saç, saç modeli, ten ve kıyafet seç.</li>
+    </ul>
+
+    <h3>👥 Ortak oda (4 kişiye kadar)</h3>
+    <ul>
+      <li><b>Ortak Oda</b> → <b>Oda kur</b> → bağlantıyı arkadaşlarına gönder, katılanları onayla.</li>
+      <li>Zamanlayıcıyı oda sahibi yönetir; kalede birlikte gezer, sohbet edebilirsiniz.</li>
+    </ul>
+
+    <div class="row room-actions"><button class="btn small add" data-close>Anladım, başlayalım!</button></div>
+  </dialog>
+
   <dialog id="brewDlg" class="side">
     <button class="x-close" data-close aria-label="Kapat" title="Kapat">×</button>
     <h2>İksir Kazanı</h2>
@@ -210,12 +261,12 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
-  <script src="scene.js?v=202611242308"></script>
-  <script src="map.js?v=202611242308"></script>
-  <script src="room.js?v=202611242308"></script>
-  <script src="odam.js?v=202611242308"></script>
-  <script src="app.js?v=202611242308"></script>
-  <script src="cover.js?v=202611242308"></script>
+  <script src="scene.js?v=202611242313"></script>
+  <script src="map.js?v=202611242313"></script>
+  <script src="room.js?v=202611242313"></script>
+  <script src="odam.js?v=202611242313"></script>
+  <script src="app.js?v=202611242313"></script>
+  <script src="cover.js?v=202611242313"></script>
   <script>
     // Sayfa tarayıcı önbelleğinden eski haliyle açıldıysa, sunucudaki yeni sürümü bir kez yükle
     (function () {
