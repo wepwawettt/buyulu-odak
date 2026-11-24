@@ -402,3 +402,16 @@ body.deep .frame { box-shadow: 0 0 0 4px var(--ink), 0 0 0 8px var(--gold-dark),
 .guide li { font-size: 19px; line-height: 1.1; }
 .guide b { font-weight: normal; color: #f2d27a; }
 .guide-note { margin: 6px 0 0; color: var(--muted); font-size: 18px; line-height: 1.1; }
+
+/* ---------- Davet kapağı ve istek uyarısı ---------- */
+.cover-invite { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 4px; }
+.cover-invite p { margin: 0; color: var(--text); font-size: 22px; }
+.cover-invite b { color: var(--gold); font-weight: normal; }
+.cover-invite label { display: flex; gap: 10px; align-items: center; color: var(--muted); }
+.cover-invite input {
+  font: inherit; font-size: 22px; width: 260px; background: var(--ink); color: var(--text);
+  border: 0; padding: 4px 10px; box-shadow: 0 0 0 2px var(--gold-dark);
+}
+#coverErr { color: #ff9a8a; font-size: 18px; }
+#openRoom.alert { background: var(--gold); color: var(--ink); animation: alert-blink 1s steps(2) infinite; }
+@keyframes alert-blink { 50% { filter: brightness(1.35); } }

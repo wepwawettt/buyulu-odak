@@ -127,21 +127,51 @@
     draw();
   }
 
+  // Davet linkiyle gelindiyse kapak "Odaya katıl" olur ve ad sorar
+  const invite = new URLSearchParams(location.search).get('oda');
+  const enterBtn = document.getElementById('enter');
+  let nameIn = null;
+  if (invite) {
+    const box = document.createElement('div');
+    box.className = 'cover-invite';
+    box.innerHTML = '<p>✦ Bir arkadaşın seni <b>ortak odasına</b> davet etti!</p>' +
+      '<label>Adın <input id="coverName" maxlength="16" placeholder="Arkadaşların seni bu adla görecek" autocomplete="off"></label>' +
+      '<small id="coverErr" hidden>Önce adını yaz.</small>';
+    cover.insertBefore(box, enterBtn);
+    nameIn = box.querySelector('input');
+    nameIn.value = data.name || '';
+    enterBtn.textContent = 'Odaya katıl';
+    cover.querySelector('small:not(#coverErr)')?.remove();
+  }
+
   function enter() {
     if (!running) return;
+    if (invite) {
+      const n = nameIn.value.trim().slice(0, 16);
+      if (!n) { document.getElementById('coverErr').hidden = false; nameIn.focus(); return; }
+      data.name = n;
+      save();
+    }
     running = false;
     try { audio()?.resume(); } catch {}
     cover.classList.add('hide');
     setTimeout(() => cover.remove(), 650);
-    setTimeout(() => { if (typeof showGuideOnce === 'function') showGuideOnce(); }, 700); // ilk girişte rehber
+    if (invite) {
+      // Odaya hemen katıl ve paneli açık tut ki "onay bekleniyor" görünsün
+      setTimeout(() => { Room.join(invite); if (!roomDlg.open) document.getElementById('openRoom').click(); }, 300);
+    } else {
+      setTimeout(() => { if (typeof showGuideOnce === 'function') showGuideOnce(); }, 700); // ilk girişte rehber
+    }
   }
 
   buildCastle();
   draw();
   requestAnimationFrame(frame);
   document.getElementById('enter').onclick = enter;
-  cover.addEventListener('click', e => { if (e.target === cover || e.target === canvas) enter(); });
+  cover.addEventListener('click', e => { if (!invite && (e.target === cover || e.target === canvas)) enter(); });
   addEventListener('keydown', e => {
-    if (running && (e.code === 'Enter' || e.code === 'Space' || e.code === 'Escape')) { e.preventDefault(); e.stopImmediatePropagation(); enter(); }
+    if (!running) return;
+    const typing = e.target === nameIn;
+    if (e.code === 'Enter' || (!typing && (e.code === 'Space' || e.code === 'Escape'))) { e.preventDefault(); e.stopImmediatePropagation(); enter(); }
   }, true);
 })();

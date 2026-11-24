@@ -7,6 +7,7 @@
 // app.js'teki global durumu (data, mode, running, remaining, ...) çalışma anında kullanır.
 const Room = (() => {
   const PREFIX = 'buyuluodak-';
+  const PUBLIC_URL = 'https://wepwawettt.github.io/buyulu-odak/'; // yerelde kurulan odanın daveti de canlı siteye gitsin
   const MAX_GUESTS = 3;
   let peer = null;
   let role = null;     // 'host' | 'guest' | null
@@ -78,8 +79,16 @@ const Room = (() => {
   }
 
   // ---------- Oda kur ----------
+  function needName() {
+    if (data.name) return false;
+    el('roomName').focus();
+    error = 'Önce adını yaz; arkadaşların seni bu adla görecek.';
+    renderPanel();
+    return true;
+  }
+
   function host() {
-    if (peer || !ready()) return;
+    if (peer || !ready() || needName()) return;
     code = newCode(); role = 'host'; error = ''; myId = 'host';
     setStatus('connecting');
     peer = new Peer(PREFIX + code);
@@ -96,14 +105,15 @@ const Room = (() => {
         if (guests.has(req.id)) return fromGuest(req.id, m);
         if (m?.type === 'profile' && !req.profile) {
           req.profile = readProfile(m);
-          renderPanel();
-          toast(`${req.profile.name} odana katılmak istiyor`);
+          renderPanel(); render();
+          toast(`${req.profile.name} odana katılmak istiyor: Ortak Oda'dan kabul et`);
+          try { chime(); } catch {}
           if (!roomDlg.open) el('openRoom').click();
         }
       });
       c.on('close', () => {
         if (guests.has(req.id)) guestLeft(req.id);
-        else { pending = pending.filter(p => p !== req); renderPanel(); }
+        else { pending = pending.filter(p => p !== req); renderPanel(); render(); }
       });
     });
   }
@@ -137,7 +147,7 @@ const Room = (() => {
     pending = pending.filter(p => p !== req);
     sendTo(req.conn, { type: 'reject' });
     setTimeout(() => req.conn.close(), 500);
-    renderPanel();
+    renderPanel(); render();
   }
 
   function guestLeft(id) {
@@ -173,7 +183,7 @@ const Room = (() => {
   // ---------- Odaya katıl ----------
   function join(raw) {
     const c = clean(raw, 200).trim().toLowerCase().replace(/^.*[?&]oda=/, '').replace(/[^a-z0-9]/g, '');
-    if (!c || peer || !ready()) return;
+    if (!c || peer || !ready() || needName()) return;
     code = c; role = 'guest'; error = '';
     setStatus('connecting');
     peer = new Peer();
@@ -311,7 +321,9 @@ const Room = (() => {
   }
 
   function updateBadge() {
-    el('openRoom').textContent = 'Ortak Oda' + (unread ? ` (${unread})` : '');
+    const asks = pending.filter(p => p.profile).length;
+    el('openRoom').textContent = 'Ortak Oda' + (asks ? ` (${asks} istek!)` : unread ? ` (${unread})` : '');
+    el('openRoom').classList.toggle('alert', asks > 0);
   }
 
   // ---------- Panel ----------
@@ -383,7 +395,8 @@ const Room = (() => {
     el('roomJoinForm').onsubmit = e => { e.preventDefault(); join(el('roomCode').value); };
     el('roomLeave').onclick = () => leave();
     el('roomCopy').onclick = () => {
-      const link = `${location.origin}${location.pathname}?oda=${code}`;
+      const local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+      const link = `${local ? PUBLIC_URL : location.origin + location.pathname}?oda=${code}`;
       navigator.clipboard?.writeText(link).then(() => toast('Bağlantı kopyalandı!'), () => toast(link));
     };
     el('chatForm').onsubmit = e => { e.preventDefault(); sendChat(el('chatInput').value); el('chatInput').value = ''; };
@@ -422,7 +435,11 @@ const Room = (() => {
     isGuest: () => role === 'guest' && isLive(),
     durs: () => (role === 'guest' && isLive() ? durs : null),
     markDone(m) { doneMode = m; doneAt = Date.now(); },
+    join,
     note() {
+      if (status === 'connecting' && role === 'guest') return 'Odaya bağlanılıyor…';
+      if (status === 'waiting') return 'Oda sahibinin onayı bekleniyor…';
+      if (role === 'host' && pending.some(p => p.profile)) return 'Katılmak isteyen var: Ortak Oda\'dan kabul et';
       if (!isLive() || !members.size) return '';
       if (role === 'guest') return `Zamanlayıcıyı ${members.get('host')?.name || 'oda sahibi'} yönetiyor`;
       const names = others().map(o => o.name);
