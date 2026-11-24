@@ -52,6 +52,17 @@ const Scene = (() => {
     'KOOOOOOOOOcCOOOOOOOOcOOOOK',
     'KOOOOOOOOOCcOOOOOOOOOOOOOK',
   ];
+  // Kısa saç: yandaki uzun saç tutamlarını kaldırır
+  const SHORT_HAIR = {
+    18: '....KSSSSSSSSSSSSSSSSK....', 19: '....KSSSSSSSSSSSSSSSSK....',
+    20: '....KSSWESSSSSSSSWESSK....', 21: '....KSSEESSSSSSSSEESSK....', 22: '....KSSEESSSSSSSSEESSK....',
+    23: '....KSBBSSSSSSSSSSBBSK....', 24: '....KSSSSSSSMMSSSSSSSK....', 25: '.....KSSSSSSSSSSSSSSK.....',
+    26: '......KSSSSSSSSSSSSK......', 27: '.......KSSSSSSSSSSK.......', 28: '.......KCcCcCcCcCcK.......',
+    29: '..KOKOOKCcCcCcCcCcKOOKOK..',
+  };
+  const EYES_CLOSED_SHORT = {
+    20: '....KSSSSSSSSSSSSSSSSK....', 21: '....KSSSSSSSSSSSSSSSSK....', 22: '....KSSKKSSSSSSSSKKSSK....',
+  };
   const EYES_CLOSED = {
     20: '...KRSSSSSSSSSSSSSSSSRK...',
     21: '...KRSSSSSSSSSSSSSSSSRK...',
@@ -291,7 +302,8 @@ const Scene = (() => {
     const closed = !iconMode && (state === 'break' || blink);
     const bob = state === 'focus' && !iconMode ? Math.round(Math.sin((t + phase) * 3) * 0.5 + 0.5) : 0;
     const oy = 46 + bob;
-    sprite(ctx, CHAR, pal, ox, oy, { ...of.rows, ...(closed ? EYES_CLOSED : null) });
+    const short = lk.hairStyle === 'kisa';
+    sprite(ctx, CHAR, pal, ox, oy, { ...of.rows, ...(short ? SHORT_HAIR : null), ...(closed ? (short ? EYES_CLOSED_SHORT : EYES_CLOSED) : null) });
     if (of.fx === 'stars') {
       [[13, 4], [11, 7], [16, 9], [6, 12], [19, 12], [4, 31], [21, 30], [15, 32]].forEach(([x, y], i) => {
         if (iconMode || Math.sin(t * 2.5 + i * 2.3) > 0.2) px(ctx, ox + x, oy + y, 1, 1, '#ffe9a0');
@@ -823,6 +835,7 @@ const Scene = (() => {
           hair: HAIR[l.hair] ? l.hair : 'kahve',
           skin: SKIN[l.skin] ? l.skin : 1,
           outfit: OUTFITS[l.outfit] ? l.outfit : 'klasik',
+          hairStyle: l.hairStyle === 'kisa' ? 'kisa' : 'uzun',
         },
         items: (Array.isArray(f.items) ? f.items : []).filter(id => id === 'glasses' || id === 'starhat'),
       };

@@ -2,7 +2,7 @@
 const STORE = 'buyulu-odak-v1';
 const DEFAULTS = {
   settings: { focus: 25, short: 5, long: 15, goal: 120, sound: true, autoBreak: true, autoFocus: false },
-  look: { house: 'kizil', hair: 'kahve', skin: 1, outfit: 'klasik' },
+  look: { house: 'kizil', hair: 'kahve', skin: 1, outfit: 'klasik', hairStyle: 'uzun' },
   outfits: ['klasik'], // sahip olunan kıyafetler
   coins: 0,
   coinAcc: 0,   // bir sonraki altın için biriken odak saniyesi
@@ -12,7 +12,9 @@ const DEFAULTS = {
   equipped: [], // sahnede/karakterde kullanılanlar
   tasks: [],    // { id, text, done, pomos }
   activeTask: null,
+  quests: null, // günün kale görevleri (map.js yönetir)
   name: '',     // ortak odada görünen ad
+  view: 'room', // 'room' (odam) | 'castle' (kale haritası)
 };
 
 const OUTFIT_SHOP = [
@@ -132,6 +134,8 @@ function completeFocus() {
   data.cycle++;
   const task = activeTask();
   if (task) { task.pomos++; renderTasks(); }
+  Castle.onSession(!!task);
+  Castle.mail(`Tebrikler! Bugünkü ${today().pomos}. oturumun tamam. Mola senin!`);
 }
 
 function finish() {
@@ -259,6 +263,7 @@ function buildCharOptions() {
   const groups = [
     ['houseOpts', 'house', Object.entries(Scene.HOUSES).map(([k, h]) => [k, h.name, `linear-gradient(90deg, ${h.a} 50%, ${h.b} 50%)`])],
     ['hairOpts', 'hair', Object.entries(Scene.HAIR).map(([k, c]) => [k, HAIR_LABELS[k], c])],
+    ['styleOpts', 'hairStyle', [['uzun', 'Uzun', Scene.HAIR[data.look.hair]], ['kisa', 'Kısa', Scene.HAIR[data.look.hair]]]],
     ['skinOpts', 'skin', Scene.SKIN.map((c, i) => [i, '', c])],
     ['outfitOpts', 'outfit', OUTFIT_SHOP.filter(o => data.outfits.includes(o.id))
       .map(o => [o.id, o.name, Scene.OUTFITS[o.id].pal?.H || '#2b2540'])],
@@ -302,7 +307,7 @@ function renderTasks() {
     box.checked = t.done;
     box.onchange = () => {
       t.done = box.checked;
-      if (t.done) toast('Görev tamam! Bir büyü daha öğrendin.');
+      if (t.done) { toast('Görev tamam! Bir büyü daha öğrendin.'); Castle.onTaskDone(t.text); }
       saveTasks();
     };
     li.querySelector('.text').onclick = () => {
@@ -551,9 +556,24 @@ setDlg.addEventListener('close', () => {
   renderStats();
 });
 
+// Oda / Kale görünümü
+function setView(v) {
+  const castle = v === 'castle';
+  $('scene').hidden = castle;
+  $('map').hidden = !castle;
+  $('mapHelp').hidden = !castle;
+  document.querySelector('.frame').classList.toggle('castle', castle);
+  document.querySelectorAll('.views button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  Castle.show(castle);
+  if (data.view !== v) { data.view = v; save(); }
+}
+document.querySelectorAll('.views button').forEach(b => (b.onclick = () => setView(b.dataset.view)));
+
 // ---------- Başlat ----------
 Scene.init($('scene'), data.look);
 Scene.setItems(data.equipped);
+Castle.init($('map'));
+setView(data.view === 'castle' ? 'castle' : 'room');
 applyHouseColors();
 render();
 renderTasks();

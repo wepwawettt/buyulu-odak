@@ -1,12 +1,12 @@
 :root {
-  --bg: #120f1f;
-  --panel: #1d1830;
-  --panel-2: #262040;
-  --ink: #0b0914;
+  --bg: #1e1a2e;
+  --panel: #2a253e;
+  --panel-2: #363050;
+  --ink: #1b1726;
   --text: #efe6cf;
   --muted: #a89fc0;
-  --gold: #e3b23c;
-  --gold-dark: #8a6a3a;
+  --gold: #e8c47e;
+  --gold-dark: #a08660;
   --house: #9c1c1c;
   --house-2: #e3b23c;
   --accent: var(--house);
@@ -23,7 +23,7 @@ body {
     radial-gradient(1px 1px at 70% 15%, #fff6 50%, transparent 51%),
     radial-gradient(1px 1px at 85% 60%, #fff5 50%, transparent 51%),
     radial-gradient(1px 1px at 40% 80%, #fff4 50%, transparent 51%),
-    radial-gradient(ellipse at top, #241d42, var(--bg) 70%);
+    radial-gradient(ellipse at top, #2e2850, var(--bg) 70%);
   background-size: 200px 200px, 260px 260px, 180px 180px, 230px 230px, 100% 100%;
   color: var(--text);
   font-family: 'VT323', ui-monospace, monospace;
@@ -33,7 +33,7 @@ body {
 }
 
 .app {
-  width: min(680px, 100%);
+  width: min(696px, 100%);
   padding: 20px 16px 40px;
   display: flex;
   flex-direction: column;
@@ -66,10 +66,13 @@ h1 {
 
 .frame {
   position: relative;
+  align-self: center;
+  width: min(640px, calc(100% - 16px));
   box-shadow: 0 0 0 4px var(--ink), 0 0 0 8px var(--gold-dark), 0 0 0 12px var(--ink), 0 12px 40px #0008;
   margin: 8px;
 }
-#scene {
+#scene { filter: saturate(0.85) contrast(0.92) brightness(1.05); }
+#scene, #map {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -251,6 +254,44 @@ dialog.side { position: fixed; right: 20px; top: 20px; margin: 0; left: auto; ma
 #setForm input[type=checkbox] { accent-color: var(--gold); width: 18px; height: 18px; }
 #setForm .row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
 
+/* ---------- Kale haritası ---------- */
+canvas[hidden] { display: none !important; }
+.views { display: flex; gap: 10px; margin: 0 8px -6px; }
+.views button {
+  font: inherit; font-size: 22px; color: var(--muted); background: var(--panel);
+  border: 0; padding: 2px 18px; cursor: pointer; box-shadow: 0 0 0 3px var(--ink);
+}
+.views button.active { color: var(--ink); background: var(--gold); }
+.frame.castle .friend-tag { display: none; }
+.map-help { color: var(--muted); font-size: 18px; margin: -8px 8px 0; }
+.map-help > p { text-align: center; margin: 0 0 10px; }
+.quests { background: var(--panel); box-shadow: 0 0 0 3px var(--ink); padding: 10px 14px; }
+.quests h3 { margin: 0 0 6px; font-family: 'Press Start 2P', monospace; font-size: 11px; color: var(--gold); font-weight: normal; }
+.quests ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.quest { display: grid; grid-template-columns: 1fr auto; gap: 0 10px; color: var(--text); }
+.quest b { grid-column: 1 / -1; font-weight: normal; font-size: 16px; color: var(--gold); }
+.quest span { font-size: 18px; line-height: 1.05; }
+.quest em { font-style: normal; font-size: 16px; color: var(--muted); align-self: end; white-space: nowrap; }
+.quest.ready span { color: #f2d27a; }
+.quest.claimed { opacity: 0.55; }
+.quest.claimed span { text-decoration: line-through; }
+.map-bubble {
+  position: absolute; z-index: 2; transform: translate(-50%, -100%);
+  background: #fffbea; color: #3a2e48; padding: 2px 7px 3px; max-width: 38%;
+  font-size: 15px; line-height: 1; box-shadow: 0 0 0 2px #6a5a7a; pointer-events: none;
+}
+.map-bubble b { display: block; font-weight: normal; font-size: 13px; color: #a0565e; }
+.map-bubble::after {
+  content: ''; position: absolute; left: 50%; bottom: -6px; margin-left: -5px;
+  border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid #fffbea;
+}
+.map-hint {
+  position: absolute; z-index: 2; transform: translate(-50%, -100%);
+  background: var(--gold); color: var(--ink); font-size: 13px; padding: 0 4px; line-height: 1.1;
+  box-shadow: 0 0 0 2px var(--ink); pointer-events: none; animation: hint-bob 1s steps(2) infinite;
+}
+@keyframes hint-bob { 50% { transform: translate(-50%, calc(-100% - 3px)); } }
+
 /* ---------- Ortak oda ---------- */
 .friend-tag {
   position: absolute; left: 61.9%; top: 35%; transform: translate(-50%, -100%);
@@ -286,3 +327,20 @@ dialog.side { position: fixed; right: 20px; top: 20px; margin: 0; left: auto; ma
 .chat-msg.friend b { color: #a0e8ff; }
 .chat-empty { color: var(--muted); margin: auto; }
 .room-actions { margin-top: 14px; }
+
+/* ---------- Giriş kapağı ---------- */
+.cover {
+  position: fixed; inset: 0; z-index: 100; padding: 20px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  background: radial-gradient(ellipse at top, #2e2850, #141020 75%);
+  text-align: center; transition: opacity .6s;
+}
+.cover.hide { opacity: 0; pointer-events: none; }
+#coverArt {
+  width: min(640px, 92vw); aspect-ratio: 16 / 9; image-rendering: pixelated; cursor: pointer;
+  box-shadow: 0 0 0 4px var(--ink), 0 0 0 8px var(--gold-dark), 0 0 0 12px var(--ink), 0 20px 60px #0008;
+  margin-bottom: 14px;
+}
+.cover h1 { font-size: clamp(18px, 4vw, 28px); }
+.cover p { margin: 0 0 6px; color: var(--muted); font-size: 22px; }
+.cover small { color: var(--muted); font-size: 17px; }
