@@ -480,6 +480,8 @@ const Castle = (() => {
 
   const tileCenter = (tx, ty) => ({ x: tx * T + 8, y: ty * T + 13 });
   const player = { x: 0, y: 0, dir: 'down', moving: false, path: [], seated: false, toSeat: null, pendingTalk: null };
+  const othersMap = new Map(); // ortak odadaki arkadaşlar: id -> { name, look, x, y, tx, ty, dir, seated, ... }
+  let seatRank = 0; // ortak odadaki sıram (0 = oda sahibi); oturma çakışmasını önler
   Object.assign(player, tileCenter(6, 11));
 
   const student = (house, hair, skin) => ({ look: { house, hair, skin, outfit: 'klasik' } });
@@ -602,13 +604,17 @@ const Castle = (() => {
 
   function sitDown() {
     const taken = new Set(NPCS.filter(n => n.seat).map(n => n.seat.join()));
+    for (const o of othersMap.values()) if (o.seated) taken.add(tileOf({ x: o.x, y: o.y + 7 }).join());
     const [px0, py0] = tileOf(player);
-    let best = null;
+    const options = [];
     for (const s of SEATS) {
       if (taken.has(s.join())) continue;
       const p = findPath(px0, py0, s[0], s[1]);
-      if (p && (!best || p.length < best.path.length)) best = { seat: s, path: p };
+      if (p) options.push({ seat: s, path: p });
     }
+    options.sort((a, b) => a.path.length - b.path.length);
+    // Ortak odada herkes aynı anda oturur: sıra numarası kadar ileri sandalyeyi seç ki çakışmasın
+    let best = options[Math.min(seatRank, options.length - 1)];
     if (!best) { const s = SEATS[0]; Object.assign(player, tileCenter(s[0], s[1])); best = { seat: s, path: [] }; }
     player.toSeat = best.seat;
     player.path = best.path;
@@ -662,6 +668,12 @@ const Castle = (() => {
     } else player.moving = false;
 
     for (const n of NPCS) updateNpc(n, dt);
+    for (const o of othersMap.values()) {
+      const dx = o.tx - o.x, dy = o.ty - o.y, d = Math.hypot(dx, dy);
+      if (d > 80) { o.x = o.tx; o.y = o.ty; } // çok uzaksa ışınla (ör. masaya oturdu)
+      else if (d > 0.5) { const s = Math.min(d, 90 * dt); o.x += dx / d * s; o.y += dy / d * s; }
+      o.walking = o.moving || d > 1.5;
+    }
     updateMail(dt);
     if (bubble && t > bubble.until) bubble = null;
     if (!bubble) proximityChatter();
@@ -895,20 +907,21 @@ const Castle = (() => {
 
   // ---------- Çizim ----------
   function drawChar(a) {
-    const pal = a === player ? lookPal(data.look) : a.pal;
+    const lk = a === player ? data.look : a.other ? a.look : null; // oyuncu ve ortak odadaki arkadaşlar
+    const pal = lk ? lookPal(lk) : a.pal;
     const dir = a.dir === 'left' || a.dir === 'right' ? 'side' : a.dir;
     const rows = dir === 'side' ? SIDE : dir === 'up' ? UP : DOWN;
-    const step = a.moving && Math.floor(t * 8) % 2;
+    const step = (a.other ? a.walking : a.moving) && Math.floor(t * 8) % 2;
     const over = {};
     if (step) Object.assign(over, FEET_B[dir]);
-    const longHair = a === player ? data.look.hairStyle !== 'kisa' : a.long;
+    const longHair = lk ? lk.hairStyle !== 'kisa' : a.long;
     if (longHair) Object.assign(over, LONG[dir]);
     if (a.beard && dir !== 'up') Object.assign(over, BEARD[dir]);
     const flip = a.dir === 'left';
     const x = Math.round(a.x - cam.x), gy = Math.round(a.y - cam.y), y = gy - (step ? 1 : 0);
     px(ctx, x - 4, gy - 1, 8, 2, 'rgba(40,25,30,0.22)'); px(ctx, x - 5, gy - 1, 10, 1, 'rgba(40,25,30,0.12)'); px(ctx, x - 3, gy + 1, 6, 1, 'rgba(40,25,30,0.10)');
     sprite(ctx, rows, pal, x - 6, y - 12, flip, over);
-    const hat = a === player ? (data.look.outfit === 'kedi' ? 'beanie' : 'hat') : a.hat;
+    const hat = lk ? (lk.outfit === 'kedi' ? 'beanie' : 'hat') : a.hat;
     if (hat === 'hat') sprite(ctx, HAT, pal, x - 6, y - 15, flip);
     if (hat === 'beanie') sprite(ctx, BEANIE, pal, x - 6, y - 14, flip);
   }
@@ -1131,7 +1144,7 @@ const Castle = (() => {
     drawStair();
     for (const p of portraits) drawPortrait(p);
     drawDynamic();
-    const actors = [...NPCS.filter(n => !FREE_FLYERS.has(n.kind)), player].sort((a, b) => a.y - b.y);
+    const actors = [...NPCS.filter(n => !FREE_FLYERS.has(n.kind)), player, ...othersMap.values()].sort((a, b) => a.y - b.y);
     for (const a of actors) drawActor(a);
     if (player.seated && Math.sin(t * 5) > 0.3) px(ctx, Math.round(player.x - cam.x + 5), Math.round(player.y - cam.y - 2), 1, 1, '#ffe9a0');
     for (const n of NPCS) if (n.seat && Math.sin(t * 5 + n.x) > 0.3) px(ctx, Math.round(n.x - cam.x + 5), Math.round(n.y - cam.y - 2), 1, 1, '#ffe9a0');
@@ -1198,7 +1211,20 @@ const Castle = (() => {
     el.style.left = ((x - cam.x) / VW * 100) + '%';
     el.style.top = ((y - cam.y) / VH * 100) + '%';
   }
+  // Arkadaşların başının üstündeki ad etiketleri (HTML)
+  function drawTags() {
+    const box = document.getElementById('mapTags');
+    for (const o of othersMap.values()) {
+      let tag = box.querySelector(`[data-id="${CSS.escape(o.id)}"]`);
+      if (!tag) { tag = document.createElement('span'); tag.className = 'map-tag'; tag.dataset.id = o.id; box.appendChild(tag); }
+      tag.textContent = o.name;
+      placeAt(tag, o.x, o.y - (o.look?.outfit === 'kedi' ? 19 : 21));
+    }
+    for (const tag of [...box.children]) if (!othersMap.has(tag.dataset.id)) tag.remove();
+  }
+
   function drawOverlays() {
+    drawTags();
     const b = document.getElementById('mapBubble'), hint = document.getElementById('mapHint');
     if (bubble) {
       b.hidden = false;
@@ -1292,6 +1318,7 @@ const Castle = (() => {
       visible = v;
       if (!v) {
         keys.clear(); bubble = null;
+        document.getElementById('mapTags').innerHTML = '';
         document.getElementById('mapBubble').hidden = true;
         document.getElementById('mapHint').hidden = true;
         return;
@@ -1300,6 +1327,29 @@ const Castle = (() => {
       if (pendingMail) { const m = pendingMail; pendingMail = null; setTimeout(() => sendMail(m), 600); }
     },
     mail: sendMail,
+    // Ortak oda: benim konumum ve diğer oyuncular
+    myPos: () => ({ x: Math.round(player.x), y: Math.round(player.y), dir: player.dir, moving: !!player.moving, seated: !!player.seated }),
+    setOthers(list) {
+      const ids = new Set(list.map(o => o.id));
+      for (const id of [...othersMap.keys()]) if (!ids.has(id)) othersMap.delete(id);
+      for (const o of list) {
+        let cur = othersMap.get(o.id);
+        if (!cur) {
+          cur = { id: o.id, other: true, dir: 'down', ...tileCenter(6, 11) };
+          cur.tx = cur.x; cur.ty = cur.y;
+          othersMap.set(o.id, cur);
+        }
+        cur.name = o.name; cur.look = o.look || {};
+        if (o.pos) Castle.movePlayer(o.id, o.pos, !cur.seen);
+      }
+    },
+    setRank(n) { seatRank = Math.max(0, n | 0); },
+    movePlayer(id, p, snap) {
+      const o = othersMap.get(id);
+      if (!o) return;
+      if (snap || !o.seen) { o.x = p.x; o.y = p.y; o.seen = true; }
+      o.tx = p.x; o.ty = p.y; o.dir = p.dir; o.moving = p.moving; o.seated = p.seated;
+    },
     // Odak oturumu bitti: oturduğun yere göre görev sayacı (haritayı hiç açmadıysan kütüphane sayılır)
     onSession(withTask) {
       const room = player.seated ? roomOf(...tileOf(player)) : 'lib';

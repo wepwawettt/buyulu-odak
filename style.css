@@ -382,3 +382,14 @@ body.deep .frame { box-shadow: 0 0 0 4px var(--ink), 0 0 0 8px var(--gold-dark),
 .pantry { background: var(--ink); padding: 6px 10px; display: flex; flex-direction: column; }
 .pantry b { font-weight: normal; color: var(--gold); }
 .pantry small { color: var(--muted); font-size: 16px; line-height: 1.05; margin-top: 2px; }
+
+/* ---------- Çok kişilik oda ---------- */
+.map-tag {
+  position: absolute; z-index: 2; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap;
+  background: #2a253ecc; color: #a0e8ff; font-size: 14px; line-height: 1; padding: 1px 5px; box-shadow: 0 0 0 1px #1b1726;
+}
+.frame:not(.castle) #mapTags { display: none; }
+.room-members { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.room-members li { color: #a0e8ff; font-size: 18px; }
+.room-members li:first-child { color: var(--gold); }
+#roomRequests { display: flex; flex-direction: column; gap: 8px; }

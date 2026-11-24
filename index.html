@@ -6,11 +6,11 @@
   <title>Büyülü Odak</title>
   <meta name="description" content="Büyücü okulu temalı piksel art pomodoro: odaklan, mola ver, kaleyi keşfet.">
   <meta name="theme-color" content="#1e1a2e">
-  <link rel="icon" href="icon.svg?v=202611241511" type="image/svg+xml">
+  <link rel="icon" href="icon.svg?v=202611241650" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=202611241511">
+  <link rel="stylesheet" href="style.css?v=202611241650">
 </head>
 <body data-mode="focus">
   <!-- Giriş kapağı (cover.js çizer ve kapatır) -->
@@ -39,6 +39,7 @@
       <canvas id="map" width="213" height="160" hidden></canvas>
       <div id="mapBubble" class="map-bubble" hidden><b></b><span></span></div>
       <div id="mapHint" class="map-hint" hidden>E</div>
+      <div id="mapTags"></div>
       <div id="toast" class="toast"></div>
       <div id="friendTag" class="friend-tag" hidden></div>
       <div id="sceneTip" class="scene-tip" hidden></div>
@@ -167,16 +168,10 @@
     <div id="roomHosting" hidden>
       <div class="room-code" id="roomCodeShow"></div>
       <button id="roomCopy" class="btn small">Bağlantıyı kopyala</button>
-      <div id="roomRequest" class="room-request" hidden>
-        <p id="roomRequestText"></p>
-        <div class="row">
-          <button id="roomAccept" class="btn small add">Kabul et</button>
-          <button id="roomReject" class="btn small">Reddet</button>
-        </div>
-      </div>
+      <div id="roomRequests"></div>
     </div>
     <div id="roomLive" hidden>
-      <p id="roomFriend" class="room-friend"></p>
+      <ul id="roomMembers" class="room-members"></ul>
       <div id="chatLog" class="chat-log"></div>
       <form id="chatForm" class="task-form">
         <input id="chatInput" maxlength="200" placeholder="Mesaj yaz…" autocomplete="off">
@@ -214,12 +209,12 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
-  <script src="scene.js?v=202611241511"></script>
-  <script src="map.js?v=202611241511"></script>
-  <script src="room.js?v=202611241511"></script>
-  <script src="odam.js?v=202611241511"></script>
-  <script src="app.js?v=202611241511"></script>
-  <script src="cover.js?v=202611241511"></script>
+  <script src="scene.js?v=202611241650"></script>
+  <script src="map.js?v=202611241650"></script>
+  <script src="room.js?v=202611241650"></script>
+  <script src="odam.js?v=202611241650"></script>
+  <script src="app.js?v=202611241650"></script>
+  <script src="cover.js?v=202611241650"></script>
   <script>
     // Sayfa tarayıcı önbelleğinden eski haliyle açıldıysa, sunucudaki yeni sürümü bir kez yükle
     (function () {
