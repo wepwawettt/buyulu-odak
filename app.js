@@ -14,6 +14,10 @@ const DEFAULTS = {
   activeTask: null,
   quests: null, // günün kale görevleri (map.js yönetir)
   name: '',     // ortak odada görünen ad
+  ambient: { rain: false, fire: false, night: false, vol: 60 }, // odadaki ambiyans sesleri
+  deep: false,  // derin odak modu
+  brew: null,   // demlenen iksir { id, sec }
+  wisdom: false, // bilgelik iksiri: sonraki kale görevi ödülü 2 kat
   view: 'room', // 'room' (odam) | 'castle' (kale haritası)
 };
 
@@ -119,6 +123,7 @@ function tick() {
 
 function addFocus(sec) {
   today().sec += sec;
+  Odam.onFocus(sec);
   data.coinAcc += sec;
   while (data.coinAcc >= 600) {
     data.coinAcc -= 600;
@@ -247,6 +252,7 @@ function render() {
   $('roomNote').textContent = Room.note();
   $('roomNote').hidden = !Room.note();
   Room.sync();
+  Odam.sync();
 
   Scene.setState(mode === 'focus' ? (running ? 'focus' : 'idle') : 'break');
 }
@@ -371,7 +377,11 @@ function streak() {
   return n;
 }
 
+let statsSig = '';
 function renderStats() {
+  const sig = [weekOffset, todayKey(), Math.floor(today().sec / 60), today().pomos, data.settings.goal].join('|');
+  if (sig === statsSig) return;
+  statsSig = sig;
   const now = new Date();
   const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7) + weekOffset * 7);
   const week = DAY_NAMES.map((name, i) => {
@@ -512,18 +522,21 @@ $('reset').onclick = reset;
 $('skip').onclick = skip;
 document.querySelectorAll('.tabs button').forEach(b => (b.onclick = () => switchTo(b.dataset.mode, false)));
 
+const spaceIsOurs = e => e.code === 'Space' && !Room.isGuest() && !$('setDlg').open &&
+  !e.target.closest('input, textarea, select, [contenteditable]');
 document.addEventListener('keydown', e => {
-  if (e.code === 'Space' && !e.target.closest('input, button, dialog') && !Room.isGuest()) {
-    e.preventDefault();
-    running ? pause() : start();
-  }
+  if (!spaceIsOurs(e)) return;
+  e.preventDefault();
+  if (!e.repeat) running ? pause() : start();
 });
+// Odaktaki düğme boşluk bırakılınca tekrar "tıklanmasın"
+document.addEventListener('keyup', e => { if (spaceIsOurs(e)) e.preventDefault(); });
 
 // Yan paneller (karakter, dükkan): aynı anda biri açık olur
-const charDlg = $('charDlg'), shopDlg = $('shopDlg'), roomDlg = $('roomDlg');
+const charDlg = $('charDlg'), shopDlg = $('shopDlg'), roomDlg = $('roomDlg'), brewDlg = $('brewDlg');
 function togglePanel(dlg, build) {
   const wasOpen = dlg.open;
-  charDlg.close(); shopDlg.close(); roomDlg.close();
+  charDlg.close(); shopDlg.close(); roomDlg.close(); brewDlg.close();
   if (!wasOpen) { build(); dlg.show(); }
 }
 $('openChar').onclick = () => togglePanel(charDlg, buildCharOptions);
@@ -562,6 +575,8 @@ function setView(v) {
   $('scene').hidden = castle;
   $('map').hidden = !castle;
   $('mapHelp').hidden = !castle;
+  $('roomBar').hidden = castle;
+  $('sceneTip').hidden = true;
   document.querySelector('.frame').classList.toggle('castle', castle);
   document.querySelectorAll('.views button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
   Castle.show(castle);
@@ -579,6 +594,7 @@ render();
 renderTasks();
 renderStats();
 Room.init();
+Odam.init();
 setInterval(tick, 250);
 setInterval(renderStats, 30000); // odak sürerken bugünkü çubuk büyüsün
 setInterval(save, 5000);

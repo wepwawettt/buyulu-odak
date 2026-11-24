@@ -344,3 +344,30 @@ canvas[hidden] { display: none !important; }
 .cover h1 { font-size: clamp(18px, 4vw, 28px); }
 .cover p { margin: 0 0 6px; color: var(--muted); font-size: 22px; }
 .cover small { color: var(--muted); font-size: 17px; }
+
+/* ---------- Odaya özel: ses şeridi, ipuçları, iksir, derin odak ---------- */
+.room-bar { margin: -6px 8px 0; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.room-bar-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.room-bar-row span { color: var(--muted); }
+.room-bar .btn.on { background: var(--gold); color: var(--ink); }
+.room-bar input[type=range] { accent-color: var(--gold); width: 110px; }
+.room-tip { margin: 0; color: var(--muted); font-size: 17px; text-align: center; }
+.scene-tip {
+  position: absolute; z-index: 3; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap;
+  background: #fffbea; color: #3a2e48; font-size: 15px; padding: 1px 7px; box-shadow: 0 0 0 2px #6a5a7a;
+}
+.flash { animation: flash 1.2s; }
+@keyframes flash { 0%, 100% { box-shadow: 0 0 0 4px var(--ink), 0 0 0 8px var(--panel-2); } 30%, 70% { box-shadow: 0 0 0 4px var(--ink), 0 0 0 8px var(--gold); } }
+#brewDlg { width: 340px; }
+#brewBody { display: flex; flex-direction: column; gap: 8px; }
+.potion-dot { width: 40px; height: 40px; display: block; box-shadow: inset -6px -6px 0 #0003, 0 0 0 2px var(--ink); }
+#brewBody .item { grid-template-columns: 40px 1fr auto; }
+.brew-now b { color: var(--gold); font-weight: normal; }
+.brew-now small { color: var(--muted); font-size: 17px; }
+.brew-buff { margin: 0; color: #c8b0f0; }
+body.deep { background: #0c0a14; }
+body.deep .views, body.deep .room-bar, body.deep .tasks, body.deep .stats, body.deep .goal, body.deep .foot,
+body.deep .tabs, body.deep .cycle, body.deep .coins, body.deep #current, body.deep #roomNote { display: none; }
+body.deep .panel { background: transparent; box-shadow: none; }
+body.deep .top h1 { opacity: 0.35; }
+body.deep .frame { box-shadow: 0 0 0 4px var(--ink), 0 0 0 8px var(--gold-dark), 0 0 80px rgba(232,196,126,0.18); }

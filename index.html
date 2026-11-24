@@ -41,10 +41,25 @@
       <div id="mapHint" class="map-hint" hidden>E</div>
       <div id="toast" class="toast"></div>
       <div id="friendTag" class="friend-tag" hidden></div>
+      <div id="sceneTip" class="scene-tip" hidden></div>
     </div>
     <div id="mapHelp" class="map-help" hidden>
       <p>Yürü: ok tuşları / WASD ya da tıkla · Konuş: E · Odak başlayınca en yakın masaya (kütüphane ya da salon) oturursun</p>
       <div class="quests"><h3>Günün görevleri</h3><ul id="questList"></ul></div>
+    </div>
+    <div id="roomBar" class="room-bar">
+      <div class="room-bar-row">
+        <span>Ses</span>
+        <button class="btn small" data-amb="rain">Yağmur</button>
+        <button class="btn small" data-amb="fire">Şömine</button>
+        <button class="btn small" data-amb="night">Gece</button>
+        <input id="ambVol" type="range" min="0" max="100" title="Ses seviyesi">
+      </div>
+      <div class="room-bar-row">
+        <button id="brewBtn" class="btn small">İksir demle</button>
+        <button id="deepBtn" class="btn small" title="Odadayken odak sürerken her şeyi karartır (Esc ile kapanır)">Derin odak</button>
+      </div>
+      <p class="room-tip">İpucu: odadaki eşyalara tıkla: pencere, mumlar, kitaplık, masa, iksir şişesi, baykuş ve karakterin.</p>
     </div>
 
     <section class="panel">
@@ -171,6 +186,12 @@
     </div>
   </dialog>
 
+  <dialog id="brewDlg" class="side">
+    <h2>İksir Kazanı</h2>
+    <div id="brewBody"></div>
+    <button class="btn small close" data-close>Kapat</button>
+  </dialog>
+
   <dialog id="setDlg">
     <form id="setForm" method="dialog">
       <h2>Ayarlar</h2>
@@ -192,6 +213,7 @@
   <script src="scene.js"></script>
   <script src="map.js"></script>
   <script src="room.js"></script>
+  <script src="odam.js"></script>
   <script src="app.js"></script>
   <script src="cover.js"></script>
 </body>

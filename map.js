@@ -705,14 +705,8 @@ const Castle = (() => {
     a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
   }
 
-  // Portreler selam verir, çığlık kökleri bağırır
+  // Çığlık kökleri yaklaşınca bağırır (portreler sadece E / tıklama ile konuşur)
   function proximityChatter() {
-    for (const p of portraits) {
-      if (t < p.cool || Math.hypot(player.x - p.x, player.y - p.y - 10) > 30) continue;
-      p.cool = t + 25;
-      say(p.name, p.lines[Math.floor(Math.random() * p.lines.length)], { x: p.x, y: p.y - 4 });
-      return;
-    }
     for (const r of roots) {
       if (t < r.cool || Math.hypot(player.x - r.x, player.y - r.y) > 24) continue;
       r.cool = t + 15; r.pop = t + 2.5;
@@ -786,11 +780,13 @@ const Castle = (() => {
     const q = questOf(n);
     if (q && isDone(q)) {
       quests().claimed[q.id] = true;
-      data.coins += q.reward;
+      const mult = data.wisdom ? 2 : 1; // bilgelik iksiri
+      data.wisdom = false;
+      data.coins += q.reward * mult;
       save(); render(); renderQuests();
       const c = document.querySelector('.coins');
       c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop');
-      say(n.name, `Harika iş! Ödülün: +${q.reward} altın.`, n);
+      say(n.name, `Harika iş! Ödülün: +${q.reward * mult} altın.${mult > 1 ? ' (Bilgelik iksiri!)' : ''}`, n);
       if (!player.seated) faceTo(player, n);
       return;
     }
@@ -816,6 +812,11 @@ const Castle = (() => {
     if (quests().c.water) return say('Screamroot', 'Glub… yeterince suladın, teşekkürler!', { x: r.x, y: r.y - 10 });
     say('Screamroot', 'Glub glub… ahh, teşekkürler!', { x: r.x, y: r.y - 10 });
     bump('water');
+  }
+
+  const nearPortrait = () => portraits.find(p => Math.hypot(player.x - p.x, player.y - p.y - 10) < 30);
+  function talkPortrait(p) {
+    say(p.name, p.lines[Math.floor(Math.random() * p.lines.length)], { x: p.x, y: p.y - 4 });
   }
 
   function nearestNpc() {
@@ -1146,11 +1147,15 @@ const Castle = (() => {
       b.hidden = false;
       b.querySelector('b').textContent = bubble.name;
       b.querySelector('span').textContent = bubble.text;
-      placeAt(b, bubble.anchor.x, bubble.anchor.y - (bubble.anchor === player || NPCS.includes(bubble.anchor) ? 20 : 0));
+      const bx = Math.max(cam.x + VW * 0.2, Math.min(cam.x + VW * 0.8, bubble.anchor.x));
+      const by = Math.max(cam.y + 22, bubble.anchor.y - (bubble.anchor === player || NPCS.includes(bubble.anchor) ? 20 : 0));
+      placeAt(b, bx, by);
     } else b.hidden = true;
-    const near = !bubble && !player.seated && nearestNpc();
-    hint.hidden = !near;
-    if (near) placeAt(hint, near.x, near.y - 20);
+    const npc = !bubble && !player.seated && nearestNpc();
+    const pic = !bubble && !player.seated && !npc && nearPortrait();
+    hint.hidden = !npc && !pic;
+    if (npc) placeAt(hint, npc.x, npc.y - 20);
+    else if (pic) placeAt(hint, pic.x, pic.Y + 2);
   }
 
   function frame(now) {
@@ -1173,7 +1178,9 @@ const Castle = (() => {
     if (down && e.code === 'KeyE' && !e.repeat) {
       const root = roots.find(r => Math.hypot(player.x - r.x, player.y - r.y) < 24);
       if (root) return waterRoot(root);
-      const n = nearestNpc(); if (n) talk(n);
+      const n = nearestNpc();
+      if (n) talk(n);
+      else { const p = nearPortrait(); if (p) talkPortrait(p); }
     }
   }
 
@@ -1191,6 +1198,8 @@ const Castle = (() => {
       }
       return;
     }
+    const pic = portraits.find(p => mx >= p.X && mx < p.X + T && my >= p.Y && my < p.Y + T);
+    if (pic) return Math.hypot(player.x - pic.x, player.y - pic.y - 10) < 40 ? talkPortrait(pic) : toast('Portreyle konuşmak için yanına git.');
     const root = roots.find(r => Math.abs(r.x - mx) < 8 && Math.abs(r.y - my) < 10);
     if (root && Math.hypot(player.x - root.x, player.y - root.y) < 30) return waterRoot(root);
     if (player.seated || player.toSeat) return toast('Odak bitince gezebilirsin!');

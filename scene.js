@@ -94,6 +94,7 @@ const Scene = (() => {
   let t = 0, last = 0, acc = 0, sparkTimer = 0, particles = [], stars = [], items = [];
   // Ortak oda: arkadaş varken iki kişilik düzen (sen solda, arkadaşın sağda)
   let friend = null;
+  let brew = null; // { level 0..1, color, done } — odadaki iksir demleme
   const FRIEND_X = 86;
   const duo = () => friend && !iconMode;
   const meX = () => (duo() ? 50 : 67);
@@ -709,10 +710,21 @@ const Scene = (() => {
     // İksir şişesi (fokurdar)
     const po = d ? 3 : 0;
     px(ctx, 112 + po, 70, 2, 3, '#9aa8b8'); px(ctx, 112 + po, 69, 2, 1, '#a07040');
-    px(ctx, 110 + po, 73, 6, 7, '#5a2a8a'); px(ctx, 110 + po, 73, 6, 1, '#7a4aaa');
-    px(ctx, 111 + po, 74, 1, 2, '#b08ae0');
+    if (brew) {
+      // Demlenen iksir: şişe camı + dolum seviyesi
+      const lvl = Math.max(1, Math.round(brew.level * 6));
+      px(ctx, 110 + po, 73, 6, 7, '#3a3448'); px(ctx, 110 + po, 80 - lvl, 6, lvl, brew.color);
+      px(ctx, 110 + po, 73, 6, 1, '#8a8aa0'); px(ctx, 111 + po, 74, 1, 4, 'rgba(255,255,255,0.35)');
+      if (brew.done) {
+        ctx.fillStyle = 'rgba(255,240,160,0.18)'; ctx.fillRect(106 + po, 66, 14, 16);
+        if (Math.sin(t * 6) > 0) px(ctx, 108 + po + Math.floor(t * 4) % 10, 67 + Math.floor(t * 3) % 4, 1, 1, '#fff2b0');
+      }
+    } else {
+      px(ctx, 110 + po, 73, 6, 7, '#5a2a8a'); px(ctx, 110 + po, 73, 6, 1, '#7a4aaa');
+      px(ctx, 111 + po, 74, 1, 2, '#b08ae0');
+    }
     const by = 79 - Math.floor((t * 3) % 6);
-    px(ctx, 113 + po + (Math.floor(t * 3) % 2), by, 1, 1, '#d8c0ff');
+    px(ctx, 113 + po + (Math.floor(t * 3) % 2), by, 1, 1, brew ? '#ffffff' : '#d8c0ff');
 
     drawHands(meX(), look, true, 0);
     if (d) drawHands(FRIEND_X, friend.look, false, 1.7);
@@ -825,6 +837,7 @@ const Scene = (() => {
     },
     setLook(l) { look = { ...look, ...l }; buildBg(); },
     setItems(list) { items = list; },
+    setBrew(b) { brew = b; },
     // Arkadaşın görünüşü ağdan geldiği için burada doğrulanır; null = tek kişilik düzen
     setFriend(f) {
       if (!f) { friend = null; return; }
