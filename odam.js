@@ -288,6 +288,7 @@ const Odam = (() => {
     { area: [136, 4, 146, 22], label: 'Mum · şömine sesi', act: () => toggleAmbient('fire') },
     { area: [114, 26, 152, 92], label: 'Kitaplık · haftalık istatistik', act: () => jump(document.querySelector('.stats')) },
     { area: [44, 44, 96, 80], label: 'Sen · karakter ve kıyafet', act: () => togglePanel(charDlg, buildCharOptions) },
+    { area: [4, 100, 27, 119], label: 'Evcil hayvanın', act: () => Pet.click() },
     { area: [32, 82, 128, 100], label: 'Masa · görevlerin', act: () => { jump(document.querySelector('.tasks')); setTimeout(() => $('taskInput').focus(), 400); } },
   ];
   function jump(el) {

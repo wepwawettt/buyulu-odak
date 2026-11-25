@@ -187,6 +187,11 @@ const Room = (() => {
       for (const [id, p] of Object.entries(all)) if (id !== uid) next.set(clean(id, 128), readProfile(p));
       if (!first && (isLive() || role === 'host')) {
         for (const [id, p] of next) if (!members.has(id)) toast(`${p.name} odaya katıldı!`);
+        // Arkadaş bir oturum bitirdiyse tebrik etmeyi hatırlat
+        for (const [id, p] of next) {
+          const old = members.get(id);
+          if (old && p.today.pomos > old.today.pomos) toastLater(`${p.name} bir oturum bitirdi! Ortak Oda'dan 👏 gönder.`);
+        }
         for (const [id, p] of members) if (!next.has(id)) { toast(`${p.name} odadan ayrıldı`); positions.delete(id); }
       }
       first = false;
@@ -214,7 +219,13 @@ const Room = (() => {
     on(roomRef.child('chat').limitToLast(50), 'child_added', s => {
       const m = s.val() || {};
       const text = clean(m.text, 200).trim();
-      if (text) addChat(clean(m.name, 16) || 'Büyücü', text, m.uid === uid);
+      const name = clean(m.name, 16) || 'Büyücü';
+      if (m.react && REACTS.includes(text)) { // tepki: sohbette kısa satır, yeniyse ekranda uçuşur
+        const fresh = serverNow() - num(m.at, 0, 1e15, 0) < 15000;
+        if (fresh) popReaction(name, text, m.uid === uid);
+        return addChat(name, text, m.uid === uid, !fresh);
+      }
+      if (text) addChat(name, text, m.uid === uid);
     });
 
     if (role === 'host') {
@@ -313,16 +324,34 @@ const Room = (() => {
   }
 
   // ---------- Sohbet ----------
-  function addChat(name, text, mine) {
+  function addChat(name, text, mine, quiet) {
     chat.push({ name, text, mine });
     if (chat.length > 100) chat.shift();
-    if (!mine && !roomDlg.open) { unread++; toast(`${name}: ${text}`); }
+    if (!mine && !roomDlg.open && !quiet) { unread++; toast(`${name}: ${text}`); }
     renderPanel();
   }
   function sendChat(text) {
     text = clean(text, 200).trim();
     if (!text || !isLive() || !roomRef) return;
     roomRef.child('chat').push({ uid, name: myName(), text, at: TS() });
+  }
+
+  // ---------- Tepkiler ----------
+  const REACTS = ['👏', '✨', '🔥', '☕', '💪'];
+  function sendReact(e) {
+    if (!REACTS.includes(e) || !isLive() || !roomRef) return;
+    roomRef.child('chat').push({ uid, name: myName(), text: e, react: true, at: TS() });
+  }
+  // Sahnenin üstünde yükselip kaybolan tepki
+  function popReaction(name, e, mine) {
+    const d = document.createElement('div');
+    d.className = 'react-pop';
+    d.style.left = (15 + Math.random() * 70) + '%';
+    d.innerHTML = '<span></span><small></small>';
+    d.querySelector('span').textContent = e;
+    d.querySelector('small').textContent = mine ? 'sen' : name;
+    document.querySelector('.frame').appendChild(d);
+    setTimeout(() => d.remove(), 2600);
   }
 
   function updateBadge() {
@@ -403,6 +432,7 @@ const Room = (() => {
       navigator.clipboard?.writeText(link).then(() => toast('Bağlantı kopyalandı!'), () => toast(link));
     };
     el('chatForm').onsubmit = e => { e.preventDefault(); sendChat(el('chatInput').value); el('chatInput').value = ''; };
+    document.querySelectorAll('#reactRow [data-react]').forEach(b => (b.onclick = () => sendReact(b.dataset.react)));
     el('roomName').onchange = () => {
       data.name = clean(el('roomName').value, 16).trim();
       save();

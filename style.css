@@ -88,6 +88,46 @@ h1 {
 .touch-pad .act { width: 96px; height: 96px; border-radius: 50%; font-family: 'Press Start 2P', monospace; font-size: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
 .touch-pad .act small { font-family: 'VT323', monospace; font-size: 17px; }
 
+/* Ortak oda tepkileri */
+.react-row { display: flex; gap: 6px; margin: 6px 0; }
+.react-row button {
+  flex: 1; font-size: 20px; line-height: 1; padding: 4px 0; cursor: pointer;
+  background: var(--panel-2); border: 0; box-shadow: 0 0 0 2px var(--ink);
+}
+.react-row button:hover { background: var(--gold-dark); }
+.react-pop {
+  position: absolute; bottom: 18%; z-index: 4; pointer-events: none; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; animation: reactUp 2.6s ease-out forwards;
+}
+.react-pop span { font-size: 40px; line-height: 1; filter: drop-shadow(2px 2px 0 var(--ink)); }
+.react-pop small { font-size: 18px; color: var(--text); text-shadow: 1px 1px 0 var(--ink), -1px -1px 0 var(--ink); }
+@keyframes reactUp { 0% { opacity: 0; transform: translate(-50%, 20px) scale(.6); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -110px) scale(1); } }
+
+/* Haftalık sıralama */
+.friend-code { color: var(--gold); font-weight: normal; letter-spacing: 2px; }
+.friend-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.friend-list li:not(.room-msg) {
+  display: grid; grid-template-columns: 30px 1fr auto auto; gap: 8px; align-items: center;
+  background: var(--panel-2); padding: 4px 8px; box-shadow: 0 0 0 2px var(--ink);
+}
+.friend-list li.me { box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px var(--gold-dark); }
+.friend-list .rank { text-align: center; }
+.friend-list .who b { display: block; font-weight: normal; }
+.friend-list .who small { color: var(--muted); font-size: 16px; }
+.friend-list .min { color: var(--gold); }
+.friend-list .del { background: none; border: 0; color: var(--muted); font: inherit; font-size: 24px; cursor: pointer; line-height: 1; }
+
+/* Sınıf kutusu (Rozetler panelinin üstü) */
+.class-box { background: var(--panel-2); box-shadow: 0 0 0 2px var(--ink); padding: 8px 10px; margin-bottom: 18px; }
+.class-box > b { display: block; font-weight: normal; font-size: 26px; color: var(--gold); }
+.class-box .bar { height: 10px; background: var(--ink); margin: 4px 0; }
+.class-box .bar div { height: 100%; background: var(--gold); }
+.class-box small { color: var(--muted); font-size: 17px; }
+.class-list { margin: 8px 0 0; padding-left: 0; list-style: none; font-size: 17px; line-height: 1.15; color: var(--muted); }
+.class-list li { padding: 2px 0; opacity: .7; }
+.class-list li.got { color: var(--text); opacity: 1; }
+.class-list li.got::before { content: '✓ '; color: var(--gold); }
+
 /* Rozetler */
 #badgeDlg h2 small { color: var(--muted); font-size: 11px; }
 .badge-list { display: flex; flex-direction: column; gap: 6px; }

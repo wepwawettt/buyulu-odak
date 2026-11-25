@@ -138,6 +138,7 @@ const Cloud = (() => {
     queue,
     ready: () => readyP,
     signedIn: () => !!user,
+    user: () => user,
     // Tüm ilerlemeyi sıfırlarken: sonraki açılışta boş kayıt hesaba da yazılsın
     wipe() { if (user) writeMeta({ ...meta, dirty: true }); },
   };

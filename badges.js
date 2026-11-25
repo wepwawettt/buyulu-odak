@@ -37,6 +37,11 @@ const Badges = (() => {
     { id: 'dukkan', icon: '◆', name: 'Koleksiyoncu', desc: 'Dükkandan 5 eşya al.', ok: () => data.owned.length >= 5 },
     { id: 'moda', icon: '◇', name: 'Moda Büyücüsü', desc: '3 kıyafete sahip ol.', ok: () => data.outfits.length >= 3 },
     { id: 'arkadas', icon: '♥', name: 'Çalışma Arkadaşı', desc: 'Ortak odada bir arkadaşınla oturum bitir.', ok: () => flag('room') },
+    { id: 'yumurta', icon: '◉', name: 'Yumurta Çatladı', desc: 'Evcil hayvanının yumurtası çatlasın.', ok: () => !!data.pet?.species },
+    { id: 'buyuk', icon: '◉', name: 'Büyük Dost', desc: 'Evcil hayvanın yetişkin olsun.', ok: () => (data.pet?.sec || 0) >= 30 * 3600 },
+    { id: 'gozlem', icon: '☆', name: 'Yıldız Gözcüsü', desc: 'Gözlemevindeki teleskoptan yıldız falına bak.', ok: () => flag('sky') },
+    { id: 'arsiv', icon: '▤', name: 'Arşiv Faresi', desc: 'Gizli Kütüphanedeki eski kitabı oku.', ok: () => flag('book') },
+    { id: 'mezun', icon: '♛', name: 'Mezun', desc: 'Okulu bitir (120 saat odak).', ok: () => hours() >= 120 },
   ];
 
   // save() her kayıtta çağırır; yeni rozet kazanıldıysa altın verir ve kutlar

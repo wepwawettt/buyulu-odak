@@ -33,6 +33,10 @@ const OUTFIT_SHOP = [
   { id: 'kraliyet', name: 'Kraliyet Moru',     price: 12, desc: 'Altın kenarlı mor şapka.' },
   { id: 'kar',      name: 'Kar Büyücüsü',      price: 15, desc: 'Etrafında kar taneleri uçuşur.' },
   { id: 'kedi',     name: 'Kedi Kulaklı Bere', price: 18, desc: 'Sivri şapka yerine sevimli bere.' },
+  // Satılmaz: sınıf atlayınca açılır (level = Levels listesindeki sıra)
+  { id: 'bilgin',   name: 'Bilgin Cübbesi',    price: 0, level: 3, desc: 'Derin deniz yeşili, bilge bir görünüm.' },
+  { id: 'kidemli',  name: 'Kıdemli Cübbesi',   price: 0, level: 6, desc: 'Bordo, altın kenarlı şapka.' },
+  { id: 'mezun',    name: 'Mezuniyet Cübbesi', price: 0, level: 7, desc: 'Siyah ve altın; üstünde yıldızlar.' },
 ];
 
 const SHOP = [
@@ -72,6 +76,8 @@ let resetting = false; // sıfırlarken sayfa kapanırken eski veriyi geri yazma
 const save = () => {
   if (resetting) return;
   Badges.check(); // yeni kazanılan rozet var mı
+  Levels.check(); // sınıf atlandı mı
+  Friends.publish(); // giriş yapıldıysa haftalık sıralama profili
   const json = JSON.stringify(data);
   localStorage.setItem(STORE, json);
   Cloud.queue(json); // Google ile giriş yapıldıysa hesaba da yükle
@@ -137,6 +143,7 @@ function addFocus(sec) {
   const tag = activeTask()?.tag; // ders etiketine göre süre
   if (tag) { const d = today(); (d.tags ||= {})[tag] = (d.tags[tag] || 0) + sec; }
   Odam.onFocus(sec);
+  Pet.onFocus(sec);
   data.coinAcc += sec;
   while (data.coinAcc >= 600) {
     data.coinAcc -= 600;
@@ -292,6 +299,7 @@ function render() {
   Odam.sync();
 
   Scene.setState(mode === 'focus' ? (running ? 'focus' : 'idle') : 'break');
+  Scene.setPet(Pet.info());
 }
 
 function applyHouseColors() {
@@ -573,7 +581,13 @@ function buildShop() {
   for (const o of OUTFIT_SHOP) {
     const worn = data.look.outfit === o.id;
     let b;
-    if (!data.outfits.includes(o.id)) b = priceButton(o, () => buyOutfit(o));
+    if (!data.outfits.includes(o.id) && o.level !== undefined) { // sınıf ödülü: henüz kilitli
+      b = document.createElement('button');
+      b.className = 'btn';
+      b.textContent = Levels.need(o.level).name;
+      b.title = `${Levels.need(o.level).name}'a geçince açılır`;
+      b.disabled = true;
+    } else if (!data.outfits.includes(o.id)) b = priceButton(o, () => buyOutfit(o));
     else {
       b = document.createElement('button');
       b.className = 'btn';
@@ -655,10 +669,10 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => { if (spaceIsOurs(e)) e.preventDefault(); });
 
 // Yan paneller (karakter, dükkan): aynı anda biri açık olur
-const charDlg = $('charDlg'), shopDlg = $('shopDlg'), roomDlg = $('roomDlg'), brewDlg = $('brewDlg'), badgeDlg = $('badgeDlg');
+const charDlg = $('charDlg'), shopDlg = $('shopDlg'), roomDlg = $('roomDlg'), brewDlg = $('brewDlg'), badgeDlg = $('badgeDlg'), friendDlg = $('friendDlg');
 function togglePanel(dlg, build) {
   const wasOpen = dlg.open;
-  charDlg.close(); shopDlg.close(); roomDlg.close(); brewDlg.close(); badgeDlg.close();
+  charDlg.close(); shopDlg.close(); roomDlg.close(); brewDlg.close(); badgeDlg.close(); friendDlg.close();
   if (!wasOpen) { build(); dlg.show(); }
 }
 $('openChar').onclick = () => togglePanel(charDlg, buildCharOptions);
@@ -666,7 +680,8 @@ $('openShop').onclick = () => togglePanel(shopDlg, buildShop);
 document.querySelector('.coins').onclick = () => togglePanel(shopDlg, buildShop);
 for (const d of [charDlg, shopDlg, roomDlg]) d.querySelector('[data-close]').onclick = () => d.close();
 $('openRoom').onclick = () => togglePanel(roomDlg, Room.renderPanel);
-$('openBadges').onclick = $('streakBadge').onclick = () => togglePanel(badgeDlg, Badges.render);
+$('openFriends').onclick = () => togglePanel(friendDlg, Friends.render);
+$('openBadges').onclick = $('streakBadge').onclick = () => togglePanel(badgeDlg, () => { Levels.render(); Badges.render(); });
 
 const setDlg = $('setDlg'), form = $('setForm');
 // Nasıl oynanır? rehberi: düğmeyle her zaman, ilk girişte bir kez kendiliğinden

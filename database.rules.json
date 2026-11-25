@@ -7,6 +7,19 @@
         ".validate": "newData.child('json').isString() && newData.child('json').val().length < 500000 && newData.child('at').isNumber()"
       }
     },
+    "profiles": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.child('name').isString() && newData.child('name').val().length <= 16 && newData.child('cls').isString() && newData.child('cls').val().length <= 16 && newData.child('week').isString() && newData.child('week').val().length <= 10 && newData.child('min').isNumber()"
+      }
+    },
+    "codes": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && !data.exists() && newData.val() === auth.uid && $code.length <= 12"
+      }
+    },
     "rooms": {
       "$code": {
         ".read": "auth != null",

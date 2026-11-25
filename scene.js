@@ -107,11 +107,73 @@ const Scene = (() => {
   };
   let skyKey = '';
 
+  // ---------- Evcil hayvan (yumurtadan çıkan sürpriz yaratık; oda ve kale birlikte kullanır) ----------
+  // K kontur  A ana renk  W karın/yüz  E göz  P burun/yanak  S yumurta beneği
+  const PET_PAL = {
+    tilki: { A: '#e8925a', W: '#fff0dc', P: '#6a3a3a' },
+    pofuduk: { A: '#c8a8e8', W: '#f4ecff', P: '#f6a6b0' },
+    kurbaga: { A: '#7ac06a', W: '#d8f0b0', P: '#e88a8a' },
+    tavsan: { A: '#e8dcd0', W: '#ffffff', P: '#f6a6b0' },
+  };
+  const PET_SPR = {
+    egg: ['..KKK..', '.KWWWK.', 'KWWSWWK', 'KWWWWSK', 'KSWWWWK', 'KWWSWWK', '.KWWWK.', '..KKK..'],
+    tilki: [
+      ['.K....K.', 'KAK..KAK', 'KAAAAAAK', 'KAEAAEAK', 'KWWAAWWK', '.KWWWWK.', '..K..K..'],
+      ['.K....K....', 'KAK..KAK...', 'KAAAAAAK...', 'KAEAAEAK.K.', 'KWWAAWWKKAK', '.KWWWWKKAAK', '.KAAAAAAAWK', '.KAAAAAAKK.', '..KK..KK...'],
+    ],
+    pofuduk: [
+      ['..KKKK..', '.KAAAAK.', 'KAAAAAAK', 'KAEAAEAK', 'KAPAAPAK', '.KAAAAK.', '..K..K..'],
+      ['...KKKK...', '.KKAAAAKK.', 'KAAAAAAAAK', 'KAAEAAEAAK', 'KAPAAAAPAK', 'KAAAAAAAAK', '.KAAAAAAK.', '..KKAAKK..', '..K....K..'],
+    ],
+    kurbaga: [
+      ['.KK..KK.', 'KWEKKWEK', 'KAAAAAAK', 'KAPAAPAK', 'KAWWWWAK', '.KK..KK.'],
+      ['.KKK..KKK.', 'KWEAKKWEAK', 'KAAAAAAAAK', 'KAPAAAAPAK', 'KAAWWWWAAK', 'KAWWWWWWAK', '.KAAKKAAK.', 'KK.K..K.KK'],
+    ],
+    tavsan: [
+      ['.KK..KK.', 'KPK..KPK', 'KPK..KPK', 'KAAKKAAK', 'KAAAAAAK', 'KAEAAEAK', 'KAPAAPAK', '.KAWWAK.', '..K..K..'],
+      ['.KK....KK.', 'KPK....KPK', 'KPAK..KAPK', '.KAKKKKAK.', 'KAAAAAAAAK', 'KAAEAAEAAK', 'KAPAAAAPAK', '.KAAWWAAK.', 'KAAAWWAAAK', 'KAAAAAAAAK', '.KK.KK.KK.'],
+    ],
+  };
+  // info: { species, stage (0 yumurta, 1 yavru, 2 genç, 3 yetişkin), sleepy, cape }
+  // (cx, by): ayakların ortası
+  function drawPet(c, cx, by, info, time) {
+    if (!info) return;
+    if (!info.stage) { // yumurta: ara sıra sallanır
+      const wob = Math.sin(time * 9) > 0.7 && Math.sin(time * 0.9) > 0.4 ? (Math.sin(time * 30) > 0 ? 1 : -1) : 0;
+      sprite(c, PET_SPR.egg, { K: '#5a4050', W: '#f4ecdc', S: '#b8a0d8' }, Math.round(cx - 3 + wob), Math.round(by - 8));
+      return;
+    }
+    const rows = PET_SPR[info.species][info.stage >= 2 ? 1 : 0];
+    const w = rows[0].length, h = rows.length;
+    const bob = info.sleepy ? 0 : Math.sin(time * 4) > 0.3 ? 1 : 0;
+    const ox = Math.round(cx - w / 2), oy = Math.round(by - h - bob);
+    const pal = { K: '#5a4050', E: info.sleepy ? '#5a4050' : '#2a1e2e', ...PET_PAL[info.species] };
+    sprite(c, rows, pal, ox, oy);
+    if (info.stage === 3) {
+      if (info.species === 'tavsan') { // omuzlardan sarkan pelerin ve altın toka
+        const cape = info.cape || '#9c1c1c';
+        px(c, ox - 1, oy + 7, 2, 4, cape); px(c, ox + w - 1, oy + 7, 2, 4, cape);
+        px(c, ox + 1, oy + 7, 2, 1, cape); px(c, ox + w - 3, oy + 7, 2, 1, cape);
+        px(c, ox + 4, oy + 8, 2, 1, '#e3b23c');
+      } else if (info.species === 'tilki') { // kuyrukta parlayan yıldızlar
+        if (Math.sin(time * 3) > -0.2) px(c, ox + w - 2, oy + 3, 1, 1, '#fff6a0');
+        if (Math.sin(time * 3 + 2) > -0.2) px(c, ox + w, oy + 6, 1, 1, '#fff6a0');
+      } else if (info.species === 'pofuduk') { // taç ve minik kanatlar
+        px(c, ox + 3, oy - 2, 4, 1, '#e3b23c'); px(c, ox + 3, oy - 3, 1, 1, '#e3b23c'); px(c, ox + 6, oy - 3, 1, 1, '#e3b23c');
+        px(c, ox - 2, oy + 3, 2, 2, '#ffffff'); px(c, ox + w, oy + 3, 2, 2, '#ffffff');
+      } else if (info.species === 'kurbaga') { // büyücü şapkası
+        px(c, ox + 2, oy - 1, 6, 1, '#4a4068'); px(c, ox + 3, oy - 2, 4, 1, '#6a5e90'); px(c, ox + 4, oy - 4, 2, 2, '#6a5e90'); px(c, ox + 5, oy - 5, 1, 1, '#e3b23c');
+      }
+    }
+    if (info.sleepy && Math.sin(time * 1.5) > 0) px(c, ox + w, oy - 3, 2, 1, '#c8c8e8'); // uyuyor (z)
+  }
+
   let ctx, bg, look = { house: 'kizil', hair: 'kahve', skin: 1 }, state = 'idle';
   let t = 0, last = 0, acc = 0, sparkTimer = 0, particles = [], stars = [], items = [];
   // Ortak oda: arkadaş varken iki kişilik düzen (sen solda, arkadaşın sağda)
   let friend = null;
   let brew = null; // { level 0..1, color, done } — odadaki iksir demleme
+  let pet = null, chart = false; // evcil hayvan bilgisi, duvardaki yıldız haritası
   const FRIEND_X = 86;
   const duo = () => friend && !iconMode;
   const meX = () => (duo() ? 50 : 67);
@@ -251,6 +313,19 @@ const Scene = (() => {
       px(c, bx, floorY, 38, 2, '#6a452b');
     }
 
+    // 5. sınıf ödülü: çerçeveli yıldız haritası (takımyıldız çizgileriyle)
+    if (chart) {
+      px(c, 93, 27, 18, 16, '#8a6a3a'); px(c, 94, 28, 16, 14, '#1c2450');
+      px(c, 93, 27, 18, 1, '#a8845f');
+      const st = [[96, 31], [100, 33], [104, 30], [107, 35], [103, 38], [98, 39]];
+      for (let i = 0; i < st.length - 1; i++) {
+        const [x0, y0] = st[i], [x1, y1] = st[i + 1], n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+        for (let k = 1; k < n; k++) px(c, Math.round(x0 + (x1 - x0) * k / n), Math.round(y0 + (y1 - y0) * k / n), 1, 1, '#4a5a9a');
+      }
+      for (const [x, y] of st) px(c, x, y, 1, 1, '#fff6c0');
+      px(c, 108, 29, 1, 1, '#9fb0e8'); px(c, 95, 36, 1, 1, '#9fb0e8');
+    }
+
     // Zemin
     px(c, 0, 92, W, 28, '#4a3222');
     for (let y = 92; y < H; y += 6) {
@@ -329,6 +404,10 @@ const Scene = (() => {
     kabak:    { pal: { H: '#e07a20', h: '#f5a547', O: '#3a2a1a' }, sleeve: '#4a3622' },
     kraliyet: { pal: { H: '#4a2a7a', h: '#7a52b8', O: '#3a2060', g: '#e3b23c' }, sleeve: '#4a2c78', rows: GOLD_BRIM },
     kar:      { pal: { H: '#dde6f2', h: '#ffffff', O: '#b8c8e0', K: '#4a5a7a' }, sleeve: '#c8d6ea', fx: 'snow' },
+    // Sınıf atlayınca açılanlar (dükkanda satılmaz)
+    bilgin:   { pal: { H: '#2a5a5a', h: '#4a8a80', O: '#20463f' }, sleeve: '#2a5650' },
+    kidemli:  { pal: { H: '#6a2a3a', h: '#9a4a5a', O: '#4a2030', g: '#e3b23c' }, sleeve: '#5a2632', rows: GOLD_BRIM },
+    mezun:    { pal: { H: '#2a2632', h: '#4a4458', O: '#1e1a26', g: '#e3b23c' }, sleeve: '#2a2632', rows: GOLD_BRIM, fx: 'stars' },
     kedi:     { pal: { H: '#efe6d6', h: '#ffffff', P: '#f0a0b0', O: '#6a5a8a' }, sleeve: '#7a6a9a', rows: CAT_BEANIE,
                 starSpots: [[7, 9], [12, 8], [17, 9], [10, 10], [15, 10]] },
   };
@@ -862,6 +941,7 @@ const Scene = (() => {
       drawDesk();
       drawDeskItems();
       drawItems('front');
+      if (!iconMode) drawPet(ctx, 15, 117, pet, t);
       drawParticles(acc);
       drawZzz();
       if (duo()) drawZzz(FRIEND_X, 0.3);
@@ -886,6 +966,9 @@ const Scene = (() => {
     setLook(l) { look = { ...look, ...l }; buildBg(); },
     setItems(list) { items = list; },
     setBrew(b) { brew = b; },
+    setPet(p) { pet = p; },
+    setChart(v) { if (v !== chart) { chart = v; buildBg(); } }, // 5. sınıf ödülü: duvarda yıldız haritası
+    drawPet,
     // Arkadaşın görünüşü ağdan geldiği için burada doğrulanır; null = tek kişilik düzen
     setFriend(f) {
       if (!f) { friend = null; return; }

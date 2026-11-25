@@ -4,7 +4,7 @@
 const Castle = (() => {
   const T = 16;                // karo boyu (piksel)
   const VW = 213, VH = 160;    // görünen alan (640px genişlikte ~3x piksel ölçeği)
-  const MW = 34, MH = 21;      // harita (karo)
+  const MW = 43, MH = 21;      // harita (karo); 34. sütundan sonrası sınıf atlayınca açılan doğu kanadı
 
   // ---------- Harita ----------
   // Duvarlar: '#' taş  'W' pencere  'P' portre  'i' meşale  'G' sera camı  'S' büyülü tavan
@@ -45,7 +45,7 @@ const Castle = (() => {
   // Koridor
   fill(1, 10, 32, 11, '.');
   fill(2, 10, 31, 11, 'r');
-  put([[1, 10], [32, 10]], 'n');
+  put([[1, 10]], 'n');
   fill(4, 9, 5, 9, 'D'); fill(16, 9, 18, 9, 'D'); fill(28, 9, 29, 9, 'D');
   put([[2, 9], [10, 9], [24, 9], [32, 9]], 'i');
   put([[7, 9], [13, 9], [21, 9], [26, 9]], 'P');
@@ -74,11 +74,27 @@ const Castle = (() => {
   fill(24, 14, 26, 14, 'L'); fill(29, 14, 31, 14, 'L'); fill(24, 17, 26, 17, 'L'); fill(29, 17, 31, 17, 'L');
   put([[24, 19], [26, 19], [30, 19], [32, 19]], 'm');
   put([[32, 14]], 'x'); put([[32, 16]], 'n');
+  // Doğu kanadı: koridor sağa uzar. 'Q' Gözlemevi kapısı (3. Sınıf), 'U' Gizli Kütüphane kapısı (6. Sınıf)
+  //   'X' teleskop  'O' kürsüde eski kitap
+  fill(32, 10, 40, 11, 'r'); fill(41, 10, 41, 11, '.'); put([[41, 10]], 'n');
+  put([[35, 9], [40, 9], [35, 12], [40, 12]], 'i');
+  fill(37, 9, 38, 9, 'Q'); fill(37, 12, 38, 12, 'U');
+  // Gözlemevi (sağ üst)
+  fill(34, 2, 41, 8, '.');
+  put([[35, 1], [38, 1], [41, 1]], 'W');
+  fill(36, 4, 39, 6, 'u');
+  put([[40, 3]], 'X'); put([[34, 3]], 'K'); put([[34, 8], [41, 8]], 'Y'); put([[41, 5]], 'B');
+  // Gizli Kütüphane (sağ alt)
+  fill(34, 13, 41, 19, ',');
+  fill(34, 13, 36, 13, 'B'); fill(39, 13, 41, 13, 'B'); fill(34, 15, 34, 19, 'B'); fill(41, 15, 41, 19, 'B');
+  put([[37, 16]], 'O'); put([[36, 18], [39, 18]], 'd'); put([[36, 19], [39, 19]], 'k'); put([[38, 19]], 'Y');
 
-  const SOLID = new Set(['#', 'W', 'P', 'i', 'V', 'G', 'S', 'B', 'd', 'T', 'H', 'F', 't', 'o', 'c', 'J', 'L', 'm', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l']);
+  const SOLID = new Set(['#', 'W', 'P', 'i', 'V', 'G', 'S', 'B', 'd', 'T', 'H', 'F', 't', 'o', 'c', 'J', 'L', 'm', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l', 'X', 'O']);
+  const LOCKS = { Q: { name: 'Gözlemevi', open: () => Levels.observatory(), lv: () => Levels.OBSERVATORY },
+    U: { name: 'Gizli Kütüphane', open: () => Levels.library(), lv: () => Levels.LIBRARY } };
   const isWall = ch => ch === '#' || ch === 'W' || ch === 'P' || ch === 'i' || ch === 'V';
   // Eşyanın altındaki zemin, bulunduğu bölgeye göre
-  const region = (x, y) => (y >= 13 ? (x <= 8 ? 'q' : x <= 22 ? 'g' : 'y') : y <= 8 && x <= 9 ? ',' : '.');
+  const region = (x, y) => (x >= 34 ? (y >= 13 ? ',' : '.') : y >= 13 ? (x <= 8 ? 'q' : x <= 22 ? 'g' : 'y') : y <= 8 && x <= 9 ? ',' : '.');
   const at = (x, y) => (x < 0 || y < 0 || x >= MW || y >= MH ? '#' : grid[y][x]);
   const tilesOf = ch => grid.flatMap((row, y) => row.map((c, x) => (c === ch ? [x, y] : null)).filter(Boolean));
 
@@ -93,6 +109,7 @@ const Castle = (() => {
   function walkable(x, y) {
     const ch = at(x, y);
     if (ch === 'v') return stairFixed() && y >= 4 && y <= 6 && (x === STAIR.cols[STAIR.to] || x === STAIR.cols[STAIR.to] + 1);
+    if (LOCKS[ch]) return LOCKS[ch].open(); // sınıfı gelene kadar kilitli
     return !SOLID.has(ch);
   }
 
@@ -261,7 +278,19 @@ const Castle = (() => {
         case 'S': px(c, X, Y, T, T, '#26305e'); break;
         case '.': floorStone(c, X, Y, x, y); break;
         case 'q': floorStone(c, X, Y, x, y, '#5e566a', '#544c60', '#6a7a62'); break;
-        case 'D': floorStone(c, X, Y, x, y); px(c, X, Y, T, 4, 'rgba(40,30,30,0.18)'); break;
+        case 'D': case 'Q': case 'U': floorStone(c, X, Y, x, y); px(c, X, Y, T, 4, 'rgba(40,30,30,0.18)'); break;
+        case 'X': // teleskop (pirinç boru, üç ayak)
+          baseFloor(c, X, Y, x, y);
+          px(c, X + 3, Y + 12, 1, 4, '#5a4a3a'); px(c, X + 12, Y + 12, 1, 4, '#5a4a3a'); px(c, X + 7, Y + 9, 2, 7, '#6a5a4a');
+          for (let k = 0; k < 9; k++) px(c, X + 2 + k, Y + 10 - k, 3, 3, k < 2 ? '#a07a40' : '#d8b870');
+          px(c, X + 11, Y + 1, 3, 3, '#f0d890'); px(c, X + 12, Y + 2, 1, 1, '#8ab0e8');
+          break;
+        case 'O': // kürsüde açık eski kitap
+          baseFloor(c, X, Y, x, y);
+          px(c, X + 6, Y + 8, 4, 6, '#7a5a40'); px(c, X + 4, Y + 14, 8, 2, '#6a4a34');
+          px(c, X + 2, Y + 4, 12, 5, '#a07454'); px(c, X + 3, Y + 3, 5, 4, '#f2e8c0'); px(c, X + 8, Y + 3, 5, 4, '#e8dcb0');
+          px(c, X + 4, Y + 4, 3, 1, '#b8ac88'); px(c, X + 9, Y + 4, 3, 1, '#b8ac88'); px(c, X + 4, Y + 6, 2, 1, '#b8ac88');
+          break;
         case ',': floorWood(c, X, Y, x, y); break;
         case 'y':
           px(c, X, Y, T, T, '#c4a080'); px(c, X, Y, T, 1, '#b08e70'); px(c, X, Y, 1, T, '#b08e70');
@@ -440,7 +469,7 @@ const Castle = (() => {
       }
     }
     // Eşyaların zemine düşen yumuşak gölgesi (alta ve sağa)
-    const CASTS = new Set(['B', 'd', 'T', 'H', 'J', 'L', 'c', 'o', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l']);
+    const CASTS = new Set(['B', 'd', 'T', 'H', 'J', 'L', 'c', 'o', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l', 'X', 'O']);
     for (let y = 0; y < MH - 1; y++) for (let x = 0; x < MW; x++) {
       if (!CASTS.has(grid[y][x])) continue;
       if (!SOLID.has(grid[y + 1][x])) { px(c, x * T + 1, (y + 1) * T, T - 1, 3, 'rgba(60,40,30,0.18)'); px(c, x * T + 2, (y + 1) * T + 3, T - 3, 1, 'rgba(60,40,30,0.08)'); }
@@ -518,6 +547,14 @@ const Castle = (() => {
     { name: 'Felix', ...student('kizil', 'kizil', 1), area: [10, 13, 22, 19], start: [12, 17],
       lines: ['Avlunun havası kafa açıyor!', 'Molada biraz yürümek iyi gelir.', 'Çeşmeye dilek tuttum: bol odak!'],
       focus: 'Molada görüşürüz!' },
+    { name: 'Professor Lumen', look: { house: 'safir', hair: 'gumus', skin: 2 }, hat: 'hat', beard: true,
+      extra: { H: '#2a3a6a', h: '#3a5a9a', O: '#24304e', C: '#e3b23c', c: '#d8b870' }, area: [35, 3, 40, 7], start: [36, 7],
+      lines: ['Gözlemevine hoş geldin! Teleskoba bak, yıldızlar sana bir şey söyleyecek.', 'Her gece aynı yıldızlar… ama her gece biraz farklı.', 'Sabır, gökyüzünün en büyük dersidir.'],
+      focus: 'Yıldızlar acele etmez; sen de odaklan.' },
+    { name: 'Madam Inkridge', look: { house: 'kizil', hair: 'siyah', skin: 1 }, hat: 'hat', long: true,
+      extra: { H: '#3a2a3a', h: '#5a4a5a', O: '#2e2430' }, area: [35, 14, 40, 17], start: [39, 15],
+      lines: ['Bu raflardaki kitapları çok az kişi okudu.', 'Kürsüdeki eski kitabı oku; her gün başka bir sayfası açılır.', 'Sessizce… kitaplar uyuyor.'],
+      focus: 'Şşş… bilgi sessizlikte büyür.' },
     { name: 'Pip', kind: 'owl', start: [29, 3],
       lines: ['Huu! Oturum bitince sana mektup getiririm.', 'Baykuşhane kulenin en tepesinde.', 'Huu huu! Kanatlarım hazır.'],
       focus: 'Huu… odaklan.' },
@@ -553,6 +590,71 @@ const Castle = (() => {
   const cauldrons = tilesOf('c').map(([x, y], i) => ({ X: x * T, Y: y * T, col: ['#7ae07a', '#c07ae0', '#f0a040', '#6ac8f0'][i % 4] }));
   const perches = tilesOf('o').map(([x, y], i) => ({ X: x * T, Y: y * T, col: ['#8a6a4a', '#a8a8b0', '#6a4a3a', '#b08050', '#7a7a6a'][i % 5], p: i * 1.7 }));
   const SKY_STARS = Array.from({ length: 40 }, (_, i) => ({ x: Math.floor(hash(i, 51) * 206), y: Math.floor(hash(i, 52) * 30), p: hash(i, 53) * 6 }));
+
+  // ---------- Doğu kanadı: kilitli kapılar, teleskop ve eski kitap ----------
+  const lockTiles = [...tilesOf('Q'), ...tilesOf('U')];
+  const scope = tilesOf('X')[0], lectern = tilesOf('O')[0];
+  const FORTUNES = [
+    'Yıldızlar diyor ki: bugün başladığın işi bitireceksin.',
+    'Kuzey yıldızı parlıyor: küçük adımlar seni uzağa götürecek.',
+    'Bir kuyruklu yıldız geçti: bugün beklenmedik bir fikir gelecek.',
+    'Ay yarım ama sen tamsın: bir oturum daha, sonra dinlen.',
+    'Takımyıldızlar sıralanmış: zor konu bugün kolaylaşacak.',
+    'Gökyüzü açık: dikkatin de öyle olacak.',
+    'Yıldız tozu masana düştü: bugün odaklanmak kolay.',
+    'Parlak bir gezegen yükseliyor: arkadaşınla çalışmak iyi gelecek.',
+  ];
+  const PAGES = [
+    'Bir konuyu birine anlatabiliyorsan, gerçekten öğrenmişsin.',
+    'Zor işe günün en dinç saatinde başla.',
+    'Molada ekrana değil uzağa bak; gözlerin de dinlensin.',
+    'Büyük bir işi en küçük ilk adımına böl ve sadece onu yap.',
+    'Unutmak öğrenmenin parçası; tekrar etmek büyünün kendisi.',
+    'Telefonunu başka odada bırakan büyücü iki kat hızlı öğrenir.',
+    'Su iç. Beyin de bir iksir kazanı gibi sıvı ister.',
+    'Bugün dünkünden biraz daha iyi olmak yeter.',
+  ];
+  const lockMsg = ch => { const L = LOCKS[ch], need = Levels.need(L.lv()); return `${L.name} kilitli: ${need.name}'a geçince açılır (toplam ${need.h} sa odak).`; };
+  // Günde bir kez +2 altın veren keşif noktaları
+  function dailyBonus(dayKey, flag, who, list, anchor) {
+    const msg = list[Math.floor(Math.random() * list.length)];
+    if (data[dayKey] === todayKey()) return say(who, msg, anchor, 6);
+    data[dayKey] = todayKey();
+    (data.flags ||= {})[flag] = true;
+    data.coins += 2;
+    save(); render();
+    say(who, `${msg} (+2 altın)`, anchor, 6);
+  }
+  const lookScope = () => dailyBonus('skyDay', 'sky', 'Teleskop', FORTUNES, { x: scope[0] * T + 8, y: scope[1] * T });
+  const readBook = () => dailyBonus('bookDay', 'book', 'Eski kitap', PAGES, { x: lectern[0] * T + 8, y: lectern[1] * T });
+  const tileDist = ([tx, ty]) => Math.hypot(player.x - tx * T - 8, player.y - ty * T - 10);
+  const nearTile = (p, r = 26) => tileDist(p) < r;
+  // E tuşu: yakındaki teleskop, kitap ya da kilitli kapı → { fn, d } (d: uzaklık, NPC ile kıyaslanır)
+  function specialNear() {
+    if (scope && nearTile(scope)) return { fn: lookScope, d: tileDist(scope) };
+    if (lectern && nearTile(lectern)) return { fn: readBook, d: tileDist(lectern) };
+    for (const [x, y] of lockTiles) {
+      const ch = at(x, y);
+      if (!LOCKS[ch].open() && nearTile([x, y], 22)) return { fn: () => say(LOCKS[ch].name, lockMsg(ch), { x: x * T + 8, y: y * T }, 5), d: tileDist([x, y]) };
+    }
+    return null;
+  }
+  // Kilitli kapılar: tahta kapı ve ortasında altın kilit
+  function drawLocks() {
+    const shut = lockTiles.filter(([x, y]) => !LOCKS[at(x, y)].open());
+    for (const [x, y] of shut) {
+      const X = x * T - cam.x, Y = y * T - cam.y;
+      if (X < -T || X > VW || Y < -T || Y > VH) continue;
+      px(ctx, X, Y, T, T, '#6a4a30');
+      for (let k = 3; k < T; k += 4) px(ctx, X + k, Y, 1, T, '#553a24');
+      px(ctx, X, Y + 3, T, 1, '#8a6a4a'); px(ctx, X, Y + 12, T, 1, '#8a6a4a');
+    }
+    for (const [x, y] of shut) {
+      if (at(x + 1, y) !== at(x, y)) continue; // kilit iki kanadın ortasında
+      const X = x * T - cam.x, Y = y * T - cam.y;
+      px(ctx, X + 13, Y + 6, 6, 5, '#e3b23c'); px(ctx, X + 14, Y + 4, 4, 2, '#c8a040'); px(ctx, X + 15, Y + 8, 2, 2, '#5a4030');
+    }
+  }
 
   // ---------- Yol bulma (karo ızgarasında BFS) ----------
   function findPath(sx, sy, tx, ty) {
@@ -927,9 +1029,26 @@ const Castle = (() => {
     if (hat === 'beanie') sprite(ctx, BEANIE, pal, x - 6, y - 14, flip);
   }
 
+  // Evcil hayvan: oyuncunun yürüdüğü yolu birkaç adım geriden izler (duvarlardan geçmez)
+  const petFollow = { x: 0, y: 0, trail: [] };
+  function updatePet() {
+    const tr = petFollow.trail, lastP = tr[tr.length - 1];
+    const d = lastP ? Math.hypot(player.x - lastP.x, player.y - lastP.y) : Infinity;
+    if (d > 40) { // ilk kez ya da oyuncu bir anda yer değiştirdi (merdiven vb.)
+      tr.length = 0; tr.push({ x: player.x, y: player.y });
+      Object.assign(petFollow, { x: player.x - 10, y: player.y });
+      return;
+    }
+    if (d >= 1) tr.push({ x: player.x, y: player.y });
+    while (tr.length > 16) { const p = tr.shift(); petFollow.x = p.x; petFollow.y = p.y; }
+  }
+
   function drawActor(a) {
     const x = Math.round(a.x - cam.x), y = Math.round(a.y - cam.y);
-    if (a.kind === 'cat') {
+    if (a.kind === 'pet') {
+      px(ctx, x - 4, y - 1, 8, 2, 'rgba(40,25,30,0.2)');
+      Scene.drawPet(ctx, x, y, Pet.info(), t);
+    } else if (a.kind === 'cat') {
       const step = a.moving && Math.floor(t * 8) % 2;
       sprite(ctx, CAT, { K: '#4e4260', Y: '#f0d040' }, x - 4, y - 6, a.dir === 'left', step ? { 5: CAT_B } : null);
     } else if (a.kind === 'toad') {
@@ -1151,9 +1270,12 @@ const Castle = (() => {
     ctx.drawImage(bg, cam.x, cam.y, VW, VH, 0, 0, VW, VH);
     drawSky();
     drawStair();
+    drawLocks();
     for (const p of portraits) drawPortrait(p);
     drawDynamic();
-    const actors = [...NPCS.filter(n => !FREE_FLYERS.has(n.kind)), player, ...othersMap.values()].sort((a, b) => a.y - b.y);
+    updatePet();
+    const petActor = { kind: 'pet', x: petFollow.x, y: petFollow.y - 0.5 }; // aynı hizadaysa oyuncunun arkasında
+    const actors = [...NPCS.filter(n => !FREE_FLYERS.has(n.kind)), player, petActor, ...othersMap.values()].sort((a, b) => a.y - b.y);
     for (const a of actors) drawActor(a);
     if (player.seated && Math.sin(t * 5) > 0.3) px(ctx, Math.round(player.x - cam.x + 5), Math.round(player.y - cam.y - 2), 1, 1, '#ffe9a0');
     for (const n of NPCS) if (n.seat && Math.sin(t * 5 + n.x) > 0.3) px(ctx, Math.round(n.x - cam.x + 5), Math.round(n.y - cam.y - 2), 1, 1, '#ffe9a0');
@@ -1283,7 +1405,8 @@ const Castle = (() => {
       if (g) return gather(g);
       const pot = cauldrons.find(k => Math.hypot(player.x - k.X - 8, player.y - k.Y - 10) < 24);
       if (pot && !nearestNpc()) return say('Kazan', Odam.brewStatus(), { x: pot.X + 8, y: pot.Y });
-      const n = nearestNpc();
+      const sp = specialNear(), n = nearestNpc();
+      if (sp && (!n || sp.d <= Math.hypot(n.x - player.x, n.y - player.y))) return sp.fn(); // hangisi yakınsa
       if (n) talk(n);
       else { const p = nearPortrait(); if (p) talkPortrait(p); }
     }
@@ -1311,8 +1434,11 @@ const Castle = (() => {
     if (spot) return Math.hypot(player.x - spot.x * T - 8, player.y - spot.y * T - 8) < 40 ? gather(spot) : toast('Toplamak için yanına git.');
     const pot = cauldrons.find(k => mx >= k.X && mx < k.X + T && my >= k.Y && my < k.Y + T);
     if (pot && Math.hypot(player.x - pot.X - 8, player.y - pot.Y - 10) < 40) return say('Kazan', Odam.brewStatus(), { x: pot.X + 8, y: pot.Y });
-    if (player.seated || player.toSeat) return toast('Odak bitince gezebilirsin!');
     const tx = Math.floor(mx / T), ty = Math.floor(my / T);
+    if (LOCKS[at(tx, ty)] && !LOCKS[at(tx, ty)].open()) return toast(lockMsg(at(tx, ty)));
+    if (scope && tx === scope[0] && ty === scope[1]) return nearTile(scope, 40) ? lookScope() : toast('Teleskoba bakmak için yanına git.');
+    if (lectern && tx === lectern[0] && ty === lectern[1]) return nearTile(lectern, 40) ? readBook() : toast('Kitabı okumak için yanına git.');
+    if (player.seated || player.toSeat) return toast('Odak bitince gezebilirsin!');
     const p = walkable(tx, ty) && findPath(...tileOf(player), tx, ty);
     if (p) { player.path = p; player.pendingTalk = null; }
     else if (at(tx, ty) === 'v') toast('Merdivenin yerine oturmasını bekle!');
