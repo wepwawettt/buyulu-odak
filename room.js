@@ -1,24 +1,26 @@
-// Ortak çalışma odası (4 kişiye kadar): tarayıcılar PeerJS ile doğrudan bağlanır (kendi sunucumuz yok).
-// Yıldız düzeni: oda sahibi (host) merkezdir; 3 misafire kadar kabul eder, misafirlerin mesajlarını
-// ve harita konumlarını diğerlerine iletir, zamanlayıcıyı yönetir. Mesajlar düz JSON nesneleri:
-//   misafir → sahip:  profile {…}  ·  chat { text }  ·  pos { pos }
-//   sahip → misafir:  accept { you }  ·  reject { reason }  ·  roster { members }  ·  timer {…}
-//                     chat { id, name, text }  ·  pos { id, pos }  ·  gone { id }
-// app.js'teki global durumu (data, mode, running, remaining, ...) çalışma anında kullanır.
+// Ortak çalışma odası (4 kişiye kadar) — Firebase Realtime Database üzerinden.
+// Doğrudan tarayıcı bağlantısı gerekmez; her ağda çalışır. Veri düzeni:
+//   rooms/{kod}/host                 oda sahibinin uid'i (oda sahibi çıkınca oda silinir)
+//   rooms/{kod}/members/{uid}        { name, look, items, today, at }  (onaylı üyeler)
+//   rooms/{kod}/pos/{uid}            { x, y, dir, moving, seated }     (kale konumu, sık güncellenir)
+//   rooms/{kod}/requests/{uid}       { name, at }                      (katılma istekleri)
+//   rooms/{kod}/rejects/{uid}        'no' | 'full'
+//   rooms/{kod}/timer                { mode, running, remaining, endAt, durs }  (sunucu saatiyle)
+//   rooms/{kod}/chat/{id}            { uid, name, text, at }
+// Ayarlar firebase-config.js'te (window.FIREBASE_CONFIG). Dış arayüz app.js için aynı kaldı.
 const Room = (() => {
-  const PREFIX = 'buyuluodak-';
+  const MAX = 4;
   const PUBLIC_URL = 'https://wepwawettt.github.io/buyulu-odak/'; // yerelde kurulan odanın daveti de canlı siteye gitsin
-  const MAX_GUESTS = 3;
-  let peer = null;
+  const TS = () => firebase.database.ServerValue.TIMESTAMP;
+  let db = null, uid = null, offset = 0;
   let role = null;     // 'host' | 'guest' | null
   let status = 'idle'; // idle | connecting | hosting | waiting | live
-  let code = '', durs = null, lastSig = '', error = '', myId = null;
-  const guests = new Map();  // sahip: peerId -> { conn, profile }
-  let pending = [];          // sahip: [{ id, conn, profile }]
-  let hostConn = null;       // misafir: sahibe bağlantı
-  let members = new Map();   // herkes: diğer kişiler id -> profile
-  const positions = new Map(); // id -> harita konumu
-  let chat = [], unread = 0, doneMode = null, doneAt = 0, lastPos = '';
+  let code = '', error = '', durs = null, lastSig = '', hostUid = null;
+  let roomRef = null, listeners = [];
+  let members = new Map();     // diğer onaylı üyeler: uid -> profil
+  const positions = new Map(); // uid -> kale konumu
+  let requests = [];           // sahip: [{ uid, name }]
+  let chat = [], unread = 0, doneMode = null, doneAt = 0, lastPos = '', posBeat = 0;
 
   const el = id => document.getElementById(id);
   const isLive = () => status === 'live';
@@ -26,13 +28,24 @@ const Room = (() => {
   const clean = (v, n) => String(v ?? '').slice(0, n);
   const num = (v, lo, hi, d) => (Number.isFinite(+v) ? Math.min(hi, Math.max(lo, +v)) : d);
   const others = () => [...members.entries()].map(([id, p]) => ({ id, ...p }));
+  const serverNow = () => Date.now() + offset;
 
+  // ---------- Bağlantı ----------
   function ready() {
-    if (typeof Peer !== 'undefined') return true;
-    error = 'Bağlantı kütüphanesi yüklenemedi. İnternet bağlantını kontrol et.';
+    if (typeof firebase !== 'undefined' && window.FIREBASE_CONFIG) return true;
+    error = 'Ortak oda henüz ayarlanmadı (Firebase).';
     renderPanel();
     return false;
   }
+  async function connect() {
+    if (!firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
+    db = firebase.database();
+    if (!firebase.auth().currentUser) await firebase.auth().signInAnonymously();
+    uid = firebase.auth().currentUser.uid;
+    db.ref('.info/serverTimeOffset').on('value', s => { offset = s.val() || 0; });
+  }
+  // Ağ çok yavaşsa sonsuza kadar bekleme
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
 
   function newCode() {
     const a = 'abcdefghjkmnpqrstuvwxyz23456789';
@@ -47,8 +60,7 @@ const Room = (() => {
       today: { min: Math.floor(d.sec / 60), pomos: d.pomos },
     };
   }
-
-  // Ağdan gelen her şey doğrulanır
+  // Başkalarından gelen her şey doğrulanır
   function readProfile(m) {
     return {
       name: clean(m?.name, 16).trim() || 'Büyücü', look: m?.look || {}, items: m?.items,
@@ -63,22 +75,18 @@ const Room = (() => {
     };
   }
 
-  const sendTo = (conn, msg) => { if (conn && conn.open) conn.send(msg); };
-  // Sahip: tüm misafirlere (biri hariç) gönder
-  function broadcast(msg, exceptId) { for (const [id, g] of guests) if (id !== exceptId) sendTo(g.conn, msg); }
   function setStatus(s) { status = s; refreshFriends(); renderPanel(); render(); }
 
-  // Odam sahnesindeki masaya bir arkadaş sığar (ilk kişi), harita herkesi gösterir
+  // Odam'daki masaya bir arkadaş sığar (ilk kişi); harita herkesi gösterir
   function refreshFriends() {
     const list = isLive() ? others() : [];
-    // Sıra: oda sahibi 0, misafirler kimliklerine göre (her ekranda aynı sonuç)
-    const ids = isLive() ? ['host', ...[myId, ...members.keys()].filter(id => id && id !== 'host').sort()] : [];
-    Castle.setRank(Math.max(0, ids.indexOf(myId)));
+    // Oturma sırası: oda sahibi 0, diğerleri uid sırasına göre (her ekranda aynı)
+    const ids = isLive() ? [hostUid, ...[uid, ...members.keys()].filter(id => id && id !== hostUid).sort()] : [];
+    Castle.setRank(Math.max(0, ids.indexOf(uid)));
     Scene.setFriend(list[0] || null);
     Castle.setOthers(list.map(o => ({ ...o, pos: positions.get(o.id) })));
   }
 
-  // ---------- Oda kur ----------
   function needName() {
     if (data.name) return false;
     el('roomName').focus();
@@ -87,163 +95,161 @@ const Room = (() => {
     return true;
   }
 
-  function host() {
-    if (peer || !ready() || needName()) return;
-    code = newCode(); role = 'host'; error = ''; myId = 'host';
+  // ---------- Oda kur ----------
+  async function host() {
+    if (status !== 'idle' || !ready() || needName()) return;
+    error = '';
     setStatus('connecting');
-    peer = new Peer(PREFIX + code);
-    peer.on('open', () => setStatus('hosting'));
-    peer.on('error', onError);
-    peer.on('connection', c => {
-      if (guests.size + pending.length >= MAX_GUESTS) {
-        c.on('open', () => { c.send({ type: 'reject', reason: 'full' }); setTimeout(() => c.close(), 500); });
-        return;
+    try {
+      await withTimeout(connect(), 15000);
+      for (let i = 0; i < 6 && !roomRef; i++) {
+        const c = newCode(), ref = db.ref('rooms/' + c);
+        const res = await withTimeout(ref.child('host').transaction(cur => (cur ? undefined : uid)), 15000);
+        if (res.committed) { code = c; roomRef = ref; }
       }
-      const req = { id: c.peer, conn: c, profile: null };
-      pending.push(req);
-      c.on('data', m => {
-        if (guests.has(req.id)) return fromGuest(req.id, m);
-        if (m?.type === 'profile' && !req.profile) {
-          req.profile = readProfile(m);
-          renderPanel(); render();
-          toast(`${req.profile.name} odana katılmak istiyor: Ortak Oda'dan kabul et`);
-          try { chime(); } catch {}
-          if (!roomDlg.open) el('openRoom').click();
-        }
-      });
-      c.on('close', () => {
-        if (guests.has(req.id)) guestLeft(req.id);
-        else { pending = pending.filter(p => p !== req); renderPanel(); render(); }
-      });
-    });
+      if (!roomRef) throw new Error('kod');
+      role = 'host'; hostUid = uid;
+      roomRef.onDisconnect().remove(); // sayfa kapanınca oda kapanır
+      await roomRef.child('members/' + uid).set({ ...profile(), at: TS() });
+      listen();
+      setStatus('hosting');
+      sendTimer();
+    } catch (e) {
+      leave('Sunucuya bağlanılamadı. İnternetini kontrol edip tekrar dene.');
+    }
   }
-
-  function roster() {
-    return [{ id: 'host', profile: profile() }, ...[...guests].map(([id, g]) => ({ id, profile: g.profile }))];
-  }
-  function sendRoster() { broadcast({ type: 'roster', members: roster() }); }
 
   function accept(id) {
-    const req = pending.find(p => p.id === id && p.profile);
-    if (!req) return;
-    pending = pending.filter(p => p !== req);
-    guests.set(id, { conn: req.conn, profile: req.profile });
-    members.set(id, req.profile);
-    sendTo(req.conn, { type: 'accept', you: id });
-    sendRoster();
-    lastSig = '';
-    sendTimer();
-    // Yeni gelen herkesin konumunu bilsin
-    const mine = Castle.myPos();
-    sendTo(req.conn, { type: 'pos', id: 'host', pos: mine });
-    for (const [gid, p] of positions) sendTo(req.conn, { type: 'pos', id: gid, pos: p });
-    setStatus('live');
-    toast(`${req.profile.name} odaya katıldı!`);
+    const r = requests.find(q => q.uid === id);
+    if (!r || !roomRef) return;
+    if (members.size + 1 >= MAX) { roomRef.child('rejects/' + id).set('full'); roomRef.child('requests/' + id).remove(); return; }
+    roomRef.child('members/' + id).set({ name: r.name, at: TS() });
+    roomRef.child('requests/' + id).remove();
   }
-
   function reject(id) {
-    const req = pending.find(p => p.id === id);
-    if (!req) return;
-    pending = pending.filter(p => p !== req);
-    sendTo(req.conn, { type: 'reject' });
-    setTimeout(() => req.conn.close(), 500);
-    renderPanel(); render();
-  }
-
-  function guestLeft(id) {
-    const n = members.get(id)?.name || 'Bir arkadaşın';
-    guests.delete(id); members.delete(id); positions.delete(id);
-    broadcast({ type: 'gone', id });
-    sendRoster();
-    setStatus(guests.size ? 'live' : 'hosting');
-    toast(`${n} odadan ayrıldı`);
-  }
-
-  // Sahip: misafirden gelen mesaj
-  function fromGuest(id, m) {
-    if (!m || typeof m !== 'object') return;
-    if (m.type === 'profile') {
-      const p = readProfile(m);
-      guests.get(id).profile = p; members.set(id, p);
-      sendRoster(); refreshFriends(); renderPanel(); render();
-    } else if (m.type === 'chat') {
-      const text = clean(m.text, 200).trim();
-      if (!text) return;
-      const name = members.get(id)?.name || 'Büyücü';
-      addChat(name, text, false);
-      broadcast({ type: 'chat', id, name, text }, id);
-    } else if (m.type === 'pos') {
-      const p = readPos(m.pos);
-      positions.set(id, p);
-      Castle.movePlayer(id, p);
-      broadcast({ type: 'pos', id, pos: p }, id);
-    }
+    if (!roomRef) return;
+    roomRef.child('rejects/' + id).set('no');
+    roomRef.child('requests/' + id).remove();
   }
 
   // ---------- Odaya katıl ----------
-  function join(raw) {
+  async function join(raw) {
     const c = clean(raw, 200).trim().toLowerCase().replace(/^.*[?&]oda=/, '').replace(/[^a-z0-9]/g, '');
-    if (!c || peer || !ready() || needName()) return;
-    code = c; role = 'guest'; error = '';
+    if (!c || status !== 'idle' || !ready() || needName()) return;
+    code = c; error = '';
     setStatus('connecting');
-    peer = new Peer();
-    peer.on('error', onError);
-    peer.on('open', () => {
-      const cn = peer.connect(PREFIX + code, { reliable: true });
-      cn.on('open', () => { hostConn = cn; sendTo(cn, { type: 'profile', ...profile() }); setStatus('waiting'); });
-      cn.on('data', fromHost);
-      cn.on('close', () => { if (role === 'guest') leave('Oda kapandı.'); });
-    });
-  }
-
-  // Misafir: sahipten gelen mesaj
-  function fromHost(m) {
-    if (!m || typeof m !== 'object') return;
-    if (m.type === 'accept') { myId = clean(m.you, 80); chat = []; setStatus('live'); toast('Odaya katıldın!'); sendPos(true); return; }
-    if (m.type === 'reject') return leave(m.reason === 'full' ? 'Oda dolu (en fazla 4 kişi).' : 'Oda sahibi isteğini kabul etmedi.');
-    if (m.type === 'roster' && Array.isArray(m.members)) {
-      members = new Map(m.members.slice(0, MAX_GUESTS + 1)
-        .filter(x => x && x.id !== myId)
-        .map(x => [clean(x.id, 80), readProfile(x.profile)]));
-      for (const id of positions.keys()) if (!members.has(id)) positions.delete(id);
-      refreshFriends(); renderPanel(); render();
-    } else if (m.type === 'timer') applyTimer(m);
-    else if (m.type === 'chat') {
-      const text = clean(m.text, 200).trim();
-      if (text) addChat(clean(m.name, 16) || 'Büyücü', text, false);
-    } else if (m.type === 'pos') {
-      const id = clean(m.id, 80);
-      if (!members.has(id)) return;
-      const p = readPos(m.pos);
-      positions.set(id, p);
-      Castle.movePlayer(id, p);
-    } else if (m.type === 'gone') {
-      const id = clean(m.id, 80);
-      members.delete(id); positions.delete(id); refreshFriends(); renderPanel();
+    try {
+      await withTimeout(connect(), 15000);
+      const ref = db.ref('rooms/' + code);
+      const h = await withTimeout(ref.child('host').get(), 15000);
+      if (!h.exists()) return leave('Bu kodla açık bir oda bulunamadı.');
+      const m = await withTimeout(ref.child('members').get(), 15000);
+      if (m.numChildren() >= MAX && !m.hasChild(uid)) return leave('Oda dolu (en fazla 4 kişi).');
+      roomRef = ref; role = 'guest'; hostUid = h.val();
+      await ref.child('rejects/' + uid).remove();
+      ref.child('requests/' + uid).onDisconnect().remove();
+      await ref.child('requests/' + uid).set({ name: myName(), at: TS() });
+      listen();
+      setStatus('waiting');
+    } catch (e) {
+      leave('Sunucuya bağlanılamadı. İnternetini kontrol edip tekrar dene.');
     }
   }
 
-  function onError(err) {
-    const type = err?.type;
-    if (type === 'unavailable-id' && role === 'host') { cleanup(); return host(); } // kod çakıştı, yenisi
-    if ((isLive() || status === 'hosting') && type !== 'peer-unavailable') { try { peer.reconnect(); } catch {} return; }
-    leave(type === 'peer-unavailable' ? 'Bu kodla açık bir oda bulunamadı.' : `Bağlantı kurulamadı (${type || 'bilinmeyen hata'}).`);
+  // Misafir onaylandı: kendi üyelik kaydını tamamla
+  function joined() {
+    roomRef.child('members/' + uid).onDisconnect().remove();
+    roomRef.child('pos/' + uid).onDisconnect().remove();
+    roomRef.child('members/' + uid).update({ ...profile() });
+    chat = [];
+    setStatus('live');
+    toast('Odaya katıldın!');
+    sendPos(true);
   }
 
-  function cleanup() {
-    for (const g of guests.values()) { try { g.conn.close(); } catch {} }
-    for (const p of pending) { try { p.conn.close(); } catch {} }
-    try { hostConn?.close(); } catch {}
-    try { peer?.destroy(); } catch {}
-    peer = hostConn = null;
-    guests.clear(); pending = [];
+  // ---------- Dinleyiciler ----------
+  function on(ref, ev, fn) { ref.on(ev, fn); listeners.push(() => ref.off(ev, fn)); }
+
+  function listen() {
+    // Oda kapandı mı?
+    on(roomRef.child('host'), 'value', s => { if (!s.exists() && role) leave(role === 'guest' ? 'Oda kapandı.' : ''); });
+
+    // Üyeler (profiller): seyrek değişir
+    let first = true;
+    on(roomRef.child('members'), 'value', s => {
+      const all = s.val() || {};
+      if (role === 'guest') {
+        if (all[uid] && status === 'waiting') joined();
+        else if (!all[uid] && isLive()) return leave('Odadan çıkarıldın.');
+      }
+      const next = new Map();
+      for (const [id, p] of Object.entries(all)) if (id !== uid) next.set(clean(id, 128), readProfile(p));
+      if (!first && (isLive() || role === 'host')) {
+        for (const [id, p] of next) if (!members.has(id)) toast(`${p.name} odaya katıldı!`);
+        for (const [id, p] of members) if (!next.has(id)) { toast(`${p.name} odadan ayrıldı`); positions.delete(id); }
+      }
+      first = false;
+      members = next;
+      if (role === 'host') setStatus(members.size ? 'live' : 'hosting');
+      else { refreshFriends(); renderPanel(); render(); }
+    });
+
+    // Kale konumları: sadece değişen kişi gelir
+    const posRef = roomRef.child('pos');
+    const onPos = s => {
+      if (s.key === uid) return;
+      const p = readPos(s.val());
+      positions.set(s.key, p);
+      Castle.movePlayer(s.key, p);
+    };
+    on(posRef, 'child_added', onPos);
+    on(posRef, 'child_changed', onPos);
+    on(posRef, 'child_removed', s => positions.delete(s.key));
+
+    // Zamanlayıcı (misafir uygular)
+    on(roomRef.child('timer'), 'value', s => { if (role === 'guest' && s.exists()) applyTimer(s.val()); });
+
+    // Sohbet: son 50 mesaj
+    on(roomRef.child('chat').limitToLast(50), 'child_added', s => {
+      const m = s.val() || {};
+      const text = clean(m.text, 200).trim();
+      if (text) addChat(clean(m.name, 16) || 'Büyücü', text, m.uid === uid);
+    });
+
+    if (role === 'host') {
+      on(roomRef.child('requests'), 'value', s => {
+        const before = new Set(requests.map(r => r.uid));
+        requests = Object.entries(s.val() || {}).map(([id, r]) => ({ uid: id, name: clean(r?.name, 16).trim() || 'Büyücü' }));
+        const fresh = requests.filter(r => !before.has(r.uid));
+        if (fresh.length) {
+          toast(`${fresh[0].name} odana katılmak istiyor: Ortak Oda'dan kabul et`);
+          try { chime(); } catch {}
+          if (!roomDlg.open) el('openRoom').click();
+        }
+        renderPanel(); render();
+      });
+    } else {
+      on(roomRef.child('rejects/' + uid), 'value', s => {
+        if (!s.exists()) return;
+        leave(s.val() === 'full' ? 'Oda dolu (en fazla 4 kişi).' : 'Oda sahibi isteğini kabul etmedi.');
+      });
+    }
   }
 
   function leave(msg = '') {
     const wasGuest = role === 'guest';
-    cleanup();
-    role = null; durs = null; code = ''; chat = []; unread = 0; lastSig = ''; myId = null;
-    members = new Map(); positions.clear();
+    listeners.forEach(f => f()); listeners = [];
+    if (roomRef && uid) {
+      if (role === 'host') roomRef.remove();
+      else {
+        roomRef.child('members/' + uid).remove();
+        roomRef.child('pos/' + uid).remove();
+        roomRef.child('requests/' + uid).remove();
+      }
+      roomRef.onDisconnect().cancel();
+    }
+    roomRef = null; role = null; durs = null; code = ''; chat = []; unread = 0; lastSig = ''; hostUid = null;
+    members = new Map(); positions.clear(); requests = [];
     error = msg;
     if (wasGuest) { running = false; remaining = dur(mode); }
     setStatus('idle');
@@ -252,7 +258,7 @@ const Room = (() => {
   }
 
   // ---------- Zamanlayıcı ----------
-  // render her çağrıldığında: arkadaş satırı + (sahipsek) zamanlayıcı değiştiyse gönder
+  // render her çağrıldığında: arkadaş satırı + (sahipsek) zamanlayıcı değiştiyse yaz
   function sync() {
     const list = isLive() ? others() : [];
     const first = list[0];
@@ -260,16 +266,18 @@ const Room = (() => {
     el('friendLine').hidden = !list.length;
     if (first) el('friendTag').textContent = first.name;
     if (list.length) el('friendLine').textContent = list.map(o => `${o.name} ${o.today.min} dk`).join(' · ') + ' (bugün)';
-    if (role !== 'host' || !isLive()) return;
+    if (role !== 'host' || !roomRef) return;
     const sig = [mode, running, running ? Math.round(endAt / 1000) : Math.round(remaining),
       data.settings.focus, data.settings.short, data.settings.long].join('|');
     if (sig !== lastSig) { lastSig = sig; sendTimer(); }
   }
 
   function sendTimer() {
-    broadcast({
-      type: 'timer', mode, running,
-      remaining: running ? Math.max(0, (endAt - Date.now()) / 1000) : remaining,
+    if (role !== 'host' || !roomRef) return;
+    const rem = running ? Math.max(0, (endAt - Date.now()) / 1000) : remaining;
+    roomRef.child('timer').set({
+      mode, running, remaining: rem,
+      endAt: running ? serverNow() + rem * 1000 : 0, // sunucu saatine göre bitiş
       durs: { focus: data.settings.focus, short: data.settings.short, long: data.settings.long },
     });
   }
@@ -277,8 +285,9 @@ const Room = (() => {
   // Misafir: oda sahibinin saatini kendi saatine uygula
   function applyTimer(m) {
     if (role !== 'guest' || !['focus', 'short', 'long'].includes(m.mode)) return;
-    // Az önce bitirdiğimiz oturumun gecikmeli tekrarını yok say (çift sayım olmasın)
-    if (m.mode === doneMode && m.running && Date.now() - doneAt < 8000 && num(m.remaining, 0, 1e6, 99) < 6) return;
+    const rem = m.running ? Math.max(0, (num(m.endAt, 0, 1e15, 0) - serverNow()) / 1000) : num(m.remaining, 0, 1e6, 0);
+    // Az önce bitirdiğimiz oturumun tekrarını yok say (çift sayım olmasın)
+    if (m.mode === doneMode && m.running && Date.now() - doneAt < 8000 && rem < 6) return;
     tick(); // biriken odak süresini say
     if (mode === 'focus' && running && m.mode !== 'focus' && remaining < 5) guestFinish(); // sahibi bizden önce bitirdi
     durs = { focus: num(m.durs?.focus, 1, 180, 25), short: num(m.durs?.short, 1, 60, 5), long: num(m.durs?.long, 1, 90, 15) };
@@ -286,22 +295,20 @@ const Room = (() => {
     const continuing = running && !!m.running && mode === m.mode;
     mode = m.mode;
     running = !!m.running;
-    remaining = num(m.remaining, 0, durs[mode] * 60, 0);
+    remaining = Math.min(rem, durs[mode] * 60);
     if (running) { if (!continuing) lastTick = now; endAt = now + remaining * 1000; }
     render();
   }
 
   // ---------- Harita konumu ----------
-  // Konum değiştikçe (en fazla ~7/sn) ve 2 sn'de bir gönderilir
-  let posBeat = 0;
+  // Konum değiştikçe (en fazla ~5/sn) ve 3 sn'de bir yazılır
   function sendPos(force) {
-    if (!isLive()) return;
+    if (!isLive() || !roomRef) return;
     const p = Castle.myPos();
     const sig = [p.x, p.y, p.dir, p.moving, p.seated].join('|');
-    if (!force && sig === lastPos && Date.now() - posBeat < 2000) return;
+    if (!force && sig === lastPos && Date.now() - posBeat < 3000) return;
     lastPos = sig; posBeat = Date.now();
-    if (role === 'host') broadcast({ type: 'pos', id: 'host', pos: p });
-    else sendTo(hostConn, { type: 'pos', pos: p });
+    roomRef.child('pos/' + uid).set(p);
   }
 
   // ---------- Sohbet ----------
@@ -311,17 +318,14 @@ const Room = (() => {
     if (!mine && !roomDlg.open) { unread++; toast(`${name}: ${text}`); }
     renderPanel();
   }
-
   function sendChat(text) {
     text = clean(text, 200).trim();
-    if (!text || !isLive()) return;
-    if (role === 'host') broadcast({ type: 'chat', id: 'host', name: myName(), text });
-    else sendTo(hostConn, { type: 'chat', text });
-    addChat(myName(), text, true);
+    if (!text || !isLive() || !roomRef) return;
+    roomRef.child('chat').push({ uid, name: myName(), text, at: TS() });
   }
 
   function updateBadge() {
-    const asks = pending.filter(p => p.profile).length;
+    const asks = requests.length;
     el('openRoom').textContent = 'Ortak Oda' + (asks ? ` (${asks} istek!)` : unread ? ` (${unread})` : '');
     el('openRoom').classList.toggle('alert', asks > 0);
   }
@@ -330,8 +334,7 @@ const Room = (() => {
   function renderPanel() {
     const nameIn = el('roomName');
     if (document.activeElement !== nameIn) nameIn.value = data.name || '';
-    const hostName = members.get('host')?.name || 'oda sahibi';
-
+    const hostName = members.get(hostUid)?.name || 'oda sahibi';
     const msgs = {
       idle: error || 'Arkadaşlarınla (en fazla 4 kişi) aynı odada, aynı zamanlayıcıyla çalış.',
       connecting: 'Bağlanıyor…',
@@ -343,19 +346,18 @@ const Room = (() => {
     el('roomMsg').classList.toggle('err', status === 'idle' && !!error);
 
     el('roomIdle').hidden = status !== 'idle';
-    // Sahip, oda canlıyken de kodu paylaşıp yeni istekleri kabul edebilir
     el('roomHosting').hidden = !(role === 'host' && (status === 'hosting' || isLive()));
     el('roomCodeShow').textContent = code;
     const reqBox = el('roomRequests');
     reqBox.innerHTML = '';
-    for (const r of pending.filter(p => p.profile)) {
+    for (const r of requests) {
       const div = document.createElement('div');
       div.className = 'room-request';
       div.innerHTML = '<p></p><div class="row"><button class="btn small add">Kabul et</button><button class="btn small">Reddet</button></div>';
-      div.querySelector('p').textContent = `${r.profile.name} odana katılmak istiyor.`;
+      div.querySelector('p').textContent = `${r.name} odana katılmak istiyor.`;
       const [ok, no] = div.querySelectorAll('button');
-      ok.onclick = () => accept(r.id);
-      no.onclick = () => reject(r.id);
+      ok.onclick = () => accept(r.uid);
+      no.onclick = () => reject(r.uid);
       reqBox.appendChild(div);
     }
 
@@ -367,7 +369,7 @@ const Room = (() => {
     ul.appendChild(me);
     for (const o of others()) {
       const li = document.createElement('li');
-      li.textContent = `${o.name}${o.id === 'host' ? ' (oda sahibi)' : ''} · bugün ${o.today.min} dk, ${o.today.pomos} oturum`;
+      li.textContent = `${o.name}${o.id === hostUid ? ' (oda sahibi)' : ''} · bugün ${o.today.min} dk, ${o.today.pomos} oturum`;
       ul.appendChild(li);
     }
 
@@ -413,35 +415,29 @@ const Room = (() => {
       el('openRoom').click();
     }
 
-    // Saat kaymasına ve kaçan mesajlara karşı düzenli tazele
-    setInterval(() => {
-      if (!isLive()) return;
-      if (role === 'host') { sendTimer(); sendRoster(); }
-      else sendTo(hostConn, { type: 'profile', ...profile() });
-    }, 15000);
-    setInterval(() => sendPos(false), 150);
-    addEventListener('beforeunload', cleanup);
+    // Profil (bugünkü dakika vb.) ara ara tazelensin
+    setInterval(() => { if (isLive() || status === 'hosting') sendProfile(); }, 30000);
+    setInterval(() => sendPos(false), 200);
+    addEventListener('beforeunload', () => { if (roomRef) leave(); });
     renderPanel();
   }
 
   function sendProfile() {
-    if (!isLive()) return;
-    if (role === 'host') sendRoster();
-    else sendTo(hostConn, { type: 'profile', ...profile() });
+    if (!roomRef || !uid || !(isLive() || status === 'hosting')) return;
+    roomRef.child('members/' + uid).update(profile());
   }
 
   return {
-    init, renderPanel, sync, sendProfile,
+    init, renderPanel, sync, sendProfile, join,
     isGuest: () => role === 'guest' && isLive(),
     durs: () => (role === 'guest' && isLive() ? durs : null),
     markDone(m) { doneMode = m; doneAt = Date.now(); },
-    join,
     note() {
-      if (status === 'connecting' && role === 'guest') return 'Odaya bağlanılıyor…';
+      if (status === 'connecting' && role !== 'host') return 'Odaya bağlanılıyor…';
       if (status === 'waiting') return 'Oda sahibinin onayı bekleniyor…';
-      if (role === 'host' && pending.some(p => p.profile)) return 'Katılmak isteyen var: Ortak Oda\'dan kabul et';
+      if (role === 'host' && requests.length) return 'Katılmak isteyen var: Ortak Oda\'dan kabul et';
       if (!isLive() || !members.size) return '';
-      if (role === 'guest') return `Zamanlayıcıyı ${members.get('host')?.name || 'oda sahibi'} yönetiyor`;
+      if (role === 'guest') return `Zamanlayıcıyı ${members.get(hostUid)?.name || 'oda sahibi'} yönetiyor`;
       const names = others().map(o => o.name);
       return names.length === 1 ? `${names[0]} ile birlikte çalışıyorsun` : `${names.length} arkadaşınla birlikte çalışıyorsun`;
     },
