@@ -40,6 +40,7 @@ const Room = (() => {
   async function connect() {
     if (!firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
     db = firebase.database();
+    await Cloud.ready(); // Google ile giriş yapılmışsa o kimlik kullanılsın, anonime geçilmesin
     if (!firebase.auth().currentUser) await firebase.auth().signInAnonymously();
     uid = firebase.auth().currentUser.uid;
     db.ref('.info/serverTimeOffset').on('value', s => { offset = s.val() || 0; });
@@ -430,6 +431,7 @@ const Room = (() => {
   return {
     init, renderPanel, sync, sendProfile, join,
     isGuest: () => role === 'guest' && isLive(),
+    busy: () => status !== 'idle', // odadayken giriş/çıkış kimliği değiştirmesin
     durs: () => (role === 'guest' && isLive() ? durs : null),
     markDone(m) { doneMode = m; doneAt = Date.now(); },
     note() {

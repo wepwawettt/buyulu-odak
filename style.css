@@ -259,6 +259,8 @@ dialog.side { position: fixed; right: 20px; top: 20px; margin: 0; left: auto; ma
 }
 #setForm input[type=checkbox] { accent-color: var(--gold); width: 18px; height: 18px; }
 #setForm .row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+.cloud-box { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 6px; padding: 8px; max-width: 320px; background: var(--ink); }
+.cloud-box p { margin: 0; font-size: 0.9em; line-height: 1.3; }
 
 /* ---------- Kale haritası ---------- */
 canvas[hidden] { display: none !important; }

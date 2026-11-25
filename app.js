@@ -69,7 +69,12 @@ function load() {
 }
 const data = load();
 let resetting = false; // sıfırlarken sayfa kapanırken eski veriyi geri yazmasın
-const save = () => { if (!resetting) localStorage.setItem(STORE, JSON.stringify(data)); };
+const save = () => {
+  if (resetting) return;
+  const json = JSON.stringify(data);
+  localStorage.setItem(STORE, json);
+  Cloud.queue(json); // Google ile giriş yapıldıysa hesaba da yükle
+};
 
 const todayKey = () => new Date().toLocaleDateString('sv'); // YYYY-AA-GG
 function today() {
@@ -560,9 +565,11 @@ function showGuideOnce() {
   $('guideDlg').showModal();
 }
 
-// Tüm ilerlemeyi sıfırla (sadece bu tarayıcı ve bu adres)
+// Tüm ilerlemeyi sıfırla (bu tarayıcı; giriş yapıldıysa Google hesabındaki kayıt da)
 $('resetAll').onclick = () => {
-  if (!confirm('Bütün ilerlemen silinecek: altın, eşyalar, kıyafetler, görevler, istatistikler, iksirler ve malzemeler. Bu geri alınamaz. Emin misin?')) return;
+  const acc = Cloud.signedIn() ? ' Google hesabındaki kayıt da sıfırlanır.' : '';
+  if (!confirm(`Bütün ilerlemen silinecek: altın, eşyalar, kıyafetler, görevler, istatistikler, iksirler ve malzemeler.${acc} Bu geri alınamaz. Emin misin?`)) return;
+  Cloud.wipe();
   resetting = true;
   localStorage.removeItem(STORE);
   location.reload();
@@ -617,6 +624,7 @@ renderTasks();
 renderStats();
 Room.init();
 Odam.init();
+Cloud.init();
 setInterval(tick, 250);
 setInterval(renderStats, 30000); // odak sürerken bugünkü çubuk büyüsün
 setInterval(save, 5000);
