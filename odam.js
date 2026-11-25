@@ -142,6 +142,16 @@ const Odam = (() => {
     save(); renderBrew(); syncScene();
     toast(`${potion().name} demlenmeye başladı. Odaklandıkça dolacak.`);
   }
+  // Demlemeyi iptal et: malzemeler geri gelir
+  function cancelBrew() {
+    const p = potion();
+    if (!p || brewDone()) return;
+    if (data.brew.sec >= 60 && !confirm(`${p.name} %${Math.round(100 * data.brew.sec / (p.min * 60))} doldu. Vazgeçersen bu ilerleme silinir, malzemeler geri gelir. Emin misin?`)) return;
+    for (const [k, n] of Object.entries(p.needs)) pantry()[k] += n;
+    data.brew = null;
+    save(); renderBrew(); syncScene(); renderBar();
+    toast(`${p.name} demlemesinden vazgeçildi, malzemeler geri geldi.`);
+  }
   function collect() {
     const p = potion();
     if (!p || !brewDone()) return;
@@ -174,9 +184,8 @@ const Odam = (() => {
       box.appendChild(div);
       const b = document.createElement('button');
       b.className = 'btn small add';
-      b.textContent = brewDone() ? 'İksiri iç' : 'Demleniyor…';
-      b.disabled = !brewDone();
-      b.onclick = collect;
+      b.textContent = brewDone() ? 'İksiri iç' : 'Vazgeç';
+      b.onclick = brewDone() ? collect : cancelBrew;
       box.appendChild(b);
       return;
     }
