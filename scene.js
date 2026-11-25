@@ -90,6 +90,23 @@ const Scene = (() => {
 
   const WIN = { x: 12, y: 12, w: 34, h: 50 };
 
+  // Gerçek saate göre gökyüzü (oda penceresi ve kale tavanı): 08–17 gündüz, 06–08 ve 17–20 alacakaranlık
+  function skyPhase(d = new Date()) {
+    const h = d.getHours();
+    return h >= 8 && h < 17 ? 'day' : (h >= 6 && h < 8) || (h >= 17 && h < 20) ? 'dusk' : 'night';
+  }
+  // Mevsim süsleri: Aralık–Şubat kar, 20–31 Ekim balkabağı
+  function season(d = new Date()) {
+    const m = d.getMonth() + 1;
+    return m === 12 || m <= 2 ? 'winter' : m === 10 && d.getDate() >= 20 ? 'pumpkin' : '';
+  }
+  const WIN_SKY = {
+    night: { sky: ['#141a3d', '#1c2a5c', '#2b3c78'], hill: '#0e1128' },
+    dusk: { sky: ['#2e2a5e', '#8a4a6a', '#e08a5a'], hill: '#2a1a2a' },
+    day: { sky: ['#4a8ad0', '#6aa8e0', '#9ccaf0'], hill: '#3a4a68' },
+  };
+  let skyKey = '';
+
   let ctx, bg, look = { house: 'kizil', hair: 'kahve', skin: 1 }, state = 'idle';
   let t = 0, last = 0, acc = 0, sparkTimer = 0, particles = [], stars = [], items = [];
   // Ortak oda: arkadaş varken iki kişilik düzen (sen solda, arkadaşın sağda)
@@ -141,33 +158,49 @@ const Scene = (() => {
       }
     }
 
-    // Kemerli pencere
+    // Kemerli pencere (gökyüzü gerçek saate göre)
     const { x: wx, y: wy, w: ww, h: wh } = WIN;
+    const phase = skyPhase(), sea = season(), S = WIN_SKY[phase];
+    skyKey = phase + sea;
     for (let y = wy - 2; y < wy + wh + 2; y++) {
       for (let x = wx - 2; x < wx + ww + 2; x++) {
         if (!inArch(x, y, wx - 2, wy - 2, ww + 4, wh + 4)) continue;
         if (!inArch(x, y, wx, wy, ww, wh)) { px(c, x, y, 1, 1, '#6b4a2f'); continue; }
         const k = (y - wy) / wh;
-        px(c, x, y, 1, 1, k < 0.35 ? '#141a3d' : k < 0.7 ? '#1c2a5c' : '#2b3c78');
+        px(c, x, y, 1, 1, S.sky[k < 0.35 ? 0 : k < 0.7 ? 1 : 2]);
       }
     }
-    // Ay
-    for (let y = -5; y <= 5; y++) for (let x = -5; x <= 5; x++) {
-      if (x * x + y * y <= 25) px(c, 36 + x, 26 + y, 1, 1, '#f4ecc8');
-    }
-    px(c, 34, 24, 2, 2, '#ddd3aa'); px(c, 38, 28, 2, 1, '#ddd3aa');
+    const disc = (cx, cy, r, col) => {
+      for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
+        if (x * x + y * y <= r * r && inArch(cx + x, cy + y, wx, wy, ww, wh)) px(c, cx + x, cy + y, 1, 1, col);
+      }
+    };
+    if (phase === 'night') { // Ay
+      disc(36, 26, 5, '#f4ecc8');
+      px(c, 34, 24, 2, 2, '#ddd3aa'); px(c, 38, 28, 2, 1, '#ddd3aa');
+    } else if (phase === 'day') { // Güneş ve bulutlar
+      disc(37, 22, 4, '#ffe9a0'); disc(37, 22, 3, '#fff6d0');
+      px(c, 15, 30, 9, 2, '#eef6ff'); px(c, 17, 28, 5, 2, '#eef6ff');
+      px(c, 31, 46, 10, 2, '#eef6ff'); px(c, 33, 44, 5, 2, '#eef6ff');
+    } else disc(38, 50, 5, '#ffb468'); // Batan/doğan güneş
     // Uzak kale silüeti
     for (let x = wx; x < wx + ww; x++) {
       const hgt = 4 + Math.floor(hash(x, 3) * 3) + ((x > 20 && x < 24) ? 8 : 0) + ((x > 32 && x < 35) ? 6 : 0);
-      for (let y = wy + wh - hgt; y < wy + wh; y++) if (inArch(x, y, wx, wy, ww, wh)) px(c, x, y, 1, 1, '#0e1128');
+      for (let y = wy + wh - hgt; y < wy + wh; y++) if (inArch(x, y, wx, wy, ww, wh)) px(c, x, y, 1, 1, S.hill);
     }
-    px(c, 21, wy + wh - 14, 4, 2, '#0e1128'); px(c, 22, wy + wh - 16, 2, 2, '#0e1128');
-    px(c, 22, wy + wh - 9, 1, 1, '#ffd46b'); px(c, 33, wy + wh - 7, 1, 1, '#ffd46b');
+    px(c, 21, wy + wh - 14, 4, 2, S.hill); px(c, 22, wy + wh - 16, 2, 2, S.hill);
+    if (phase !== 'day') { px(c, 22, wy + wh - 9, 1, 1, '#ffd46b'); px(c, 33, wy + wh - 7, 1, 1, '#ffd46b'); }
     // Pencere kayıtları ve pervaz
     px(c, wx + ww / 2 - 1, wy, 2, wh, '#6b4a2f');
     px(c, wx, wy + 30, ww, 2, '#6b4a2f');
     px(c, wx - 4, wy + wh + 1, ww + 8, 3, '#7a5636');
-    px(c, wx - 4, wy + wh + 1, ww + 8, 1, '#8f6a45');
+    px(c, wx - 4, wy + wh + 1, ww + 8, 1, sea === 'winter' ? '#eef4ff' : '#8f6a45'); // kışın pervazda kar
+    if (sea === 'pumpkin') { // pervazda balkabağı
+      const bx = wx + ww - 9, by = wy + wh - 5;
+      px(c, bx + 1, by, 6, 6, '#e07a2a'); px(c, bx, by + 1, 8, 4, '#e07a2a');
+      px(c, bx + 3, by, 1, 6, '#b85a1a'); px(c, bx + 5, by + 1, 1, 4, '#b85a1a');
+      px(c, bx + 3, by - 2, 2, 2, '#4a7a3a');
+    }
 
     // Yıldızlar (kayıtlara ve aya denk gelmeyenler)
     stars = [];
@@ -236,7 +269,18 @@ const Scene = (() => {
   }
 
   // ---------- Dinamik parçalar ----------
+  // Kışın pencerenin ardında kar yağar
+  function drawSnow() {
+    const { x: wx, y: wy, w: ww, h: wh } = WIN;
+    for (let i = 0; i < 16; i++) {
+      const x = Math.round(wx + hash(i, 7) * ww + Math.sin(t * 0.9 + i) * 1.5);
+      const y = Math.round(wy + ((t * (5 + hash(i, 3) * 4) + hash(i, 9) * wh) % wh));
+      if (inArch(x, y, wx, wy, ww, wh) && Math.abs(x - (wx + ww / 2 - 0.5)) > 1 && y !== wy + 30 && y !== wy + 31) px(ctx, x, y, 1, 1, '#f4f8ff');
+    }
+  }
+
   function drawStars() {
+    if (skyKey.startsWith('day') || skyKey.startsWith('dusk')) return; // yıldızlar sadece gece
     for (const s of stars) {
       const v = Math.sin(t * 2 + s.p);
       if (v > -0.3) px(ctx, s.x, s.y, 1, 1, v > 0.6 ? '#ffffff' : '#9fb0e8');
@@ -809,6 +853,7 @@ const Scene = (() => {
       t += acc;
       ctx.drawImage(bg, 0, 0);
       drawStars();
+      if (skyKey.endsWith('winter')) drawSnow();
       CANDLES.forEach(drawCandle);
       drawItems('back');
       drawOwl();
@@ -834,7 +879,10 @@ const Scene = (() => {
       if (initialLook) look = { ...look, ...initialLook };
       buildBg();
       requestAnimationFrame(frame);
+      // Saat ilerledikçe pencere gökyüzü değişsin
+      setInterval(() => { if (skyPhase() + season() !== skyKey) buildBg(); }, 60000);
     },
+    skyPhase, season,
     setLook(l) { look = { ...look, ...l }; buildBg(); },
     setItems(list) { items = list; },
     setBrew(b) { brew = b; },

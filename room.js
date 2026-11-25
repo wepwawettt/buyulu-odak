@@ -432,6 +432,7 @@ const Room = (() => {
     init, renderPanel, sync, sendProfile, join,
     isGuest: () => role === 'guest' && isLive(),
     busy: () => status !== 'idle', // odadayken giriş/çıkış kimliği değiştirmesin
+    live: isLive, // odada en az bir arkadaşla birlikte
     durs: () => (role === 'guest' && isLive() ? durs : null),
     markDone(m) { doneMode = m; doneAt = Date.now(); },
     note() {

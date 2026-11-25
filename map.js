@@ -795,6 +795,7 @@ const Castle = (() => {
       const mult = data.wisdom ? 2 : 1; // bilgelik iksiri
       data.wisdom = false;
       data.coins += q.reward * mult;
+      data.questsDone = (data.questsDone || 0) + 1; // başarımlar için
       save(); render(); renderQuests();
       const c = document.querySelector('.coins');
       c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop');
@@ -959,25 +960,33 @@ const Castle = (() => {
     px(ctx, hash(Math.floor(t * 8), Math.floor(p * 10)) > 0.5 ? x : x + 2, y - 2, 1, 1, '#ff9a3c');
   }
 
-  // Büyülü tavan: canlı gece gökyüzü, bulutlar, kayan yıldız ve sancaklar
+  const CEIL_SKY = {
+    night: ['#26305e', '#2e3b74', '#38488a'],
+    dusk: ['#3a3468', '#8a5070', '#d0805a'],
+    day: ['#5a92d8', '#78ace6', '#9cc8f0'],
+  };
+  // Büyülü tavan: dışarıdaki gökyüzü (gerçek saate göre), bulutlar, kayan yıldız ve sancaklar
   function drawSky() {
     const X0 = 11 * T - cam.x, Y0 = -cam.y, Wd = 13 * T, Hd = 2 * T;
     if (Y0 + Hd < 0 || X0 > VW || X0 + Wd < 0) return;
     ctx.save();
     ctx.beginPath(); ctx.rect(X0, Y0, Wd, Hd); ctx.clip();
-    px(ctx, X0, Y0, Wd, 11, '#26305e'); px(ctx, X0, Y0 + 11, Wd, 11, '#2e3b74'); px(ctx, X0, Y0 + 22, Wd, 10, '#38488a');
-    for (const s of SKY_STARS) {
+    const phase = Scene.skyPhase(), sky = CEIL_SKY[phase]; // tavan gerçek saate göre
+    px(ctx, X0, Y0, Wd, 11, sky[0]); px(ctx, X0, Y0 + 11, Wd, 11, sky[1]); px(ctx, X0, Y0 + 22, Wd, 10, sky[2]);
+    if (phase === 'night') for (const s of SKY_STARS) {
       const v = Math.sin(t * 2 + s.p);
       if (v > -0.4) px(ctx, X0 + s.x, Y0 + s.y, 1, 1, v > 0.6 ? '#ffffff' : '#9fb0e8');
     }
-    disc(ctx, X0 + 176, Y0 + 9, 5, d => (d > 20 ? '#e8dcb0' : '#f6eed0'));
+    if (phase === 'night') disc(ctx, X0 + 176, Y0 + 9, 5, d => (d > 20 ? '#e8dcb0' : '#f6eed0'));
+    else if (phase === 'day') disc(ctx, X0 + 176, Y0 + 9, 5, d => (d > 20 ? '#ffe9a0' : '#fff6d0'));
+    else disc(ctx, X0 + 176, Y0 + 24, 5, () => '#ffb468');
     for (let i = 0; i < 3; i++) {
       const cx = X0 + ((t * 5 + i * 95) % (Wd + 40)) - 20, cy = Y0 + 6 + i * 8;
-      ctx.fillStyle = 'rgba(220,225,255,0.22)';
+      ctx.fillStyle = phase === 'day' ? 'rgba(255,255,255,0.6)' : 'rgba(220,225,255,0.22)';
       ctx.fillRect(Math.round(cx), cy, 22, 4); ctx.fillRect(Math.round(cx) + 4, cy - 2, 12, 3);
     }
     const sp = (t % 7) / 0.8;
-    if (sp < 1) for (let i = 0; i < 5; i++) {
+    if (sp < 1 && phase === 'night') for (let i = 0; i < 5; i++) {
       ctx.globalAlpha = 1 - i * 0.18;
       px(ctx, X0 + 150 - sp * 40 + i * 2, Y0 + 4 + sp * 14 - i, 1, 1, '#ffffff');
     }
@@ -1163,24 +1172,31 @@ const Castle = (() => {
   const buildLights = () => [
     ...torches.map(tc => ({ x: tc.X + 8, y: tc.Y + 12, r: 46, a: 0.95, col: '255,170,90', glow: 0.22, flick: 1 })),
     ...CANDLES.map(([cx, cy], i) => ({ x: cx * T + 1, y: cy * T - 2, r: 28, a: 0.7, col: '255,200,120', glow: 0.14, flick: 0.5, bob: i * 1.3 })),
-    ...tilesOf('W').map(([x, y]) => ({ x: x * T + 8, y: y * T + 22, r: 30, a: 0.55, col: '150,180,255', glow: 0.12 })),
+    ...tilesOf('W').map(([x, y]) => ({ x: x * T + 8, y: y * T + 22, r: 30, a: 0.55, col: '150,180,255', glow: 0.12, win: true })),
     ...cauldrons.map(k => ({ x: k.X + 8, y: k.Y + 6, r: 26, a: 0.6, col: k.col === '#7ae07a' ? '120,230,120' : k.col === '#c07ae0' ? '200,130,240' : k.col === '#f0a040' ? '250,170,70' : '110,200,250', glow: 0.18, flick: 0.6 })),
     ...(fountain ? [{ x: fountain.x, y: fountain.y, r: 34, a: 0.6, col: '150,210,255', glow: 0.12 }] : []),
     ...fireplaces.map(([x, y]) => ({ x: x * T + 8, y: y * T + 18, r: 44, a: 0.85, col: '255,150,70', glow: 0.2, flick: 1.4 })),
     ...flames.map(([x, y, k]) => ({ x: x * T + 8, y: y * T + 4, r: k === 'Y' ? 34 : 40, a: 0.8, col: '255,200,120', glow: 0.16, flick: 0.7 })),
   ];
-  const AMBIENT = 'rgba(30,22,58,0.40)';
+  // Gerçek saate göre genel karanlık ve pencerelerden giren ışık
+  const DAYLIGHT = {
+    night: { ambient: 'rgba(30,22,58,0.40)', win: null },
+    dusk: { ambient: 'rgba(52,26,50,0.32)', win: { r: 36, a: 0.65, col: '255,180,130', glow: 0.16 } },
+    day: { ambient: 'rgba(30,22,58,0.15)', win: { r: 42, a: 0.8, col: '255,245,215', glow: 0.2 } },
+  };
   let lightCv, lc;
 
   function drawLighting() {
     if (!lightCv) { lightCv = document.createElement('canvas'); lightCv.width = VW; lightCv.height = VH; lc = lightCv.getContext('2d'); }
     if (!LIGHTS) LIGHTS = buildLights();
-    const live = [...LIGHTS, { x: player.x, y: player.y - 8, r: 40, a: 0.55, col: '255,230,200', glow: 0 }];
+    const D = DAYLIGHT[Scene.skyPhase()];
+    const live = [...(D.win ? LIGHTS.map(L => (L.win ? { ...L, ...D.win } : L)) : LIGHTS),
+      { x: player.x, y: player.y - 8, r: 40, a: 0.55, col: '255,230,200', glow: 0 }];
     // Büyülü tavan da salona hafif bir ışık verir
     live.push({ x: 17.5 * T, y: 1 * T, r: 110, a: 0.35, col: '160,170,255', glow: 0.05 });
     lc.globalCompositeOperation = 'source-over';
     lc.clearRect(0, 0, VW, VH);
-    lc.fillStyle = AMBIENT;
+    lc.fillStyle = D.ambient;
     lc.fillRect(0, 0, VW, VH);
     lc.globalCompositeOperation = 'destination-out';
     const vis = [];

@@ -71,6 +71,7 @@ const data = load();
 let resetting = false; // sıfırlarken sayfa kapanırken eski veriyi geri yazmasın
 const save = () => {
   if (resetting) return;
+  Badges.check(); // yeni kazanılan rozet var mı
   const json = JSON.stringify(data);
   localStorage.setItem(STORE, json);
   Cloud.queue(json); // Google ile giriş yapıldıysa hesaba da yükle
@@ -151,6 +152,19 @@ function completeFocus() {
   if (task) { task.pomos++; renderTasks(); }
   Castle.onSession(!!task);
   Castle.mail(`Tebrikler! Bugünkü ${today().pomos}. oturumun tamam. Mola senin!`);
+  // Başarımlar için: ne zaman ve kiminle çalışıldı
+  const h = new Date().getHours(), f = (data.flags ||= {});
+  if (h < 5) f.night = true; else if (h < 7) f.early = true;
+  if (Room.live()) f.room = true;
+  // Günün ilk oturumu seriyi uzatır; her 7 günde +5 altın
+  if (today().pomos === 1) {
+    const s = streak();
+    if (s >= 2) {
+      const bonus = s % 7 === 0 ? 5 : 0;
+      data.coins += bonus;
+      toastLater(`${s} günlük seri!${bonus ? ` +${bonus} altın` : ' Yarın da gel, seri sürsün.'}`);
+    }
+  }
 }
 
 function finish() {
@@ -229,6 +243,17 @@ function toast(msg) {
   el.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+// Peş peşe gelen kutlamalar (seri, rozet) birbirini ezmesin: o anki mesajdan sonra sırayla gösterilir
+const toastQueue = [];
+function toastLater(msg) {
+  toastQueue.push(msg);
+  if (toastQueue.length === 1) setTimeout(nextToast, 3200);
+}
+function nextToast() {
+  toast(toastQueue.shift());
+  render();
+  if (toastQueue.length) setTimeout(nextToast, 3200);
 }
 
 // ---------- Arayüz ----------
@@ -429,6 +454,34 @@ function renderStats() {
   line.innerHTML = `<span>hedef ${fmtMin(goal)}</span>`;
   bars.appendChild(line);
   $('days').innerHTML = week.map(w => `<span class="${w.today ? 'today' : ''} ${w.future ? 'future' : ''}">${w.name}</span>`).join('');
+  renderStreak();
+  renderHeat();
+}
+
+// Üstteki seri rozeti: bugün henüz oturum yoksa sönük durur
+function renderStreak() {
+  const s = streak(), done = today().pomos > 0;
+  $('streak').textContent = s;
+  $('streakBadge').classList.toggle('cold', !done);
+  $('streakBadge').title = !s ? 'Seri: bugün bir odak oturumu bitir, seri başlasın.'
+    : done ? `${s} gün üst üste çalıştın! Her 7 günde +5 altın.` : `${s} günlük serin var. Bugün bir oturum bitir ki bozulmasın!`;
+}
+
+// Takvim ısı haritası: son 53 haftanın her günü, günlük hedefe göre renklenir
+function renderHeat() {
+  const grid = $('heatGrid'), goal = data.settings.goal;
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7) - 52 * 7);
+  let html = '', active = 0;
+  for (const d = new Date(start); d <= now; d.setDate(d.getDate() + 1)) {
+    const min = Math.floor((data.days[dayKey(d)]?.sec || 0) / 60);
+    const lv = !min ? 0 : min >= goal ? 4 : min >= goal / 2 ? 3 : min >= goal / 4 ? 2 : 1;
+    if (min) active++;
+    html += `<i class="l${lv}" title="${shortDate(d)}: ${fmtMin(min)}"></i>`;
+  }
+  grid.innerHTML = html;
+  grid.scrollLeft = grid.scrollWidth; // en yeni günler görünsün
+  $('heatSum').textContent = `${active} gün çalıştın · en uzun seri ${Badges.longest()} gün`;
 }
 
 $('weekPrev').onclick = () => { weekOffset--; renderStats(); };
@@ -543,10 +596,10 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => { if (spaceIsOurs(e)) e.preventDefault(); });
 
 // Yan paneller (karakter, dükkan): aynı anda biri açık olur
-const charDlg = $('charDlg'), shopDlg = $('shopDlg'), roomDlg = $('roomDlg'), brewDlg = $('brewDlg');
+const charDlg = $('charDlg'), shopDlg = $('shopDlg'), roomDlg = $('roomDlg'), brewDlg = $('brewDlg'), badgeDlg = $('badgeDlg');
 function togglePanel(dlg, build) {
   const wasOpen = dlg.open;
-  charDlg.close(); shopDlg.close(); roomDlg.close(); brewDlg.close();
+  charDlg.close(); shopDlg.close(); roomDlg.close(); brewDlg.close(); badgeDlg.close();
   if (!wasOpen) { build(); dlg.show(); }
 }
 $('openChar').onclick = () => togglePanel(charDlg, buildCharOptions);
@@ -554,6 +607,7 @@ $('openShop').onclick = () => togglePanel(shopDlg, buildShop);
 document.querySelector('.coins').onclick = () => togglePanel(shopDlg, buildShop);
 for (const d of [charDlg, shopDlg, roomDlg]) d.querySelector('[data-close]').onclick = () => d.close();
 $('openRoom').onclick = () => togglePanel(roomDlg, Room.renderPanel);
+$('openBadges').onclick = $('streakBadge').onclick = () => togglePanel(badgeDlg, Badges.render);
 
 const setDlg = $('setDlg'), form = $('setForm');
 // Nasıl oynanır? rehberi: düğmeyle her zaman, ilk girişte bir kez kendiliğinden
