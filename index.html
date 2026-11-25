@@ -6,11 +6,17 @@
   <title>Büyülü Odak</title>
   <meta name="description" content="Büyücü okulu temalı piksel art pomodoro: odaklan, mola ver, kaleyi keşfet.">
   <meta name="theme-color" content="#1e1a2e">
-  <link rel="icon" href="icon.svg?v=202611251700" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Büyülü Odak">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" href="icon.svg?v=202611251905" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=202611251700">
+  <link rel="stylesheet" href="style.css?v=202611251905">
 </head>
 <body data-mode="focus">
   <!-- Giriş kapağı (cover.js çizer ve kapatır) -->
@@ -54,6 +60,15 @@
       <div id="sceneTip" class="scene-tip" hidden></div>
     </div>
     <div id="mapHelp" class="map-help" hidden>
+      <div class="touch-pad">
+        <div class="dpad">
+          <button type="button" data-key="ArrowUp" class="up" aria-label="Yukarı">▲</button>
+          <button type="button" data-key="ArrowLeft" class="left" aria-label="Sola">◀</button>
+          <button type="button" data-key="ArrowRight" class="right" aria-label="Sağa">▶</button>
+          <button type="button" data-key="ArrowDown" class="down" aria-label="Aşağı">▼</button>
+        </div>
+        <button type="button" data-key="KeyE" class="act">E <small>konuş / al</small></button>
+      </div>
       <p>Yürü: ok tuşları / WASD ya da tıkla · Konuş: E · Odak başlayınca en yakın masaya oturursun · Molada parıldayan yerlerden iksir malzemesi topla</p>
       <div class="quests"><h3>Günün görevleri</h3><ul id="questList"></ul></div>
     </div>
@@ -63,6 +78,7 @@
         <button class="btn small" data-amb="rain">Yağmur</button>
         <button class="btn small" data-amb="fire">Şömine</button>
         <button class="btn small" data-amb="night">Gece</button>
+        <button class="btn small" data-amb="lofi">Müzik</button>
         <input id="ambVol" type="range" min="0" max="100" title="Ses seviyesi">
       </div>
       <div class="room-bar-row">
@@ -113,6 +129,7 @@
       <h2>Görevler</h2>
       <form id="taskForm" class="task-form">
         <input id="taskInput" maxlength="80" placeholder="Ne üzerinde çalışacaksın?" autocomplete="off">
+        <select id="taskTag" title="Ders / etiket"></select>
         <button class="btn small add">Ekle</button>
       </form>
       <ul id="taskList" class="task-list"></ul>
@@ -134,6 +151,10 @@
       <div class="chart">
         <div id="bars" class="bars"></div>
         <div id="days" class="days"></div>
+      </div>
+      <div class="tag-stats">
+        <h3>Derslere göre</h3>
+        <div id="tagStats"></div>
       </div>
       <div class="heat">
         <div class="heat-head"><h3>Son 12 ay</h3><small id="heatSum"></small></div>
@@ -248,6 +269,14 @@
       <li>Odanın penceresi ve kalenin tavanı gerçek saate göre gündüz, akşam ya da gece olur.</li>
     </ul>
 
+    <h3>📱 Telefon, müzik ve dersler</h3>
+    <ul>
+      <li><b>Ayarlar → Uygulama</b>'dan ana ekrana kur; iPhone'da Safari'de Paylaş → <b>Ana Ekrana Ekle</b>.</li>
+      <li>Telefonda kalenin altında <b>yön tuşları</b> ve <b>E</b> düğmesi çıkar; haritaya dokunarak da yürüyebilirsin.</li>
+      <li>Odadaki <b>Müzik</b> düğmesi sakin bir lo-fi çalar; yağmur ve şömineyle birlikte de açılabilir.</li>
+      <li>Görev eklerken bir <b>etiket</b> seç (ör. Matematik); istatistiklerde haftanın <b>derslere göre</b> dağılımını görürsün.</li>
+    </ul>
+
     <h3>👥 Ortak oda (4 kişiye kadar)</h3>
     <ul>
       <li><b>Ortak Oda</b> → <b>Oda kur</b> → bağlantıyı arkadaşlarına gönder, katılanları onayla.</li>
@@ -282,6 +311,7 @@
       <label class="check"><input type="checkbox" name="sound"> Bitince sihirli ses çal</label>
       <label class="check"><input type="checkbox" name="autoBreak"> Molayı otomatik başlat</label>
       <label class="check"><input type="checkbox" name="autoFocus"> Moladan sonra odağı otomatik başlat</label>
+      <div id="installBox" class="cloud-box" hidden><b>Uygulama</b><p></p><button type="button" class="btn small">Ana ekrana kur</button></div>
       <div id="cloudBox" class="cloud-box" hidden><b>Hesap</b><p></p><button type="button" class="btn small">Google ile giriş yap</button></div>
       <button type="button" id="resetAll" class="btn small danger">Tüm ilerlemeyi sıfırla</button>
       <div class="row">
@@ -294,15 +324,19 @@
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
-  <script src="firebase-config.js?v=202611251700"></script>
-  <script src="cloud.js?v=202611251700"></script>
-  <script src="scene.js?v=202611251700"></script>
-  <script src="map.js?v=202611251700"></script>
-  <script src="room.js?v=202611251700"></script>
-  <script src="odam.js?v=202611251700"></script>
-  <script src="badges.js?v=202611251700"></script>
-  <script src="app.js?v=202611251700"></script>
-  <script src="cover.js?v=202611251700"></script>
+  <script src="firebase-config.js?v=202611251905"></script>
+  <script src="cloud.js?v=202611251905"></script>
+  <script src="scene.js?v=202611251905"></script>
+  <script src="map.js?v=202611251905"></script>
+  <script src="room.js?v=202611251905"></script>
+  <script src="odam.js?v=202611251905"></script>
+  <script src="badges.js?v=202611251905"></script>
+  <script src="app.js?v=202611251905"></script>
+  <script src="cover.js?v=202611251905"></script>
+  <script>
+    // Çevrimdışı yedek ve telefona kurulabilmek için
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+  </script>
   <script>
     // Sayfa tarayıcı önbelleğinden eski haliyle açıldıysa, sunucudaki yeni sürümü bir kez yükle
     (function () {

@@ -134,6 +134,8 @@ function tick() {
 
 function addFocus(sec) {
   today().sec += sec;
+  const tag = activeTask()?.tag; // ders etiketine göre süre
+  if (tag) { const d = today(); (d.tags ||= {})[tag] = (d.tags[tag] || 0) + sec; }
   Odam.onFocus(sec);
   data.coinAcc += sec;
   while (data.coinAcc >= 600) {
@@ -344,6 +346,7 @@ function renderTasks() {
       <span class="count" title="Bu göreve tamamlanan odak oturumu">${t.pomos ? '✦ ' + t.pomos : ''}</span>
       <button class="del" title="Sil">×</button>`;
     li.querySelector('.text').textContent = t.text;
+    if (t.tag) li.querySelector('.text').prepend(tagChip(t.tag), ' ');
     const box = li.querySelector('input');
     box.checked = t.done;
     box.onchange = () => {
@@ -381,11 +384,48 @@ function saveTasks() {
   renderTasks();
 }
 
+// Ders etiketleri: görevlerde ve son 60 günde kullanılanlar listelenir (kullanılmayan kendiliğinden düşer)
+const TAG_COLORS = ['#e07a5f', '#81b29a', '#f2cc8f', '#7aa6d8', '#c08ad8', '#e8a0b8', '#a0c060', '#d8a060'];
+const tagColor = name => TAG_COLORS[[...name].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % TAG_COLORS.length];
+function tagChip(name) {
+  const s = document.createElement('span');
+  s.className = 'tag-chip';
+  s.style.background = tagColor(name);
+  s.textContent = name;
+  return s;
+}
+function knownTags() {
+  const set = new Set(data.tasks.map(t => t.tag).filter(Boolean));
+  const since = dayKey(new Date(Date.now() - 60 * 864e5));
+  for (const [k, d] of Object.entries(data.days)) if (k >= since) Object.keys(d.tags || {}).forEach(x => set.add(x));
+  if (data.lastTag) set.add(data.lastTag);
+  return [...set].sort((a, b) => a.localeCompare(b, 'tr'));
+}
+function renderTagSelect() {
+  const sel = $('taskTag');
+  sel.innerHTML = '';
+  sel.add(new Option('Etiket yok', ''));
+  for (const t of knownTags()) sel.add(new Option(t, t));
+  sel.add(new Option('+ Yeni etiket…', '__new'));
+  sel.value = data.lastTag && knownTags().includes(data.lastTag) ? data.lastTag : '';
+}
+$('taskTag').onchange = () => {
+  const sel = $('taskTag');
+  if (sel.value === '__new') {
+    const name = (prompt('Yeni etiket (ör. Matematik, Tarih, Proje):') || '').trim().slice(0, 16);
+    data.lastTag = name || data.lastTag || '';
+    renderTagSelect();
+    if (name) sel.value = name;
+  } else data.lastTag = sel.value;
+  save();
+};
+
 $('taskForm').onsubmit = e => {
   e.preventDefault();
   const text = $('taskInput').value.trim();
   if (!text) return;
   const t = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text, done: false, pomos: 0 };
+  if ($('taskTag').value && $('taskTag').value !== '__new') t.tag = $('taskTag').value;
   data.tasks.push(t);
   if (!activeTask()) data.activeTask = t.id;
   $('taskInput').value = '';
@@ -454,8 +494,27 @@ function renderStats() {
   line.innerHTML = `<span>hedef ${fmtMin(goal)}</span>`;
   bars.appendChild(line);
   $('days').innerHTML = week.map(w => `<span class="${w.today ? 'today' : ''} ${w.future ? 'future' : ''}">${w.name}</span>`).join('');
+  renderTagStats(week);
   renderStreak();
   renderHeat();
+}
+
+// Derslere göre: seçili haftada her etikete ayrılan odak süresi
+function renderTagStats(week) {
+  const byTag = {};
+  for (const w of week) for (const [k, s] of Object.entries(data.days[dayKey(w.d)]?.tags || {})) byTag[k] = (byTag[k] || 0) + s;
+  const rows = Object.entries(byTag).map(([k, s]) => [k, Math.round(s / 60)]).filter(r => r[1] > 0).sort((a, b) => b[1] - a[1]);
+  const box = $('tagStats');
+  box.innerHTML = rows.length ? '' : '<p class="room-msg">Görevlerine etiket ver (ör. Matematik); hangi derse ne kadar çalıştığın burada görünür.</p>';
+  for (const [k, m] of rows) {
+    const row = document.createElement('div');
+    row.className = 'tag-row';
+    row.innerHTML = '<span class="name"></span><div class="tag-bar"><div></div></div><span class="min"></span>';
+    row.querySelector('.name').append(tagChip(k));
+    row.querySelector('.tag-bar div').style.cssText = `width:${100 * m / rows[0][1]}%;background:${tagColor(k)}`;
+    row.querySelector('.min').textContent = fmtMin(m);
+    box.appendChild(row);
+  }
 }
 
 // Üstteki seri rozeti: bugün henüz oturum yoksa sönük durur
@@ -629,7 +688,30 @@ $('resetAll').onclick = () => {
   location.reload();
 };
 
+// Telefona/bilgisayara uygulama olarak kurma (Ayarlar'daki "Uygulama" kutusu)
+let installPrompt = null;
+const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function renderInstall() {
+  const box = $('installBox');
+  box.hidden = standalone() || (!installPrompt && !isIOS);
+  box.querySelector('button').hidden = !installPrompt;
+  box.querySelector('p').textContent = installPrompt
+    ? 'Büyülü Odak\'ı ana ekranına ekle; uygulama gibi tam ekran açılır.'
+    : 'iPhone/iPad: Safari\'de Paylaş düğmesine dokun, sonra "Ana Ekrana Ekle"yi seç.';
+}
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; renderInstall(); });
+addEventListener('appinstalled', () => { installPrompt = null; renderInstall(); toast('Büyülü Odak kuruldu!'); });
+$('installBox').querySelector('button').onclick = async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;
+  renderInstall();
+};
+
 $('openSettings').onclick = () => {
+  renderInstall();
   for (const [k, v] of Object.entries(data.settings)) {
     const input = form.elements[k];
     if (input.type === 'checkbox') input.checked = v; else input.value = v;
@@ -674,6 +756,7 @@ Castle.init($('map'));
 setView(data.view === 'castle' ? 'castle' : 'room');
 applyHouseColors();
 render();
+renderTagSelect();
 renderTasks();
 renderStats();
 Room.init();
@@ -684,6 +767,17 @@ setInterval(renderStats, 30000); // odak sürerken bugünkü çubuk büyüsün
 setInterval(save, 5000);
 addEventListener('visibilitychange', save);
 addEventListener('beforeunload', save);
+
+// Dokunmatik ekran: kaledeki yön tuşları ve E, klavye tuşu gibi davranır (basılı tutunca yürür)
+document.querySelectorAll('.touch-pad [data-key]').forEach(b => {
+  const send = type => dispatchEvent(new KeyboardEvent(type, { code: b.dataset.key }));
+  b.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    try { b.setPointerCapture(e.pointerId); } catch {} // parmak düğmeden kayınca da bırakılınca dursun
+    send('keydown');
+  });
+  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) b.addEventListener(ev, () => send('keyup'));
+});
 
 // Herhangi bir paneldeki "Kapat" / × düğmesi kendi panelini kapatır
 document.addEventListener('click', e => {

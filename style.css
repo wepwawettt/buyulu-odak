@@ -73,6 +73,21 @@ h1 {
 .streak.cold { box-shadow: 0 0 0 3px var(--ink), 0 0 0 5px var(--panel-2); color: var(--muted); }
 .streak.cold .flame { filter: grayscale(1) brightness(.8); }
 
+/* Dokunmatik kale kontrolleri (sadece parmakla kullanılan ekranlarda) */
+.touch-pad { display: none; justify-content: space-between; align-items: center; margin: 4px 8px 10px; }
+@media (pointer: coarse) { .touch-pad { display: flex; } }
+.touch-pad button {
+  font: inherit; color: var(--text); background: var(--panel-2); border: 0;
+  box-shadow: 0 0 0 3px var(--ink), 0 0 0 5px var(--gold-dark);
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.touch-pad button:active { background: var(--gold); color: var(--ink); }
+.dpad { display: grid; grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px); gap: 4px; }
+.dpad button { font-size: 22px; }
+.dpad .up { grid-area: 1 / 2; } .dpad .left { grid-area: 2 / 1; } .dpad .right { grid-area: 2 / 3; } .dpad .down { grid-area: 3 / 2; }
+.touch-pad .act { width: 96px; height: 96px; border-radius: 50%; font-family: 'Press Start 2P', monospace; font-size: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.touch-pad .act small { font-family: 'VT323', monospace; font-size: 17px; }
+
 /* Rozetler */
 #badgeDlg h2 small { color: var(--muted); font-size: 11px; }
 .badge-list { display: flex; flex-direction: column; gap: 6px; }
@@ -187,7 +202,7 @@ h1 {
 .bar div { height: 100%; width: 0; background: var(--house-2); transition: width .5s; }
 .goal small { color: var(--muted); font-size: 18px; }
 
-.foot { display: flex; gap: 12px; }
+.foot { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 
 .current {
   color: var(--muted); min-height: 1.2em; max-width: 100%;
@@ -203,6 +218,19 @@ h1 {
   border: 0; padding: 6px 10px; box-shadow: 0 0 0 2px var(--panel-2);
 }
 .task-form input:focus { outline: none; box-shadow: 0 0 0 2px var(--gold-dark); }
+.task-form select {
+  font: inherit; font-size: 19px; max-width: 34%; background: var(--ink); color: var(--text);
+  border: 0; padding: 4px 6px; box-shadow: 0 0 0 2px var(--panel-2); cursor: pointer;
+}
+.tag-chip { display: inline-block; padding: 0 6px; color: var(--ink); font-size: 17px; line-height: 1.3; vertical-align: 1px; }
+.task.done .tag-chip { opacity: .6; }
+.tag-stats { margin-top: 18px; }
+.tag-stats h3 { margin: 0 0 6px; font-size: 22px; font-weight: normal; color: var(--muted); }
+.tag-row { display: grid; grid-template-columns: minmax(70px, 30%) 1fr auto; gap: 10px; align-items: center; margin-bottom: 5px; }
+.tag-row .name { overflow: hidden; white-space: nowrap; }
+.tag-bar { height: 12px; background: var(--ink); }
+.tag-bar div { height: 100%; }
+.tag-row .min { color: var(--muted); font-size: 19px; }
 .btn.add { background: var(--gold); color: var(--ink); }
 .task-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .task {
@@ -221,6 +249,7 @@ h1 {
 .stats-head { display: flex; align-items: center; justify-content: space-between; }
 .stats-head .btn.ghost { width: 40px; padding: 0; font-size: 26px; }
 .stats-head .btn:disabled { opacity: .35; cursor: default; transform: none; }
+@media (max-width: 520px) { #weekTitle { font-size: 10px; line-height: 1.6; text-align: center; } }
 .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 @media (max-width: 520px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
 .tile { background: var(--panel-2); box-shadow: 0 0 0 2px var(--ink); padding: 6px 10px; display: flex; flex-direction: column; }

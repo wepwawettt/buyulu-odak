@@ -4,7 +4,7 @@ const Odam = (() => {
   const $ = id => document.getElementById(id);
 
   // ---------- Ambiyans sesleri (dosya yok, Web Audio ile üretilir) ----------
-  const AMB = { rain: 'Yağmur', fire: 'Şömine', night: 'Gece' };
+  const AMB = { rain: 'Yağmur', fire: 'Şömine', night: 'Gece', lofi: 'Müzik' };
   let master = null;
   const playing = {};
 
@@ -70,6 +70,66 @@ const Odam = (() => {
         }
       }, 900 + Math.random() * 400);
       return () => { wind.stop(); clearInterval(chirp); };
+    },
+    // Sakin lo-fi: yumuşak piyano akorları, bas, hafif davul, ara sıra melodi ve plak cızırtısı (hepsi anlık üretilir)
+    lofi(c) {
+      const bus = gain(c, 0.55);
+      bus.connect(filter(c, 'lowpass', 2600)).connect(master);
+      const crackle = loop(c, noise(c, 2), [filter(c, 'highpass', 3000), gain(c, 0.012)]);
+      const BEAT = 60 / 72;
+      const hz = m => 440 * 2 ** ((m - 69) / 12);
+      // Fmaj7 – Em7 – Dm7 – Cmaj7 (MIDI notaları)
+      const CHORDS = [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [48, 52, 55, 59]];
+      const SCALE = [72, 74, 76, 79, 81]; // do pentatonik, melodi için
+      const pop = noise(c, 0.25);
+      function note(m, t0, len, vol, type = 'sine') {
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = type; o.frequency.value = hz(m);
+        o.detune.value = (Math.random() - 0.5) * 8; // eski kaset gibi hafif kayık
+        g.gain.setValueAtTime(0, t0);
+        g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0008, t0 + len);
+        o.connect(g).connect(bus); o.start(t0); o.stop(t0 + len + 0.05);
+      }
+      function hit(t0, f, len, vol, type) {
+        const s = c.createBufferSource(), g = c.createGain();
+        s.buffer = pop;
+        g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0008, t0 + len);
+        s.connect(filter(c, type, f, 0.8)).connect(g).connect(bus); s.start(t0); s.stop(t0 + len + 0.02);
+      }
+      function kick(t0) {
+        const o = c.createOscillator(), g = c.createGain();
+        o.frequency.setValueAtTime(110, t0); o.frequency.exponentialRampToValueAtTime(42, t0 + 0.18);
+        g.gain.setValueAtTime(0.5, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.3);
+        o.connect(g).connect(bus); o.start(t0); o.stop(t0 + 0.32);
+      }
+      let bar = 0, next = c.currentTime + 0.2;
+      // Her çağrıda önümüzdeki ölçüleri zamanlar (tarayıcı sekmesi arkadayken de akmaya devam eder)
+      function schedule() {
+        while (next < c.currentTime + 3) {
+          const ch = CHORDS[bar % 4], t0 = next;
+          for (const [b, v] of [[0, 0.05], [1.5, 0.035], [2.5, 0.04]]) {
+            ch.forEach((m, i) => note(m, t0 + b * BEAT + i * 0.012 + Math.random() * 0.02, BEAT * 1.8, v, i ? 'sine' : 'triangle'));
+          }
+          note(ch[0] - 12, t0, BEAT * 1.6, 0.16); note(ch[0] - 12, t0 + 2 * BEAT, BEAT * 1.4, 0.12);
+          for (let i = 0; i < 4; i++) {
+            const b = t0 + i * BEAT;
+            if (i % 2 === 0) kick(b);
+            else hit(b, 1800, 0.18, 0.13, 'bandpass');
+            hit(b, 7000, 0.04, 0.035, 'highpass');
+            hit(b + BEAT * 0.58, 7000, 0.03, 0.02, 'highpass'); // sallantılı hi-hat
+          }
+          if (bar % 4 === 1 && Math.random() < 0.3) kick(t0 + 2.5 * BEAT);
+          for (let i = 0; i < 8; i++) if (Math.random() < 0.18) {
+            note(SCALE[Math.floor(Math.random() * SCALE.length)], t0 + i * BEAT / 2, BEAT, 0.05, 'triangle');
+          }
+          bar++;
+          next += 4 * BEAT;
+        }
+      }
+      schedule();
+      const timer = setInterval(schedule, 500);
+      return () => { clearInterval(timer); crackle.stop(); bus.disconnect(); };
     },
   };
 
