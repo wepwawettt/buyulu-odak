@@ -189,6 +189,37 @@ const Pet = (() => {
       grid.append(cell);
     }
     box.append(grid);
+
+    // Balık defteri (kaledeki gölden)
+    const FISH = Castle.FISH(), book = data.fishBook || {};
+    box.insertAdjacentHTML('beforeend', `<h3>Balık defteri <small>${Object.keys(book).length}/${FISH.length}</small></h3>`);
+    const fg = document.createElement('div');
+    fg.className = 'pet-album';
+    for (const f of FISH) {
+      const n = book[f.id] || 0, cell = document.createElement('div');
+      cell.className = 'pet-card' + (n ? ' got' : '');
+      cell.append(fishCanvas(n ? f.col : '#14101e'));
+      const s = document.createElement('small');
+      s.textContent = n ? `${f.name} ×${n}` : '???';
+      cell.append(s);
+      if (f.rare) { const r = document.createElement('i'); r.textContent = f.rare; cell.append(r); }
+      fg.append(cell);
+    }
+    box.append(fg);
+    box.insertAdjacentHTML('beforeend', `<p class="room-msg">Molada iskelenin ucunda E ile balık tut (1 mola hakkı).${data.raceBest ? ` Halka yarışı rekorun: ${data.raceBest.toFixed(1)} sn.` : ''}</p>`);
+  }
+
+  // Küçük piksel balık (defter için)
+  function fishCanvas(col) {
+    const c = document.createElement('canvas');
+    c.width = 22; c.height = 16;
+    const x = c.getContext('2d'), p = (a, b, w, h, k) => { x.fillStyle = k; x.fillRect(a, b, w, h); };
+    const dark = col === '#14101e', line = dark ? col : '#3a2a3e';
+    p(4, 5, 10, 6, line); p(3, 6, 12, 4, line); p(14, 4, 4, 8, line); // dış çizgi
+    p(5, 6, 8, 4, col); p(4, 7, 10, 2, col); p(15, 5, 2, 6, col); p(17, 4, 1, 2, col); p(17, 10, 1, 2, col);
+    if (!dark) { p(6, 7, 1, 1, '#1a1420'); p(8, 9, 4, 1, 'rgba(255,255,255,0.35)'); p(9, 4, 3, 1, col); }
+    c.className = 'pet-cv';
+    return c;
   }
 
   // Kalede bahçede dolaşan diğer hayvanlar (en fazla 4)

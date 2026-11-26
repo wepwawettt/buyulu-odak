@@ -375,8 +375,8 @@ function render() {
   $('goalFill').style.width = Math.min(100, 100 * mins / goal) + '%';
   $('coins').textContent = data.coins;
   const tk = data.breakTickets || 0, brk = mode !== 'focus';
-  $('ticketInfo').textContent = `🎟 Mola hakkın: ${tk}/2 · ` + (brk ? (tk ? 'Ödüllü etkinlikler (balık, yarış, teleskop, eski kitap) bir hak harcar.' : 'Hak yok; oynayabilirsin ama altın çıkmaz.')
-    : 'Kale ödülleri sadece molada verilir. Her odak oturumu 1 hak kazandırır.');
+  $('ticketInfo').textContent = `🎟 Mola hakkın: ${tk}/2 · ` + (brk ? (tk ? 'Etkinlikler (balık, halka yarışı, teleskop, eski kitap) açık; her biri 1 hak harcar.' : 'Hak yok: etkinlikler kapalı. Bir odak oturumu bitir.')
+    : 'Etkinlikler sadece molada, mola hakkıyla açılır. Her odak oturumu 1 hak kazandırır.');
   $('coinNext').textContent = `Sonraki altına ${Math.ceil((600 - data.coinAcc) / 60)} dk odak · bugün ${today().pomos} oturum`;
 
   const guest = Room.isGuest();

@@ -96,33 +96,46 @@ const Castle = (() => {
   put([[37, 16]], 'O'); put([[36, 18], [39, 18]], 'd'); put([[36, 19], [39, 19]], 'k'); put([[38, 19]], 'Y');
 
   // Okul bahçesi (kalenin güneyi, avludan kapıyla çıkılır)
-  //   'b' göl  'I' uçuş sahası  'M' halka direği  'N' balkabağı  'C' bahçıvan kulübesi  'Z' karanlık orman
+  //   'b' göl  '$' nilüfer  '%' saz  '_' toprak patika  '~' sürülmüş tarla  'N' balkabağı  '=' çit  '&' korkuluk
+  //   'C' bahçıvan kulübesi  '+' yön tabelası  '*' çiçekli ağaç  '^' çam  'I' uçuş sahası  'M' halka  'Z' orman
   fill(1, 21, 41, 29, 'g');
   fill(0, 21, 0, 30, 'Z'); fill(42, 21, 42, 30, 'Z'); fill(0, 30, 42, 30, 'Z');
-  for (const x of [1, 2, 5, 9, 13, 20, 24, 29, 35, 38, 41]) put([[x, 29]], 'Z');
-  fill(15, 20, 17, 20, 'D'); fill(16, 21, 16, 23, 'p'); fill(15, 21, 15, 21, 'p'); fill(17, 21, 17, 21, 'p');
-  fill(8, 24, 36, 24, 'p');
-  // Göl ve iskele
-  fill(1, 25, 9, 28, 'b'); fill(2, 24, 6, 24, 'b'); fill(10, 26, 10, 28, 'b'); put([[1, 25], [9, 25]], 'g');
+  for (const x of [1, 2, 9, 10, 11, 22, 23, 41]) put([[x, 29]], 'Z');
+  fill(15, 20, 17, 20, 'D');
+  // Kıvrımlı toprak patikalar: kapıdan göle, tarlaya, kulübeye ve sahaya
+  put([[16, 21], [16, 22], [16, 23], [15, 23], [14, 23], [13, 23], [12, 24], [11, 24], [10, 24], [9, 24], [8, 24], [7, 24],
+    [17, 23], [18, 23], [19, 23], [20, 24], [16, 24], [23, 25], [23, 26], [23, 27], [22, 27], [21, 27]], '_');
+  fill(21, 24, 37, 24, '_');
+  // Yuvarlak göl, iskele, nilüferler ve sazlar
+  for (const [y, x0, x1] of [[24, 2, 5], [25, 1, 8], [26, 1, 9], [27, 1, 10], [28, 2, 9], [29, 3, 7]]) fill(x0, y, x1, y, 'b');
   fill(7, 25, 7, 27, ',');
-  // Balkabağı tarlası ve kulübe
-  fill(12, 25, 19, 25, 'e'); put([[15, 25], [16, 25]], 'g');
-  for (const [x, y] of [[12, 26], [14, 27], [17, 26], [19, 27], [13, 28], [18, 28], [15, 28]]) put([[x, y]], 'N');
+  put([[3, 26], [9, 27], [4, 28], [2, 27], [6, 29]], '$');
+  put([[9, 25], [10, 26], [11, 27], [10, 28], [1, 24], [6, 24], [8, 29], [2, 29]], '%');
+  // Balkabağı tarlası: çitle çevrili sürülmüş toprak, ortada korkuluk
+  fill(12, 25, 20, 25, '='); fill(12, 26, 12, 28, '='); fill(20, 26, 20, 28, '='); put([[16, 25]], '_');
+  fill(13, 26, 19, 28, '~');
+  put([[13, 26], [15, 26], [18, 26], [14, 28], [17, 28], [19, 27], [13, 28]], 'N');
+  put([[16, 27]], '&');
+  // Kulübe
   fill(21, 25, 22, 26, 'C');
-  // Uçuş sahası, halkalar ve seyirci bankları
+  put([[21, 28], [22, 28]], 'f');
+  // Uçuş sahası, halkalar ve seyirci kuleleri
   fill(25, 25, 40, 29, 'I');
   put([[25, 26], [25, 27], [25, 28], [40, 26], [40, 27], [40, 28]], 'M');
   //   'R' bina renginde seyirci kulesi
   const TOWERS = [[27, 'kizil'], [31, 'zumrut'], [35, 'safir'], [39, 'kehribar']];
   for (const [x] of TOWERS) put([[x, 23]], 'R');
   for (const x of [29, 37]) put([[x, 23]], 'z');
-  // Ağaçlar, fenerler, çiçekler
-  put([[3, 22], [11, 22], [22, 22], [24, 21], [41, 22], [12, 29], [23, 28], [41, 24], [29, 21], [33, 21], [20, 21], [1, 23]], 't');
-  put([[15, 22], [18, 22], [8, 23], [33, 23]], 'l');
-  put([[13, 22], [26, 23], [4, 23]], 'e');
-  put([[6, 22], [20, 23], [26, 22], [10, 23], [37, 21]], 'f');
+  // Ağaçlar, fenerler, çiçekler, tabela
+  put([[3, 22], [11, 22], [22, 22], [13, 29], [33, 21]], '*');
+  put([[1, 22], [24, 21], [41, 23], [24, 28], [21, 29], [41, 26]], '^');
+  put([[20, 21], [29, 21], [12, 21], [38, 21]], 't');
+  put([[15, 22], [17, 22], [8, 23], [33, 23]], 'l');
+  put([[14, 21], [18, 21], [26, 23], [4, 23]], 'e');
+  put([[6, 22], [26, 22], [10, 22], [36, 21], [2, 23], [19, 22], [24, 23]], 'f');
+  put([[18, 22]], '+');
 
-  const SOLID = new Set(['E', 'R', 'b', 'M', 'N', 'C', 'Z', '#', 'W', 'P', 'i', 'V', 'G', 'S', 'B', 'd', 'T', 'H', 'h', 'w', 'F', 't', 'o', 'c', 'J', 'L', 'm', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l', 'X', 'O']);
+  const SOLID = new Set(['$', '=', '&', '+', '*', '^', 'E', 'R', 'b', 'M', 'N', 'C', 'Z', '#', 'W', 'P', 'i', 'V', 'G', 'S', 'B', 'd', 'T', 'H', 'h', 'w', 'F', 't', 'o', 'c', 'J', 'L', 'm', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l', 'X', 'O']);
   const LOCKS = { Q: { name: 'Gözlemevi', open: () => Levels.observatory(), lv: () => Levels.OBSERVATORY },
     U: { name: 'Gizli Kütüphane', open: () => Levels.library(), lv: () => Levels.LIBRARY } };
   const isWall = ch => ch === '#' || ch === 'W' || ch === 'P' || ch === 'i' || ch === 'V';
@@ -265,9 +278,17 @@ const Castle = (() => {
       const gx = Math.floor(hash(x * 7 + k, y) * 15), gy = Math.floor(hash(y * 7 + k, x) * 14);
       px(c, X + gx, Y + gy, 1, 2, k % 3 ? '#8fc27c' : '#72a663');
     }
-    if (y < 21 || at(x, y) !== 'g') return; // okul bahçesinde çiçek, mantar ve taşlar
+    if (y < 21) return;
+    const n = hash(Math.floor(x / 2) + 11, Math.floor(y / 2) + 5); // geniş, yumuşak ton lekeleri
+    if (n > 0.62) px(c, X, Y, T, T, 'rgba(170,220,130,0.22)'); else if (n < 0.22) px(c, X, Y, T, T, 'rgba(50,100,60,0.12)');
+    for (let k = 0; k < 3; k++) { // ot demetleri
+      const tx = X + 1 + Math.floor(hash(x * 11 + k, y) * 13), ty = Y + 2 + Math.floor(hash(y * 11 + k, x) * 12);
+      px(c, tx, ty, 1, 2, '#6a9e5a'); px(c, tx + 1, ty - 1, 1, 3, '#5e9450'); px(c, tx + 2, ty, 1, 2, '#6a9e5a');
+    }
+    if (at(x, y) !== 'g') return; // okul bahçesinde çiçek, mantar ve taşlar
     const h = hash(x * 3 + 1, y * 5 + 2), ox = 3 + Math.floor(hash(y, x * 2) * 8), oy = 3 + Math.floor(hash(x, y * 3) * 8);
-    if (h > 0.86) { for (const [dx, dy, col] of [[0, 0, '#f6a8c8'], [3, 1, '#fff0a0'], [1, 3, '#ffffff']]) { px(c, X + ox + dx, Y + oy + dy, 2, 2, col); px(c, X + ox + dx, Y + oy + dy + 2, 1, 1, '#5a9a4a'); } }
+    if (h > 0.9) { for (const [dx, dy, col] of [[0, 0, '#f6a8c8'], [3, 1, '#fff0a0'], [1, 3, '#ffffff']]) { px(c, X + ox + dx, Y + oy + dy, 2, 2, col); px(c, X + ox + dx, Y + oy + dy + 2, 1, 1, '#5a9a4a'); } }
+    else if (h > 0.86) { px(c, X + ox, Y + oy, 2, 2, '#ffe060'); px(c, X + ox + 4, Y + oy + 3, 2, 2, '#ffe060'); px(c, X + ox + 2, Y + oy + 5, 2, 2, '#a8c0ff'); } // karahindiba, çan çiçeği
     else if (h > 0.8) { px(c, X + ox, Y + oy + 2, 2, 2, '#e8dcc0'); px(c, X + ox - 1, Y + oy, 4, 2, '#d84a4a'); px(c, X + ox, Y + oy, 1, 1, '#ffffff'); }
     else if (h > 0.76) { px(c, X + ox, Y + oy, 5, 3, '#9a9488'); px(c, X + ox + 1, Y + oy, 3, 1, '#b8b2a6'); }
   }
@@ -359,17 +380,89 @@ const Castle = (() => {
           break;
         }
         case 'g': grass(c, X, Y, x, y); break;
-        case 'b': { // göl (kıyısı kumlu)
-          px(c, X, Y, T, T, '#244c74');
-          if (hash(x, y) > 0.45) px(c, X + 3, Y + 5, 5, 1, '#4a7eb0');
-          if (hash(y, x) > 0.55) px(c, X + 9, Y + 11, 4, 1, '#4a7eb0');
-          const wet = (dx, dy) => 'b,'.includes(at(x + dx, y + dy));
-          if (!wet(0, -1)) px(c, X, Y, T, 3, '#d8c89a');
-          if (!wet(0, 1)) px(c, X, Y + 13, T, 3, '#d8c89a');
-          if (!wet(-1, 0)) px(c, X, Y, 3, T, '#d8c89a');
-          if (!wet(1, 0)) px(c, X + 13, Y, 3, T, '#d8c89a');
+        case 'b': case '$': { // göl: ortası derin, kıyısı yumuşak kumlu ve yuvarlak köşeli
+          const wet = (dx, dy) => 'b,$'.includes(at(x + dx, y + dy));
+          let deep = 0;
+          for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]) deep += wet(dx, dy);
+          grass(c, X, Y, x, y);
+          px(c, X, Y, T, T, deep >= 8 ? '#366ea0' : '#3a72a4');
+          if (hash(x, y) > 0.4) px(c, X + 3, Y + 5, 5, 1, '#5a92c4');
+          if (hash(y, x) > 0.5) px(c, X + 9, Y + 11, 4, 1, '#5a92c4');
+          const sand = '#e8d8a8', foam = '#a8d4f0';
+          if (!wet(0, -1)) { px(c, X, Y, T, 4, sand); px(c, X, Y + 4, T, 1, foam); }
+          if (!wet(0, 1)) { px(c, X, Y + 12, T, 4, sand); px(c, X, Y + 11, T, 1, foam); }
+          if (!wet(-1, 0)) { px(c, X, Y, 4, T, sand); px(c, X + 4, Y + 1, 1, T - 2, foam); }
+          if (!wet(1, 0)) { px(c, X + 12, Y, 4, T, sand); px(c, X + 11, Y + 1, 1, T - 2, foam); }
+          // köşeleri yuvarla: iki komşu kıyıysa köşeye çimen
+          const g = '#7fb46e';
+          if (!wet(0, -1) && !wet(-1, 0)) { px(c, X, Y, 3, 1, g); px(c, X, Y, 1, 3, g); }
+          if (!wet(0, -1) && !wet(1, 0)) { px(c, X + 13, Y, 3, 1, g); px(c, X + 15, Y, 1, 3, g); }
+          if (!wet(0, 1) && !wet(-1, 0)) { px(c, X, Y + 15, 3, 1, g); px(c, X, Y + 13, 1, 3, g); }
+          if (!wet(0, 1) && !wet(1, 0)) { px(c, X + 13, Y + 15, 3, 1, g); px(c, X + 15, Y + 13, 1, 3, g); }
+          if (ch === '$') { // nilüfer yaprağı ve pembe çiçek
+            px(c, X + 3, Y + 6, 9, 5, '#5aa85a'); px(c, X + 4, Y + 5, 7, 7, '#5aa85a'); px(c, X + 7, Y + 5, 2, 3, '#3a72a4');
+            px(c, X + 5, Y + 7, 3, 1, '#7ac87a'); px(c, X + 9, Y + 8, 2, 2, '#f6a8c8'); px(c, X + 10, Y + 7, 1, 1, '#ffd0e0');
+          }
           break;
         }
+        case '%': // kıyıda sazlar (üstünden geçilir)
+          grass(c, X, Y, x, y);
+          for (let k = 0; k < 4; k++) {
+            const sx = X + 2 + k * 3 + Math.floor(hash(x + k, y) * 2), sh = 7 + Math.floor(hash(y + k, x) * 4);
+            px(c, sx, Y + 15 - sh, 1, sh, '#4a8a4a');
+            if (k % 2 === 0) { px(c, sx - 1, Y + 14 - sh, 2, 3, '#8a5a3a'); px(c, sx, Y + 13 - sh, 1, 1, '#4a8a4a'); }
+          }
+          break;
+        case '_': { // toprak patika: kenarları çimenle yumuşar
+          grass(c, X, Y, x, y);
+          const on = (dx, dy) => '_D,'.includes(at(x + dx, y + dy));
+          const l = on(-1, 0) ? 0 : 3, r = on(1, 0) ? 0 : 3, u = on(0, -1) ? 0 : 3, d = on(0, 1) ? 0 : 3;
+          px(c, X + l, Y + u, T - l - r, T - u - d, '#d2b48a');
+          px(c, X + l + 1, Y + u + 1, T - l - r - 2, T - u - d - 2, '#dcc098');
+          for (let k = 0; k < 4; k++) px(c, X + 3 + Math.floor(hash(x * 5 + k, y) * 10), Y + 3 + Math.floor(hash(y * 5 + k, x) * 10), 2, 1, '#b8986e');
+          break;
+        }
+        case '~': // sürülmüş tarla toprağı
+          px(c, X, Y, T, T, '#8a6444');
+          for (let k = 0; k < 4; k++) { px(c, X, Y + 2 + k * 4, T, 1, '#6e4e34'); px(c, X, Y + 3 + k * 4, T, 1, '#9a7454'); }
+          if (hash(x, y) > 0.5) { px(c, X + 4, Y + 6, 2, 2, '#5aa84a'); px(c, X + 11, Y + 12, 2, 2, '#5aa84a'); } // filiz
+          break;
+        case '=': { // ahşap çit: komşuya göre yatay ya da dikey
+          grass(c, X, Y, x, y);
+          const hz = at(x - 1, y) === '=' || at(x + 1, y) === '=';
+          if (hz) { px(c, X, Y + 6, T, 2, '#b08a5e'); px(c, X, Y + 11, T, 2, '#9a7650'); px(c, X + 6, Y + 3, 3, 12, '#c09a6c'); px(c, X + 6, Y + 3, 3, 1, '#d8b888'); }
+          else { px(c, X + 5, Y, 2, T, '#b08a5e'); px(c, X + 10, Y, 2, T, '#9a7650'); px(c, X + 4, Y + 5, 9, 3, '#c09a6c'); px(c, X + 4, Y + 5, 9, 1, '#d8b888'); }
+          break;
+        }
+        case '&': // korkuluk: hasır şapka, ekose gömlek, yayılmış kollar
+          px(c, X, Y, T, T, '#8a6444');
+          for (let k = 0; k < 4; k++) px(c, X, Y + 2 + k * 4, T, 1, '#6e4e34');
+          px(c, X + 7, Y + 4, 2, 12, '#7a5a3a'); px(c, X + 1, Y + 7, 14, 2, '#7a5a3a');
+          px(c, X + 4, Y + 6, 8, 6, '#c84a4a'); px(c, X + 4, Y + 8, 8, 1, '#e8c070'); px(c, X + 7, Y + 6, 1, 6, '#e8c070');
+          px(c, X + 5, Y + 1, 6, 5, '#f0d8a0'); px(c, X + 6, Y + 3, 1, 1, '#3a2a1e'); px(c, X + 9, Y + 3, 1, 1, '#3a2a1e');
+          px(c, X + 3, Y + 1, 10, 1, '#d8b860'); px(c, X + 5, Y - 1, 6, 2, '#e8c870');
+          px(c, X, Y + 6, 2, 3, '#e8c870'); px(c, X + 14, Y + 6, 2, 3, '#e8c870'); // saman eller
+          break;
+        case '+': // yön tabelası
+          grass(c, X, Y, x, y);
+          px(c, X + 7, Y + 4, 2, 12, '#7a5a3a');
+          px(c, X + 1, Y + 2, 10, 4, '#c09a6c'); px(c, X, Y + 3, 1, 2, '#c09a6c'); px(c, X + 3, Y + 3, 6, 1, '#7a5a3a');
+          px(c, X + 6, Y + 7, 10, 4, '#b08a5e'); px(c, X + 15, Y + 8, 1, 2, '#b08a5e'); px(c, X + 8, Y + 8, 6, 1, '#6a4a2e');
+          break;
+        case '*': // çiçekli ağaç (pembe)
+          grass(c, X, Y, x, y);
+          px(c, X + 3, Y + 13, 10, 2, 'rgba(0,0,0,0.22)');
+          px(c, X + 7, Y + 9, 3, 6, '#8a6446');
+          disc(c, X + 8, Y + 6, 7, (d, dx, dy) => (d > 46 ? '#d88aa8' : dx + dy < -3 ? '#ffd0e0' : '#f0a8c4'));
+          for (let k = 0; k < 5; k++) px(c, X + 3 + Math.floor(hash(x + k, y * 2) * 10), Y + 2 + Math.floor(hash(y + k, x * 2) * 8), 1, 1, '#ffffff');
+          break;
+        case '^': // çam
+          grass(c, X, Y, x, y);
+          px(c, X + 4, Y + 14, 8, 2, 'rgba(0,0,0,0.22)');
+          px(c, X + 7, Y + 12, 2, 4, '#6a4a30');
+          for (let k = 0; k < 3; k++) { const w = 6 + k * 3, yy = Y + 1 + k * 4; px(c, X + 8 - w / 2, yy, w, 4, k % 2 ? '#2e6a3e' : '#3a7a48'); px(c, X + 8 - w / 2, yy, Math.ceil(w / 3), 1, '#5a9a5a'); }
+          px(c, X + 7, Y, 2, 2, '#3a7a48');
+          break;
         case 'I': case 'M': { // uçuş sahası: biçilmiş çim şeritleri ve tebeşir çizgileri
           px(c, X, Y, T, T, x % 2 ? '#72ac60' : '#6aa458');
           const inP = (dx, dy) => 'IM'.includes(at(x + dx, y + dy));
@@ -394,8 +487,9 @@ const Castle = (() => {
           grass(c, X, Y, x, y);
           px(c, X + 2, Y, 2, T, '#6a4a30'); px(c, X + 12, Y, 2, T, '#6a4a30'); px(c, X + 4, Y + 6, 8, 1, '#7a5a40');
           break;
-        case 'N': // balkabağı
-          grass(c, X, Y, x, y);
+        case 'N': // balkabağı (tarlada toprağın üstünde)
+          px(c, X, Y, T, T, '#8a6444');
+          for (let k = 0; k < 4; k++) px(c, X, Y + 2 + k * 4, T, 1, '#6e4e34');
           px(c, X + 3, Y + 7, 10, 7, '#e07a2a'); px(c, X + 2, Y + 8, 12, 5, '#e07a2a');
           px(c, X + 6, Y + 7, 1, 7, '#b85a1a'); px(c, X + 9, Y + 7, 1, 7, '#b85a1a'); px(c, X + 4, Y + 8, 1, 2, '#f5a547');
           px(c, X + 7, Y + 5, 2, 2, '#4a7a3a'); px(c, X + 9, Y + 4, 3, 2, '#5aaa4a');
@@ -411,14 +505,18 @@ const Castle = (() => {
             px(c, X, Y, T, 14, '#9a8e82'); px(c, X, Y + 14, T, 2, '#6e625a');
             for (let k = 0; k < 3; k++) px(c, X + (k % 2) * 6, Y + 3 + k * 4, 9, 1, '#857a70');
             if (at(x - 1, y) !== 'C') { px(c, X + 5, Y + 4, 7, 10, '#6a4a2e'); px(c, X + 10, Y + 9, 1, 1, '#e3b23c'); }
-            else { px(c, X + 4, Y + 4, 7, 5, '#3a4c8a'); px(c, X + 4, Y + 4, 7, 1, '#6a4a2e'); px(c, X + 7, Y + 4, 1, 5, '#6a4a2e'); }
+            else {
+              px(c, X + 4, Y + 4, 7, 5, '#ffe7a0'); px(c, X + 4, Y + 4, 7, 1, '#6a4a2e'); px(c, X + 7, Y + 4, 1, 5, '#6a4a2e'); // sıcak ışıklı pencere
+              px(c, X + 3, Y + 9, 9, 2, '#8a5a3a'); px(c, X + 4, Y + 8, 2, 1, '#f6a8c8'); px(c, X + 7, Y + 8, 2, 1, '#ffe060'); px(c, X + 10, Y + 8, 1, 1, '#f6a8c8');
+            }
           }
           break;
-        case 'Z': // karanlık orman: iç içe koyu ağaç tepeleri
-          px(c, X, Y, T, T, '#1c3424');
-          disc(c, X + 5, Y + 6, 6, (d, dx, dy) => (dx + dy < -3 ? '#3a6a44' : '#2a5234'));
-          disc(c, X + 12, Y + 10, 6, (d, dx, dy) => (dx + dy < -3 ? '#36643e' : '#24482e'));
-          if (hash(x, y) > 0.7) { px(c, X + 4, Y + 12, 1, 1, '#e8f060'); px(c, X + 7, Y + 12, 1, 1, '#e8f060'); } // parlayan gözler
+        case 'Z': // orman: iç içe yuvarlak ağaç tepeleri, dipte mantar ve böğürtlen
+          px(c, X, Y, T, T, '#2a4a34');
+          disc(c, X + 5, Y + 6, 6, (d, dx, dy) => (d > 30 ? '#2e5a3a' : dx + dy < -3 ? '#5a9a62' : '#3e7a4a'));
+          disc(c, X + 12, Y + 10, 6, (d, dx, dy) => (d > 30 ? '#2a5234' : dx + dy < -3 ? '#4e8e58' : '#366c42'));
+          if (hash(x, y) > 0.6) { px(c, X + 3, Y + 4, 1, 1, '#e05a6a'); px(c, X + 6, Y + 7, 1, 1, '#e05a6a'); }
+          if (hash(y, x) > 0.7 && at(x, y - 1) !== 'Z') { px(c, X + 9, Y + 13, 3, 2, '#d84a4a'); px(c, X + 10, Y + 15, 1, 1, '#e8dcc0'); }
           break;
         case 'f': {
           grass(c, X, Y, x, y);
@@ -614,7 +712,7 @@ const Castle = (() => {
       }
     }
     // Eşyaların zemine düşen yumuşak gölgesi (alta ve sağa)
-    const CASTS = new Set(['B', 'd', 'T', 'H', 'J', 'L', 'c', 'o', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l', 'X', 'O', 'N', 'C', 'M', 'E']);
+    const CASTS = new Set(['B', 'd', 'T', 'H', 'J', 'L', 'c', 'o', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l', 'X', 'O', 'N', 'C', 'M', 'E', '=', '&', '+', '*', '^']);
     for (let y = 0; y < MH - 1; y++) for (let x = 0; x < MW; x++) {
       if (!CASTS.has(grid[y][x])) continue;
       if (!SOLID.has(grid[y + 1][x])) { px(c, x * T + 1, (y + 1) * T, T - 1, 3, 'rgba(60,40,30,0.18)'); px(c, x * T + 2, (y + 1) * T + 3, T - 3, 1, 'rgba(60,40,30,0.08)'); }
@@ -627,6 +725,16 @@ const Castle = (() => {
       px(c, X + 3, Y - 9, 2, 5, '#3a2a1e'); px(c, X + 7, Y - 9, 2, 5, '#3a2a1e'); px(c, X + 11, Y - 9, 2, 5, '#3a2a1e');
       for (let k = 0; k < 6; k++) px(c, X + 2 + k, Y - 13 - k, 12 - k * 2, 1, h.b);
       px(c, X + 7, Y - 22, 1, 4, '#5a4a3a'); px(c, X + 8, Y - 22, 4, 2, h.a);
+    }
+    // Kuleler arasında renkli bayrak dizisi
+    const flagCols = ['#e05a50', '#f0c040', '#5aa8e0', '#7ac06a', '#f6a8c8'];
+    for (let i = 0; i < TOWERS.length - 1; i++) {
+      const x0 = TOWERS[i][0] * T + 14, x1 = TOWERS[i + 1][0] * T + 2, y0 = 23 * T - 12;
+      for (let x = x0; x <= x1; x++) {
+        const k = (x - x0) / (x1 - x0), y = Math.round(y0 + Math.sin(k * Math.PI) * 6);
+        px(c, x, y, 1, 1, '#5a4a3a');
+        if ((x - x0) % 6 === 2) { const col = flagCols[((x - x0) / 6 + i) % flagCols.length | 0]; px(c, x - 1, y + 1, 3, 2, col); px(c, x, y + 3, 1, 1, col); }
+      }
     }
     // Duvarların dibine yumuşak gölge
     for (let y = 1; y < MH; y++) for (let x = 0; x < MW; x++) {
@@ -715,7 +823,7 @@ const Castle = (() => {
       lines: ['Bu raflardaki kitapları çok az kişi okudu.', 'Kürsüdeki eski kitabı oku; her gün başka bir sayfası açılır.', 'Sessizce… kitaplar uyuyor.'],
       focus: 'Şşş… bilgi sessizlikte büyür.' },
     { name: 'Bahçıvan Hollis', look: { house: 'kehribar', hair: 'kahve', skin: 2 }, beard: true,
-      extra: { H: '#6a5a3a', h: '#8a7a4a', O: '#4a3e2a', C: '#7a9a4a', c: '#5a7a3a', R: '#8a6a4a' }, area: [12, 24, 20, 24], start: [18, 24],
+      extra: { H: '#6a5a3a', h: '#8a7a4a', O: '#4a3e2a', C: '#7a9a4a', c: '#5a7a3a', R: '#8a6a4a' }, area: [12, 23, 20, 24], start: [18, 23],
       lines: ['Bu balkabakları Cadılar Gecesi\'ne yetişecek!', 'Gölün kıyısında yürümek kafayı dinlendirir.', 'Toprağa sabır ekersen başarı biçersin.', 'Ormana fazla yaklaşma; oradaki gözler hep uyanık.'],
       focus: 'Ben tarlaya bakarım, sen derslerine.' },
     { name: 'Hoca Swift', look: { house: 'safir', hair: 'sari', skin: 1 }, hat: 'hat',
@@ -786,24 +894,27 @@ const Castle = (() => {
   ];
   const lockMsg = ch => { const L = LOCKS[ch], need = Levels.need(L.lv()); return `${L.name} kilitli: ${need.name}'a geçince açılır (toplam ${need.h} sa odak).`; };
   // Günde bir kez +2 altın veren keşif noktaları
-  // Mola ödülleri: yalnızca gerçek molada ve bir mola hakkı (🎟, her odak oturumunda 1) harcanarak.
-  // Döner: altın verildiyse '' dışında bir ek metin; verilmediyse nedenini anlatan kısa not.
-  function breakReward(dayKey, coins, label) {
-    if (data[dayKey] === todayKey()) return '';
-    if (!isBreak()) return ' (Altın sadece molada: önce bir odak oturumu bitir.)';
-    if (!(data.breakTickets > 0)) return ' (Mola hakkın kalmadı: bir odak oturumu bitirince 🎟 kazanırsın.)';
-    data.breakTickets--;
-    data[dayKey] = todayKey();
-    data.coins += coins;
+  // Kale etkinlikleri (balık, halka yarışı, teleskop, eski kitap): yalnızca gerçek molada ve bir mola hakkıyla
+  // (🎟, her odak oturumunda 1) açılır. Hak, etkinlik başarıyla bitince harcanır; altın her etkinlikte günde bir kez.
+  function canPlay(what) {
+    if (focusing()) return `${what} molaya kalsın; şimdi odak zamanı!`;
+    if (!isBreak()) return `${what} için önce bir odak oturumu bitir, sonra molada gel.`;
+    if (!(data.breakTickets > 0)) return 'Mola hakkın kalmadı. Bir odak oturumu bitirince 🎟 kazanırsın.';
+    return null;
+  }
+  function spendTicket(dayKey, coins, label) {
+    data.breakTickets = Math.max(0, (data.breakTickets || 0) - 1);
+    let txt = '';
+    if (data[dayKey] !== todayKey()) { data[dayKey] = todayKey(); data.coins += coins; txt = ` +${coins} altın${label ? ` (${label})` : ''}`; }
     save(); render();
-    return ` +${coins} altın${label ? ` (${label})` : ''}`;
+    return txt;
   }
   function dailyBonus(dayKey, flag, who, list, anchor) {
-    const msg = list[Math.floor(Math.random() * list.length)];
+    if (data[dayKey] === todayKey()) return say(who, 'Bugün buna zaten baktın; yarın yine gel!', anchor, 4);
+    const no = canPlay(who);
+    if (no) return say(who, no, anchor, 5);
     (data.flags ||= {})[flag] = true;
-    const extra = breakReward(dayKey, 2);
-    save();
-    say(who, msg + extra, anchor, 6);
+    say(who, list[Math.floor(Math.random() * list.length)] + spendTicket(dayKey, 2), anchor, 6);
   }
   const lookScope = () => dailyBonus('skyDay', 'sky', 'Teleskop', FORTUNES, { x: scope[0] * T + 8, y: scope[1] * T });
   const readBook = () => dailyBonus('bookDay', 'book', 'Eski kitap', PAGES, { x: lectern[0] * T + 8, y: lectern[1] * T });
@@ -813,6 +924,7 @@ const Castle = (() => {
   function specialNear() {
     if (scope && nearTile(scope)) return { fn: lookScope, d: tileDist(scope) };
     if (nearTile(DOCK, 16)) return { fn: startFishing, d: tileDist(DOCK) };
+    if (signNear()) return { fn: () => say('Tabela', '← Göl ve iskele (balık) · ↓ Balkabağı tarlası ve kulübe · Uçuş sahası (halka yarışı) →', { x: 18 * T + 8, y: 22 * T }, 5), d: tileDist([18, 22]) };
     for (const [x, y] of GLASSES) if (nearTile([x, y], 24)) return { fn: readGlasses, d: tileDist([x, y]) };
     const rm = roamerNear();
     if (rm) return { fn: () => say(rm.name, `${rm.name} ${ROAM_LINES[Math.floor(Math.random() * ROAM_LINES.length)]}`, rm, 3), d: Math.hypot(rm.x - player.x, rm.y - player.y) };
@@ -1035,6 +1147,8 @@ const Castle = (() => {
     { id: 'water', giver: 'Professor Bramble', where: 'Sera', reward: 2, ask: 'Bir molada seraya gel, bir çığlık kökünü sula (yanına gidip E).', need: 1, count: c => c.water },
     { id: 'task', giver: 'Pip', where: 'Baykuşhane', reward: 2, ask: 'Görev listenden bir işi bitir, haberini ben uçurayım.', need: 1, count: c => c.tasks },
     { id: 'fount', giver: 'Felix', where: 'Avlu', reward: 1, ask: 'Bir molada avludaki çeşmenin başında dinlen.', need: 1, count: c => c.fountain },
+    { id: 'fish1', giver: 'Bahçıvan Hollis', where: 'Göl', reward: 2, ask: 'Bir molada iskelenin ucunda bir balık yakala.', need: 1, count: c => c.fish || 0 },
+    { id: 'race1', giver: 'Hoca Swift', where: 'Uçuş sahası', reward: 2, ask: 'Bir molada halka yarışını bitir.', need: 1, count: c => c.race || 0 },
     { id: 'tasksess', giver: 'Rose', where: 'Kütüphane', reward: 3, ask: 'Seçili bir görevine 2 odak oturumu ayır.', need: 2, count: c => c.taskSess },
   ];
   const isBreak = () => mode === 'short' || mode === 'long';
@@ -1045,7 +1159,7 @@ const Castle = (() => {
     if (!data.quests || data.quests.date !== key) {
       const seed = [...key].reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) % 1000003, 7);
       const ids = QUEST_POOL.map((q, i) => [q.id, hash(i + 1, seed)]).sort((p, q) => p[1] - q[1]).map(p => p[0]);
-      data.quests = { date: key, ids: ids.slice(0, 3), c: { lib: 0, hall: 0, water: 0, tasks: 0, fountain: 0, taskSess: 0 }, claimed: {}, seen: {} };
+      data.quests = { date: key, ids: ids.slice(0, 3), c: { lib: 0, hall: 0, water: 0, tasks: 0, fountain: 0, taskSess: 0, fish: 0, race: 0 }, claimed: {}, seen: {} };
       save();
     }
     return data.quests;
@@ -1059,7 +1173,7 @@ const Castle = (() => {
   const isDone = q => { const [cur, need] = progress(q); return cur >= need; };
 
   function bump(key) {
-    quests().c[key]++;
+    quests().c[key] = (quests().c[key] || 0) + 1;
     save();
     renderQuests();
     const ready = todays().find(q => !quests().claimed[q.id] && isDone(q) && !quests().seen['ready:' + q.id]);
@@ -1131,21 +1245,22 @@ const Castle = (() => {
 
   // ===== Göl: iskelenin ucunda balık tutma (molada) =====
   const FISH = [
-    { id: 'gumus', name: 'Gümüş Pullu', w: 30 }, { id: 'kirmizi', name: 'Kırmızı Yüzgeç', w: 25 },
-    { id: 'camur', name: 'Çamur Kedisi', w: 20 }, { id: 'ay', name: 'Ay Balığı', w: 14 },
-    { id: 'altin', name: 'Altın Sazan (nadir)', w: 8 }, { id: 'murekkep', name: 'Mürekkep Yavrusu (çok nadir)', w: 3 },
+    { id: 'gumus', name: 'Gümüş Pullu', w: 30, col: '#c8d0dc' }, { id: 'kirmizi', name: 'Kırmızı Yüzgeç', w: 25, col: '#e05a50' },
+    { id: 'camur', name: 'Çamur Kedisi', w: 20, col: '#8a7a56' }, { id: 'ay', name: 'Ay Balığı', w: 14, col: '#ece4a8' },
+    { id: 'altin', name: 'Altın Sazan', w: 8, col: '#f0c040', rare: 'Nadir' }, { id: 'murekkep', name: 'Mürekkep Yavrusu', w: 3, col: '#7a5aa0', rare: 'Çok nadir' },
   ];
   const DOCK = [7, 27];
   let fishing = null; // { phase: 'wait' | 'bite', until }
   function startFishing() {
-    if (focusing()) return say('İskele', 'Balık tutmak molaya kalsın; şimdi odak zamanı!', player, 3);
+    const no = canPlay('Balık tutmak');
+    if (no) return say('İskele', no, player, 4);
     fishing = { phase: 'wait', until: t + 2 + Math.random() * 4 };
     player.dir = 'down'; player.path = [];
     say('İskele', 'Oltayı attın… Mantar suya batınca hemen E!', player, 2.5);
   }
   function updateFishing() {
     if (!fishing) return;
-    if (player.moving || focusing() || !nearTile(DOCK, 16)) { fishing = null; return; }
+    if (player.moving || !isBreak() || focusing() || !nearTile(DOCK, 16)) { fishing = null; return; }
     if (fishing.phase === 'wait' && t > fishing.until) { fishing.phase = 'bite'; fishing.until = t + 1.2; }
     else if (fishing.phase === 'bite' && t > fishing.until) { fishing = null; say('İskele', 'Kaçtı! Bir daha dene.', player, 2.5); }
   }
@@ -1157,10 +1272,10 @@ const Castle = (() => {
     for (const x of FISH) if ((r -= x.w) < 0) { f = x; break; }
     const book = (data.fishBook ||= {}), isNew = !book[f.id];
     book[f.id] = (book[f.id] || 0) + 1;
-    let bonus = '';
-    bonus = breakReward('fishDay', 1, 'günün ilk balığı');
+    const bonus = spendTicket('fishDay', 1, 'günün ilk balığı');
+    bump('fish');
     save();
-    say('İskele', `${f.name} yakaladın!${isNew ? ' Yeni tür!' : ''}${bonus} Balık defterin: ${Object.keys(book).length}/${FISH.length}`, player, 5);
+    say('İskele', `${f.name} yakaladın!${isNew ? ' Yeni tür!' : ''}${bonus} Balık defterin (Hayvanlar paneli): ${Object.keys(book).length}/${FISH.length}`, player, 5);
   }
   function drawFishing() {
     if (!fishing) return;
@@ -1182,15 +1297,15 @@ const Castle = (() => {
   }
   function updateRace() {
     if (!race) return;
-    if (focusing()) { race = null; return; }
+    if (focusing() || !isBreak()) { race = null; return; }
     const r = RINGS[race.i], el = t - race.start;
     if (Math.hypot(player.x - r.x, player.y - 8 - r.y) < 11) {
       if (++race.i === RINGS.length) {
         race = null;
         const best = !data.raceBest || el < data.raceBest;
         if (best) data.raceBest = el;
-        let bonus = '';
-        bonus = breakReward('raceDay', 2);
+        const bonus = spendTicket('raceDay', 2);
+        bump('race');
         save();
         return say('Hoca Swift', `Bitti! ${el.toFixed(1)} saniye${best ? ', yeni rekor' : ''}.${bonus}`, swift(), 5);
       }
@@ -1240,7 +1355,17 @@ const Castle = (() => {
       px(ctx, X, Y + 3, 14, 3, '#7a5236'); px(ctx, X + 1, Y + 6, 12, 1, '#5a3a24'); px(ctx, X + 1, Y + 3, 12, 1, '#a07454');
       px(ctx, X + 10, Y - 4, 1, 7, '#5a4a3a'); px(ctx, X + 9, Y - 6, 3, 3, '#ffd46b');
     };
-    boat(2 * T + 6, 26 * T + 2, 0); boat(4 * T + 2, 28 * T + 4, 2);
+    boat(2 * T + 2, 25 * T + 4, 0); boat(4 * T + 2, 27 * T + 8, 2);
+    for (let i = 0; i < 3; i++) { // ördek ailesi: anne önde, iki yavru arkada
+      const a = t * 0.18 - i * 0.22, wx = 5.6 * T + Math.cos(a) * 2.6 * T, wy = 26.6 * T + Math.sin(a) * 0.9 * T;
+      const X = Math.round(wx - cam.x), Y = Math.round(wy - cam.y + Math.sin(t * 3 + i) * 0.6), big = i === 0, left = Math.sin(a) > 0;
+      if (X < -8 || X > VW + 8 || Y < -8 || Y > VH + 8) continue;
+      const w = big ? 6 : 4;
+      px(ctx, X - w / 2, Y, w, big ? 3 : 2, big ? '#f4f0e8' : '#ffe070');
+      px(ctx, left ? X - w / 2 - 1 : X + w / 2 - 1, Y - 2, 2, 2, big ? '#3a8a4a' : '#ffe070');
+      px(ctx, left ? X - w / 2 - 2 : X + w / 2 + 1, Y - 1, 1, 1, '#f08a3a');
+      if (Math.sin(t * 2 + i) > 0.5) px(ctx, X - w / 2 - 1, Y + (big ? 3 : 2), w + 2, 1, 'rgba(200,230,255,0.6)');
+    }
     const cyc = Math.floor(t / 22), k = t % 22;
     if (k < 4) { // dev ahtapotun kolu yükselir, kıvrılır, batar
       const lx = (2 + Math.floor(hash(cyc, 4) * 6)) * T + 8, ly = 27 * T + 10;
@@ -1260,6 +1385,31 @@ const Castle = (() => {
     }
   }
 
+  // Bahçenin canlı ayrıntıları: kelebekler (gündüz), baca dumanı, gece ormanda parlayan gözler
+  const hutChimney = { x: 22 * T + 11, y: 25 * T - 2 };
+  const forestEyes = tilesOf('Z').filter(([x, y]) => y >= 29 && hash(x, y * 3) > 0.72);
+  function drawGrounds() {
+    const phase = Scene.skyPhase();
+    for (let i = 0; i < 4; i++) { // baca dumanı
+      const k = (t * 0.35 + i / 4) % 1, X = Math.round(hutChimney.x - cam.x + Math.sin(t + i * 2) * 2 + k * 4), Y = Math.round(hutChimney.y - cam.y - k * 18);
+      if (X < -6 || X > VW || Y < -6 || Y > VH) continue;
+      ctx.globalAlpha = 0.5 * (1 - k); px(ctx, X, Y, 3 + Math.round(k * 2), 3, '#e8e8f0');
+    }
+    ctx.globalAlpha = 1;
+    if (phase !== 'night') for (let i = 0; i < 7; i++) { // kelebekler
+      const wx = (3 + hash(i, 21) * 36) * T + Math.sin(t * 0.4 + i * 2) * 26, wy = (21.4 + hash(i, 22) * 2.2) * T + Math.sin(t * 0.9 + i) * 10;
+      const X = Math.round(wx - cam.x), Y = Math.round(wy - cam.y), col = ['#ffb0d0', '#fff070', '#a8d0ff', '#ffffff'][i % 4], up = Math.floor(t * 9 + i) % 2;
+      if (X < 0 || X > VW || Y < 0 || Y > VH) continue;
+      px(ctx, X - 2, Y - up, 2, up ? 2 : 1, col); px(ctx, X + 1, Y - up, 2, up ? 2 : 1, col); px(ctx, X, Y, 1, 2, '#3a2a3e');
+    }
+    if (phase === 'night') for (const [x, y] of forestEyes) { // gece ormanda göz kırpan gözler
+      const X = x * T - cam.x, Y = y * T - cam.y;
+      if (X < -T || X > VW || Y < -T || Y > VH || (t + x) % 5 < 0.2) continue;
+      px(ctx, X + 5, Y + 9, 1, 1, '#e8f060'); px(ctx, X + 8, Y + 9, 1, 1, '#e8f060');
+    }
+  }
+  const signNear = () => nearTile([18, 22], 22);
+
   function talk(n) {
     const q = questOf(n);
     if (q && isDone(q)) {
@@ -1275,7 +1425,12 @@ const Castle = (() => {
       if (!player.seated) faceTo(player, n);
       return;
     }
-    if (n.name === 'Hoca Swift' && !focusing() && !race && !(q && isDone(q))) { startRace(n); if (!player.seated) faceTo(player, n); return; }
+    if (n.name === 'Hoca Swift' && !race && !(q && isDone(q))) {
+      const no = canPlay('Halka yarışı');
+      if (no) say(n.name, no, n, 4); else startRace(n);
+      if (!player.seated) faceTo(player, n);
+      return;
+    }
     if (n.name === 'Professor Ashdown' && !focusing()) {
       const next = Odam.nextRecipe();
       if (next === 'gold' || next === 'wisdom') {
@@ -1626,7 +1781,7 @@ const Castle = (() => {
   }
 
   // Etkinlik süsleri: avludaki ağaçlarda ışıklar, avluya kar (kış) ya da pembe yaprak (bahar) yağar
-  const FEST_TREES = tilesOf('t');
+  const FEST_TREES = [...tilesOf('t'), ...tilesOf('*'), ...tilesOf('^')];
   const FEST = {
     kis: { lights: ['#ff6a6a', '#ffd46b', '#7ad0ff', '#9aff8a'], star: true, fall: '#f4f8ff', n: 70, speed: 10 },
     bahar: { lights: ['#ffb0d0', '#fff0a0', '#ffffff', '#f080b0'], fall: '#ffb0d0', n: 40, speed: 6 },
@@ -1692,7 +1847,7 @@ const Castle = (() => {
     drawDynamic();
     updatePet();
     const petActor = { kind: 'pet', x: petFollow.x, y: petFollow.y - 0.5 }; // aynı hizadaysa oyuncunun arkasında
-    drawLake(); drawGlasses(); drawRings();
+    drawLake(); drawGrounds(); drawGlasses(); drawRings();
     const actors = [...NPCS.filter(n => !FREE_FLYERS.has(n.kind)), player, petActor, ...othersMap.values(), ...roamers].sort((a, b) => a.y - b.y);
     for (const a of actors) drawActor(a);
     if (player.seated && Math.sin(t * 5) > 0.3) px(ctx, Math.round(player.x - cam.x + 5), Math.round(player.y - cam.y - 2), 1, 1, '#ffe9a0');
@@ -1949,6 +2104,7 @@ const Castle = (() => {
     },
     mail: sendMail,
     // Ortak oda: benim konumum ve diğer oyuncular
+    FISH: () => FISH,
     myPos: () => ({ x: Math.round(player.x), y: Math.round(player.y), dir: player.dir, moving: !!player.moving, seated: !!player.seated }),
     setOthers(list) {
       const ids = new Set(list.map(o => o.id));
