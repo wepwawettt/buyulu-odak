@@ -114,6 +114,9 @@ const Scene = (() => {
     orman:    { kind: 'plank', wall: '#3a2414', b: ['#6a4428', '#74502e', '#7e5a34'], hl: '#4e321c', floor: '#3e4a28', fl: '#2e3a1e', edge: '#2a2414' },
     kristal:  { wall: '#2e2648', b: ['#4a3e6e', '#54487a', '#5e5288'], hl: '#6e62a0', floor: '#38344e', fl: '#2a2640', edge: '#221e34', spark: '#e8d8ff', spark2: '#a8e0ff' },
     kraliyet: { kind: 'paper', wall: '#2a1436', b: ['#3e2616', '#3a1e48', '#4a2e1a'], hl: '#c9a24a', floor: '#3a2418', fl: '#2a180e', edge: '#20120a' },
+    bahce:    { wall: '#2e4a36', b: ['#4a7a52', '#548a5c', '#5e9466'], hl: '#74a87a', floor: '#5a4630', fl: '#46361f', edge: '#2e2416', spark: '#ffb0d0', spark2: '#fff0a0' },
+    bilgelik: { kind: 'paper', wall: '#14303a', b: ['#3a2a1a', '#1e4450', '#4a3420'], hl: '#c9a24a', floor: '#3a2a1e', fl: '#2a1c12', edge: '#1e140c' },
+    cadikule: { wall: '#1a1424', b: ['#2e2240', '#36284a', '#3e2e54'], hl: '#4a3a64', floor: '#2a2030', fl: '#1e1624', edge: '#140e1a', spark: '#ff9a3c', spark2: '#9aff6a' },
     buz:      { wall: '#3a5a7a', b: ['#6a90b8', '#7aa0c6', '#8ab0d2'], hl: '#b8d4ee', floor: '#8aa8c8', fl: '#7090b0', edge: '#4a6a8a', spark: '#ffffff' },
   };
   let theme = 'tas';
@@ -442,6 +445,9 @@ const Scene = (() => {
     kar:      { pal: { H: '#dde6f2', h: '#ffffff', O: '#b8c8e0', K: '#4a5a7a' }, sleeve: '#c8d6ea', fx: 'snow' },
     // Sınıf atlayınca açılanlar (dükkanda satılmaz)
     bilgin:   { pal: { H: '#2a5a5a', h: '#4a8a80', O: '#20463f' }, sleeve: '#2a5650' },
+    cicek:    { pal: { H: '#e88aa8', h: '#ffc0d4', O: '#3e7a42' }, sleeve: '#4a8a4a', fx: 'petals' }, // etkinlik ödülleri
+    baykus:   { pal: { H: '#5a4030', h: '#8a6a4a', O: '#3a2a20', g: '#e3b23c' }, sleeve: '#4a3626', rows: GOLD_BRIM, fx: 'stars' },
+    cadi:     { pal: { H: '#2a1a3a', h: '#5a3a7a', O: '#1e1428', g: '#7ae07a' }, sleeve: '#2e2040', rows: GOLD_BRIM },
     ayaz:     { pal: { H: '#2a6a8a', h: '#5aa8c8', O: '#1e4a62', g: '#e8f4ff' }, sleeve: '#2a5a78', rows: GOLD_BRIM, fx: 'snow' }, // Kış Şenliği
     kidemli:  { pal: { H: '#6a2a3a', h: '#9a4a5a', O: '#4a2030', g: '#e3b23c' }, sleeve: '#5a2632', rows: GOLD_BRIM },
     mezun:    { pal: { H: '#2a2632', h: '#4a4458', O: '#1e1a26', g: '#e3b23c' }, sleeve: '#2a2632', rows: GOLD_BRIM, fx: 'stars' },
@@ -470,12 +476,12 @@ const Scene = (() => {
         if (iconMode || Math.sin(t * 2.5 + i * 2.3) > 0.2) px(ctx, ox + x, oy + y, 1, 1, '#ffe9a0');
       });
     }
-    if (of.fx === 'snow') {
+    if (of.fx === 'snow' || of.fx === 'petals') {
       for (let i = 0; i < 9; i++) {
         const fy = iconMode ? (i * 11) % 34 : (t * 5 + i * 7.3) % 36;
         const fx = (i * 17) % 34 - 4 + Math.round(Math.sin(t * 1.5 + i) * 1.5);
         ctx.globalAlpha = 0.85;
-        px(ctx, ox + fx, oy - 2 + Math.round(fy), 1, 1, '#ffffff');
+        px(ctx, ox + fx, oy - 2 + Math.round(fy), 1, 1, of.fx === 'petals' ? (i % 2 ? '#ffb0d0' : '#ffe0ec') : '#ffffff');
       }
       ctx.globalAlpha = 1;
     }
@@ -697,6 +703,42 @@ const Scene = (() => {
       },
     },
 
+    // Bahar Şenliği ödülü: pencere kemerini saran çiçekli sarmaşık
+    celenk: {
+      layer: 'back', box: [6, 7, 46, 40],
+      draw() {
+        const pts = [];
+        const add = (x, y) => { const l = pts.at(-1); if (!l || l[0] !== x || l[1] !== y) pts.push([x, y]); };
+        for (let y = 44; y > 29; y--) add(9, y);
+        for (let a = Math.PI; a <= 2 * Math.PI; a += 0.02) add(Math.round(29 + 19.6 * Math.cos(a)), Math.round(29 + 19.6 * Math.sin(a)));
+        for (let y = 29; y <= 44; y++) add(49, y);
+        const cols = ['#f080b0', '#fff0a0', '#ffffff', '#ffb0d0'];
+        pts.forEach(([x, y], i) => {
+          px(ctx, x, y, 1, 1, '#3e7a42');
+          if (i % 7 === 3) px(ctx, x + (i % 2 ? 1 : -1), y + 1, 1, 1, '#6ab06a');
+          if (i % 7 === 0) {
+            const c = cols[Math.floor(i / 7) % 4], open = iconMode || Math.sin(t * 1.5 + i) > -0.6;
+            if (open) { px(ctx, x - 1, y, 3, 1, c); px(ctx, x, y - 1, 1, 3, c); }
+            px(ctx, x, y, 1, 1, open ? '#e3b23c' : c);
+          }
+        });
+      },
+    },
+    // Sınav Maratonu ödülü: duvarda mühürlü altın sertifika
+    sertifika: {
+      layer: 'back', box: [48, 21, 20, 20],
+      draw() {
+        const x = 50, y = 25;
+        px(ctx, x + 7, y - 3, 2, 2, '#9a9aaa');
+        px(ctx, x, y, 16, 13, '#c9a24a'); px(ctx, x, y, 16, 1, '#ffe08a');
+        px(ctx, x + 1, y + 1, 14, 11, '#f4ecd0');
+        px(ctx, x + 4, y + 2, 8, 1, '#8a6a3a');
+        for (let k = 0; k < 3; k++) px(ctx, x + 3, y + 4 + k * 2, k === 2 ? 6 : 10, 1, '#b8a888');
+        px(ctx, x + 11, y + 8, 3, 3, '#c03a3a'); px(ctx, x + 11, y + 11, 1, 2, '#a02a2a'); px(ctx, x + 13, y + 11, 1, 2, '#a02a2a');
+        if (iconMode || Math.sin(t * 2) > 0.6) px(ctx, x + 12, y + 9, 1, 1, '#ffd0d0');
+      },
+    },
+
     // --- 2. paket: arka katman (tanım sırası = çizim sırası) ---
     shooting: {
       layer: 'back', iconBg: true, box: [10, 10, 38, 38],
@@ -814,6 +856,19 @@ const Scene = (() => {
           ctx.globalAlpha = glow; px(ctx, x, y, 1, 1, '#f4ffc0');
         }
         ctx.globalAlpha = 1;
+      },
+    },
+    // Cadılar Gecesi ödülü: tavanın altında uçuşan iki yarasa
+    yarasa: {
+      layer: 'front', box: [0, 0, 17, 11],
+      draw() {
+        const UP = ['K.K.K.K', 'KKKKKKK', '.KKKKK.', '..KKK..'], DOWN = ['..K.K..', '.KKKKK.', 'KKKKKKK', 'K.KKK.K'];
+        for (let i = 0; i < 2; i++) {
+          const x = iconMode ? 1 + i * 9 : Math.round(76 + 52 * Math.sin(t * 0.3 + i * 2.5));
+          const y = iconMode ? 1 + i * 6 : Math.round(12 + 6 * Math.sin(t * 0.9 + i * 1.7) + i * 8);
+          sprite(ctx, !iconMode && Math.floor(t * 8 + i * 3) % 2 ? UP : DOWN, { K: '#2a1e36' }, x, y);
+          px(ctx, x + 2, y + 2, 1, 1, '#ff7a7a'); px(ctx, x + 4, y + 2, 1, 1, '#ff7a7a');
+        }
       },
     },
     book: {

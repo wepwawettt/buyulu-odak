@@ -1246,25 +1246,37 @@ const Castle = (() => {
     }
   }
 
-  // Kış Şenliği (Aralık): avludaki ağaçlarda yanıp sönen ışıklar ve tepede yıldız, avluya kar yağar
+  // Etkinlik süsleri: avludaki ağaçlarda ışıklar, avluya kar (kış) ya da pembe yaprak (bahar) yağar
   const FEST_TREES = tilesOf('t');
+  const FEST = {
+    kis: { lights: ['#ff6a6a', '#ffd46b', '#7ad0ff', '#9aff8a'], star: true, fall: '#f4f8ff', n: 70, speed: 10 },
+    bahar: { lights: ['#ffb0d0', '#fff0a0', '#ffffff', '#f080b0'], fall: '#ffb0d0', n: 40, speed: 6 },
+    cadi: { lights: ['#ff9a3c', '#b070ff', '#9aff6a', '#ff9a3c'], lantern: true },
+  };
   function drawFest() {
-    if (!Fest.active()) return;
-    const cols = ['#ff6a6a', '#ffd46b', '#7ad0ff', '#9aff8a'];
+    const F = FEST[Events.active()];
+    if (!F) return;
     for (const [x, y] of FEST_TREES) {
       const X = x * T - cam.x, Y = y * T - cam.y;
       if (X < -T || X > VW || Y < -T || Y > VH) continue;
       [[3, 5], [12, 4], [6, 9], [10, 10], [8, 2], [4, 10], [13, 8]].forEach(([dx, dy], i) => {
-        if (Math.sin(t * 3 + i * 1.7 + x) > -0.3) px(ctx, X + dx, Y + dy, 2, 2, cols[(i + x) % 4]);
+        if (Math.sin(t * 3 + i * 1.7 + x) > -0.3) px(ctx, X + dx, Y + dy, 2, 2, F.lights[(i + x) % 4]);
       });
-      px(ctx, X + 7, Y - 3, 2, 4, '#ffe890'); px(ctx, X + 6, Y - 2, 4, 2, '#ffe890');
-      if (Math.sin(t * 4 + y) > 0) { px(ctx, X + 5, Y - 1, 1, 1, '#fff6c0'); px(ctx, X + 10, Y - 1, 1, 1, '#fff6c0'); px(ctx, X + 7, Y - 4, 2, 1, '#fff6c0'); }
+      if (F.star) {
+        px(ctx, X + 7, Y - 3, 2, 4, '#ffe890'); px(ctx, X + 6, Y - 2, 4, 2, '#ffe890');
+        if (Math.sin(t * 4 + y) > 0) { px(ctx, X + 5, Y - 1, 1, 1, '#fff6c0'); px(ctx, X + 10, Y - 1, 1, 1, '#fff6c0'); px(ctx, X + 7, Y - 4, 2, 1, '#fff6c0'); }
+      }
+      if (F.lantern) { // ağacın dibinde oyma balkabağı feneri
+        px(ctx, X + 10, Y + 11, 6, 5, '#e07a2a'); px(ctx, X + 12, Y + 10, 2, 1, '#4a7a3a');
+        if (Math.sin(t * 6 + x) > -0.5) { px(ctx, X + 11, Y + 12, 1, 1, '#ffe08a'); px(ctx, X + 14, Y + 12, 1, 1, '#ffe08a'); px(ctx, X + 12, Y + 14, 2, 1, '#ffe08a'); }
+      }
     }
+    if (!F.fall) return;
     const x0 = 10 * T, y0 = 13 * T, w = 13 * T, h = 7 * T; // avlu
-    for (let i = 0; i < 70; i++) {
-      const sx = x0 + ((hash(i, 3) * w + Math.sin(t * 0.8 + i) * 4) % w), sy = y0 + ((hash(i, 7) * h + t * (10 + hash(i, 5) * 8)) % h);
+    for (let i = 0; i < F.n; i++) {
+      const sx = x0 + ((hash(i, 3) * w + Math.sin(t * 0.8 + i) * 4) % w), sy = y0 + ((hash(i, 7) * h + t * (F.speed + hash(i, 5) * 8)) % h);
       const X = Math.round(sx - cam.x), Y = Math.round(sy - cam.y);
-      if (X >= 0 && X < VW && Y >= 0 && Y < VH) px(ctx, X, Y, 1, 1, '#f4f8ff');
+      if (X >= 0 && X < VW && Y >= 0 && Y < VH) px(ctx, X, Y, 1, 1, F.fall);
     }
   }
 

@@ -12,11 +12,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Büyülü Odak">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="icon" href="icon.svg?v=202611261403" type="image/svg+xml">
+  <link rel="icon" href="icon.svg?v=202611261601" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=202611261403">
+  <link rel="stylesheet" href="style.css?v=202611261601">
 </head>
 <body data-mode="focus">
   <!-- Giriş kapağı (cover.js çizer ve kapatır) -->
@@ -38,7 +38,7 @@
             <g fill="#fff0a0"><rect x="3" y="5" width="1" height="1"/><rect x="2" y="6" width="3" height="1"/><rect x="3" y="7" width="1" height="1"/></g>
           </svg><b id="streak">0</b>
         </button>
-        <button id="festChip" class="streak fest" type="button" hidden>❄ <b id="festCount">0</b></button>
+        <button id="festChip" class="streak fest" type="button" hidden></button>
         <div class="coins" title="Her 10 dakika odak = 1 altın">
           <span class="coin"></span><b id="coins">0</b>
         </div>
@@ -129,6 +129,7 @@
         <button id="openShop" class="btn small">Dükkan</button>
         <button id="openChar" class="btn small">Karakter</button>
         <button id="openBadges" class="btn small">Rozetler</button>
+        <button id="openEvents" class="btn small">Etkinlikler</button>
         <button id="openFriends" class="btn small">Sıralama</button>
         <button id="openSettings" class="btn small">Ayarlar</button>
         <button id="openGuide" class="btn small">Nasıl oynanır?</button>
@@ -305,11 +306,14 @@
       <li>Görev eklerken bir <b>ders etiketi</b> seç (ör. Matematik, "+ Yeni etiket…" ile kendin oluştur); istatistiklerde haftanın <b>derslere göre</b> dağılımını görürsün.</li>
     </ul>
 
-    <h3>❄️ Kış Şenliği (her Aralık)</h3>
+    <h3>🎉 Etkinlikler (her yıl aynı tarihlerde)</h3>
     <ul>
-      <li>Aralık boyunca bitirdiğin her odak oturumu <b>1 kar tanesi</b> kazandırır (üstte ❄ sayacı). Kar taneleri her yıl sıfırdan başlar.</li>
-      <li><b>8 ❄</b> pervazda bir <b>Kardan Adam</b>, <b>20 ❄</b> <b>Ayaz Cübbesi</b>, <b>40 ❄</b> <b>Buz Sarayı</b> oda teması. Bunlar dükkanda satılmaz; zaten sendeyse yerine +5 altın alırsın.</li>
-      <li>Şenlik boyunca kalenin avlusuna kar yağar, ağaçlar ışıl ışıl yanar.</li>
+      <li>Etkinlik sürerken bitirdiğin her odak oturumu <b>1 sembol</b> kazandırır (üstte sayacı görünür). Bir etkinlik başlamadan <b>7 gün önce</b> üstte geri sayım çıkar.</li>
+      <li>🌸 <b>Bahar Şenliği</b> (21 Mart – 20 Nisan): Çiçek Çelengi, Çiçek Cübbesi, Bahar Bahçesi teması.</li>
+      <li>⭐ <b>Sınav Haftası Maratonu</b> (1–21 Haziran): Altın Sertifika, Gece Kuşu Cübbesi, Bilgelik Salonu teması.</li>
+      <li>🎃 <b>Cadılar Gecesi</b> (17–31 Ekim): Yarasalar, Cadı Cübbesi, Cadı Kulesi teması.</li>
+      <li>❄ <b>Kış Şenliği</b> (1–31 Aralık): Kardan Adam, Ayaz Cübbesi, Buz Sarayı teması.</li>
+      <li>Kaç sembolde hangi ödülün açıldığını <b>Etkinlikler</b> panelinde görürsün. Bu ödüller dükkanda satılmaz; zaten sendeyse yerine +5 altın alırsın. Etkinlik boyunca kalenin avlusu da süslenir.</li>
     </ul>
 
     <h3>🎯 Odak koruyucu (isteğe bağlı)</h3>
@@ -361,9 +365,16 @@
     <button class="btn small close" data-close>Kapat</button>
   </dialog>
 
+  <dialog id="eventDlg" class="side">
+    <button class="x-close" data-close aria-label="Kapat" title="Kapat">×</button>
+    <h2>Etkinlikler</h2>
+    <p class="room-msg">Her yıl aynı tarihlerde döner. Etkinlik ödülleri dükkanda satılmaz; zaten sendeyse yerine +5 altın alırsın.</p>
+    <div id="eventBody"></div>
+    <button class="btn small close" data-close>Kapat</button>
+  </dialog>
+
   <dialog id="badgeDlg" class="side">
     <button class="x-close" data-close aria-label="Kapat" title="Kapat">×</button>
-    <div id="festBox" class="class-box fest-box" hidden></div>
     <h2>Sınıfın</h2>
     <div id="classBox" class="class-box"></div>
     <h2>Rozetler <small id="badgeCount"></small></h2>
@@ -408,20 +419,20 @@
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
-  <script src="firebase-config.js?v=202611261403"></script>
-  <script src="cloud.js?v=202611261403"></script>
-  <script src="scene.js?v=202611261403"></script>
-  <script src="map.js?v=202611261403"></script>
-  <script src="room.js?v=202611261403"></script>
-  <script src="odam.js?v=202611261403"></script>
-  <script src="badges.js?v=202611261403"></script>
-  <script src="pet.js?v=202611261403"></script>
-  <script src="levels.js?v=202611261403"></script>
-  <script src="friends.js?v=202611261403"></script>
-  <script src="fest.js?v=202611261403"></script>
-  <script src="recap.js?v=202611261403"></script>
-  <script src="app.js?v=202611261403"></script>
-  <script src="cover.js?v=202611261403"></script>
+  <script src="firebase-config.js?v=202611261601"></script>
+  <script src="cloud.js?v=202611261601"></script>
+  <script src="scene.js?v=202611261601"></script>
+  <script src="map.js?v=202611261601"></script>
+  <script src="room.js?v=202611261601"></script>
+  <script src="odam.js?v=202611261601"></script>
+  <script src="badges.js?v=202611261601"></script>
+  <script src="pet.js?v=202611261601"></script>
+  <script src="levels.js?v=202611261601"></script>
+  <script src="friends.js?v=202611261601"></script>
+  <script src="events.js?v=202611261601"></script>
+  <script src="recap.js?v=202611261601"></script>
+  <script src="app.js?v=202611261601"></script>
+  <script src="cover.js?v=202611261601"></script>
   <script>
     // Çevrimdışı yedek ve telefona kurulabilmek için
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});

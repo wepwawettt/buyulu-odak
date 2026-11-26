@@ -34,6 +34,10 @@ const OUTFIT_SHOP = [
   { id: 'kraliyet', name: 'Kraliyet Moru',     price: 12, desc: 'Altın kenarlı mor şapka.' },
   { id: 'kar',      name: 'Kar Büyücüsü',      price: 15, desc: 'Etrafında kar taneleri uçuşur.' },
   { id: 'kedi',     name: 'Kedi Kulaklı Bere', price: 18, desc: 'Sivri şapka yerine sevimli bere.' },
+  // Satılmaz: etkinliklerde kazanılır (events.js)
+  { id: 'cicek',    name: 'Çiçek Cübbesi',     price: 0, fest: true, desc: 'Bahar Şenliği ödülü: pembe şapka, yaprak yeşili cübbe.' },
+  { id: 'baykus',   name: 'Gece Kuşu Cübbesi', price: 0, fest: true, desc: 'Sınav Maratonu ödülü: kahve tüyler, altın yıldızlar.' },
+  { id: 'cadi',     name: 'Cadı Cübbesi',      price: 0, fest: true, desc: 'Cadılar Gecesi ödülü: mor ve siyah, yeşil kenarlı.' },
   { id: 'ayaz',     name: 'Ayaz Cübbesi',      price: 0, fest: true, desc: 'Kış Şenliği ödülü: buz mavisi, gümüş kenarlı.' },
   // Satılmaz: sınıf atlayınca açılır (level = Levels listesindeki sıra)
   { id: 'bilgin',   name: 'Bilgin Cübbesi',    price: 0, level: 3, desc: 'Derin deniz yeşili, bilge bir görünüm.' },
@@ -59,6 +63,9 @@ const SHOP = [
   { id: 'painting',  name: 'Hareketli Tablo',  price: 15, desc: 'Yaşlı büyücü seni izler.' },
   { id: 'book',      name: 'Uçan Kitap',       price: 18, desc: 'Sayfalarını çırparak uçar.' },
   { id: 'dragon',    name: 'Ejderha Yavrusu',  price: 25, desc: 'Kitaplığın üstünde uyuklar.' },
+  { id: 'celenk',    name: 'Çiçek Çelengi',    price: 0, fest: true, desc: 'Bahar Şenliği ödülü: pencere kemerinde açan çiçekler.' },
+  { id: 'sertifika', name: 'Altın Sertifika',  price: 0, fest: true, desc: 'Sınav Maratonu ödülü: duvarda mühürlü başarı belgesi.' },
+  { id: 'yarasa',    name: 'Yarasalar',        price: 0, fest: true, desc: 'Cadılar Gecesi ödülü: tavanda iki tatlı yarasa uçuşur.' },
   { id: 'snowman',   name: 'Kardan Adam',      price: 0, fest: true, desc: 'Kış Şenliği ödülü: pervazda atkısıyla bekler.' },
 ];
 
@@ -69,6 +76,9 @@ const THEME_SHOP = [
   { id: 'orman',    name: 'Orman Kulübesi',  price: 45, desc: 'Ilık ahşap duvarlar, yosunlu zemin.' },
   { id: 'kristal',  name: 'Kristal Salon',   price: 65, desc: 'Lila taşlar arasında parlayan kristaller.' },
   { id: 'kraliyet', name: 'Kraliyet Salonu', price: 90, desc: 'Altın desenli duvar kâğıdı, ahşap lambri.' },
+  { id: 'bahce',    name: 'Bahar Bahçesi',   price: 0, fest: true, desc: 'Bahar Şenliği ödülü: yosun yeşili taşlar, çiçek tozları.' },
+  { id: 'bilgelik', name: 'Bilgelik Salonu', price: 0, fest: true, desc: 'Sınav Maratonu ödülü: deniz mavisi, altın desenli duvar.' },
+  { id: 'cadikule', name: 'Cadı Kulesi',     price: 0, fest: true, desc: 'Cadılar Gecesi ödülü: mor taşlar, kıvılcımlı duvarlar.' },
   { id: 'buz',      name: 'Buz Sarayı',      price: 0, fest: true, desc: 'Kış Şenliği ödülü: buz mavisi, karlı duvarlar.' },
 ];
 
@@ -177,7 +187,7 @@ function completeFocus() {
   if (guardClean && dur('focus') >= 20 * 60) { data.coins++; toastLater('Tam odak! Oturum boyunca hiç ayrılmadın: +1 altın'); }
   guardClean = false;
   Pet.setSad(false);
-  Fest.onSession();
+  Events.onSession();
   today().pomos++;
   data.cycle++;
   const task = activeTask();
@@ -679,7 +689,7 @@ function buildShop() {
       b.textContent = Levels.need(o.level).name;
       b.title = `${Levels.need(o.level).name}'a geçince açılır`;
       b.disabled = true;
-    } else if (!data.outfits.includes(o.id) && o.fest) b = festButton();
+    } else if (!data.outfits.includes(o.id) && o.fest) b = festButton(o.id);
     else if (!data.outfits.includes(o.id)) b = priceButton(o, () => buyOutfit(o));
     else {
       b = document.createElement('button');
@@ -695,7 +705,7 @@ function buildShop() {
   for (const th of THEME_SHOP) {
     const on = data.theme === th.id, mine = data.themes.includes(th.id);
     let b;
-    if (!mine && th.fest) b = festButton();
+    if (!mine && th.fest) b = festButton(th.id);
     else if (!mine) b = priceButton(th, () => buyTheme(th));
     else {
       b = document.createElement('button');
@@ -711,7 +721,7 @@ function buildShop() {
   for (const it of SHOP) {
     const on = data.equipped.includes(it.id);
     let b;
-    if (!data.owned.includes(it.id) && it.fest) b = festButton();
+    if (!data.owned.includes(it.id) && it.fest) b = festButton(it.id);
     else if (!data.owned.includes(it.id)) b = priceButton(it, () => buy(it));
     else {
       b = document.createElement('button');
@@ -723,13 +733,13 @@ function buildShop() {
   }
 }
 
-// Kış Şenliği ödülleri satılmaz: Aralık'ta kar tanesi toplayınca açılır
-function festButton() {
-  const b = document.createElement('button');
+// Etkinlik ödülleri satılmaz: etkinlik sürerken oturum bitirerek açılır
+function festButton(id) {
+  const ev = Events.of(id), b = document.createElement('button');
   b.className = 'btn';
-  b.textContent = 'Kış Şenliği';
-  b.title = "Aralık'taki Kış Şenliği'nde kar tanesi toplayınca açılır (Rozetler panelinde)";
-  b.disabled = true;
+  b.textContent = ev.icon + ' Etkinlik';
+  b.title = `${ev.name} ödülü: Etkinlikler panelinden tarihine bak`;
+  b.onclick = () => togglePanel(eventDlg, Events.render);
   return b;
 }
 
@@ -805,10 +815,10 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => { if (spaceIsOurs(e)) e.preventDefault(); });
 
 // Yan paneller (karakter, dükkan): aynı anda biri açık olur
-const charDlg = $('charDlg'), shopDlg = $('shopDlg'), roomDlg = $('roomDlg'), brewDlg = $('brewDlg'), badgeDlg = $('badgeDlg'), friendDlg = $('friendDlg');
+const charDlg = $('charDlg'), shopDlg = $('shopDlg'), roomDlg = $('roomDlg'), brewDlg = $('brewDlg'), badgeDlg = $('badgeDlg'), friendDlg = $('friendDlg'), eventDlg = $('eventDlg');
 function togglePanel(dlg, build) {
   const wasOpen = dlg.open;
-  charDlg.close(); shopDlg.close(); roomDlg.close(); brewDlg.close(); badgeDlg.close(); friendDlg.close();
+  charDlg.close(); shopDlg.close(); roomDlg.close(); brewDlg.close(); badgeDlg.close(); friendDlg.close(); eventDlg.close();
   if (!wasOpen) { build(); dlg.show(); }
 }
 $('openChar').onclick = () => togglePanel(charDlg, buildCharOptions);
@@ -817,7 +827,8 @@ document.querySelector('.coins').onclick = () => togglePanel(shopDlg, buildShop)
 for (const d of [charDlg, shopDlg, roomDlg]) d.querySelector('[data-close]').onclick = () => d.close();
 $('openRoom').onclick = () => togglePanel(roomDlg, Room.renderPanel);
 $('openFriends').onclick = () => togglePanel(friendDlg, Friends.render);
-$('openBadges').onclick = $('streakBadge').onclick = $('festChip').onclick = () => togglePanel(badgeDlg, () => { Fest.render(); Levels.render(); Badges.render(); });
+$('openBadges').onclick = $('streakBadge').onclick = () => togglePanel(badgeDlg, () => { Levels.render(); Badges.render(); });
+$('openEvents').onclick = $('festChip').onclick = () => togglePanel(eventDlg, Events.render);
 
 const setDlg = $('setDlg'), form = $('setForm');
 // Nasıl oynanır? rehberi: düğmeyle her zaman, ilk girişte bir kez kendiliğinden
@@ -914,7 +925,7 @@ renderStats();
 Room.init();
 Odam.init();
 Cloud.init();
-Fest.init();
+Events.init();
 Recap.init();
 setInterval(tick, 250);
 setInterval(renderStats, 30000); // odak sürerken bugünkü çubuk büyüsün

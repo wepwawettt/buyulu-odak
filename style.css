@@ -532,12 +532,15 @@ body.deep .frame { box-shadow: 0 0 0 4px var(--ink), 0 0 0 8px var(--gold-dark),
 @keyframes alert-blink { 50% { filter: brightness(1.35); } }
 .toast { white-space: normal; width: max-content; max-width: 88%; text-align: center; line-height: 1.1; }
 
-/* Kış Şenliği sayacı ve paneli */
-.streak.fest { color: #dff0ff; box-shadow: 0 0 0 3px var(--ink), 0 0 0 5px #5aa8c8; }
-.streak[hidden], .class-box[hidden] { display: none; }
-.fest-box { box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px #5aa8c8; }
-.fest-box > b { color: #dff0ff; }
-.fest-box .bar div { background: #9ad8f0; }
+/* Etkinlik rozeti (sürerken sembol sayısı, yaklaşırken geri sayım) ve Etkinlikler paneli */
+.streak.fest { color: #fff0d8; box-shadow: 0 0 0 3px var(--ink), 0 0 0 5px #c08ad8; }
+.streak.fest.soon { color: var(--muted); box-shadow: 0 0 0 3px var(--ink), 0 0 0 5px var(--panel-2); font-size: 22px; }
+.streak[hidden] { display: none; }
+.event-box { margin-bottom: 12px; opacity: .8; }
+.event-box.on { opacity: 1; box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px #c08ad8; }
+.event-box > b { font-size: 22px; }
+.event-box small { display: block; margin-top: 2px; }
+.event-box .when { color: #f2d27a; }
 
 /* Seans notu */
 .note-box { align-self: stretch; box-sizing: border-box; width: 100%; background: var(--panel-2); box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px var(--gold-dark); padding: 8px 10px; margin: 4px 0 12px; }
