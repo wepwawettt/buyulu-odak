@@ -73,7 +73,8 @@ const Castle = (() => {
   put([[12, 13], [20, 13], [11, 17], [21, 17]], 'e');
   put([[13, 16], [20, 16]], 'z');
   put([[14, 14], [18, 14]], 'l');
-  put([[11, 15], [21, 15], [13, 19], [19, 19], [16, 19], [12, 18]], 'f');
+  put([[11, 15], [21, 15], [13, 19], [19, 19], [16, 19], [12, 18], [11, 14], [21, 14], [13, 18], [20, 18], [12, 15], [20, 15]], 'f');
+  put([[10, 13], [22, 19]], '*');
   // Sera (sağ alt)
   fill(23, 13, 23, 20, 'G'); fill(33, 13, 33, 20, 'G'); fill(23, 20, 33, 20, 'G');
   fill(24, 13, 32, 19, 'y');
@@ -704,11 +705,15 @@ const Castle = (() => {
           px(c, X + 7, Y + 5, 2, 10, '#5a5468'); px(c, X + 5, Y + 14, 6, 1, '#4a4458');
           px(c, X + 5, Y + 1, 6, 5, '#4a4458'); px(c, X + 6, Y + 2, 4, 3, '#f6e0a0');
           break;
-        case 'v':
-          px(c, X, Y, T, T, '#1a1828');
-          if (hash(x, y) > 0.6) px(c, X + Math.floor(hash(y, x) * 14), Y + Math.floor(hash(x + 1, y) * 14), 1, 1, '#2a2840');
-          if (at(x, y - 1) !== 'v') px(c, X, Y, T, 3, '#2a2638');
+        case 'v': { // merdiven boşluğu: aşağıda yıldızlı, büyülü bir derinlik
+          const k = (y - 4) / 3;
+          px(c, X, Y, T, T, k < 0.34 ? '#20204a' : k < 0.67 ? '#1a1a3e' : '#141432');
+          for (let i = 0; i < 3; i++) { const h = hash(x * 3 + i, y * 7); if (h > 0.4) px(c, X + Math.floor(hash(y + i, x) * 15), Y + Math.floor(hash(x + i, y + 2) * 15), 1, 1, h > 0.85 ? '#ffffff' : '#7a7ac8'); }
+          if (hash(x, y) > 0.8) { px(c, X + 6, Y + 6, 3, 1, '#c8b8ff'); px(c, X + 7, Y + 5, 1, 3, '#c8b8ff'); }
+          if (at(x, y - 1) !== 'v') { px(c, X, Y, T, 3, '#3a3460'); px(c, X, Y + 1, T, 1, '#d8b870'); for (let r = 1; r < T; r += 5) px(c, X + r, Y - 3, 1, 4, '#d8b870'); px(c, X, Y - 3, T, 1, '#e3c27a'); }
+          if (at(x, y + 1) !== 'v') { px(c, X, Y + 13, T, 3, '#3a3460'); px(c, X, Y + 13, T, 1, '#d8b870'); }
           break;
+        }
       }
     }
     // Eşyaların zemine düşen yumuşak gölgesi (alta ve sağa)
@@ -725,6 +730,69 @@ const Castle = (() => {
       px(c, X + 3, Y - 9, 2, 5, '#3a2a1e'); px(c, X + 7, Y - 9, 2, 5, '#3a2a1e'); px(c, X + 11, Y - 9, 2, 5, '#3a2a1e');
       for (let k = 0; k < 6; k++) px(c, X + 2 + k, Y - 13 - k, 12 - k * 2, 1, h.b);
       px(c, X + 7, Y - 22, 1, 4, '#5a4a3a'); px(c, X + 8, Y - 22, 4, 2, h.a);
+    }
+    // Koridor halısı: altın kenar ve aralıklı motifler
+    for (let x = 2; x <= 40; x++) {
+      if (at(x, 10) !== 'r') continue;
+      px(c, x * T, 10 * T + 4, T, 1, '#e3c27a'); px(c, x * T, 12 * T - 4, T, 1, '#e3c27a');
+      if (x % 4 === 0) { const cx = x * T + 8, cy = 11 * T; for (let k = 0; k < 4; k++) px(c, cx - k, cy - 3 + k, k * 2 + 1, 1, '#e3c27a'); for (let k = 0; k < 3; k++) px(c, cx - 2 + k, cy + 1 + k, 5 - k * 2, 1, '#e3c27a'); px(c, cx, cy, 1, 1, '#9c1c1c'); }
+    }
+    // Koridor duvarında bina renklerinde duvar halıları
+    const tapCols = ['kizil', 'zumrut', 'safir', 'kehribar'];
+    [3, 8, 11, 14, 19, 23, 31, 33, 39].forEach((x, i) => {
+      if (at(x, 9) !== '#') return;
+      const h = Scene.HOUSES[tapCols[i % 4]], X = x * T + 4, Y = 9 * T + 1;
+      px(c, X - 1, Y, 10, 1, '#8a6a3a'); px(c, X, Y + 1, 8, 11, h.a); px(c, X, Y + 1, 1, 11, h.b); px(c, X + 7, Y + 1, 1, 11, h.b);
+      px(c, X + 2, Y + 4, 4, 4, h.b); px(c, X + 3, Y + 5, 2, 2, h.a);
+      px(c, X, Y + 12, 2, 2, h.a); px(c, X + 3, Y + 12, 2, 2, h.a); px(c, X + 6, Y + 12, 2, 2, h.a);
+    });
+    // İksir zindanı: köşelerde örümcek ağı, yerde mantar ve mum kümeleri, yeşil iksir lekeleri
+    const web = (X, Y, fx) => { for (let k = 0; k < 7; k++) { px(c, X + (fx ? 15 - k : k), Y, 1, 1, '#b8b0c8'); px(c, X + (fx ? 15 : 0), Y + k, 1, 1, '#b8b0c8'); px(c, X + (fx ? 15 - k : k), Y + 6 - k, 1, 1, 'rgba(200,190,220,0.7)'); } px(c, X + (fx ? 12 : 3), Y + 2, 1, 1, '#b8b0c8'); };
+    web(1 * T, 14 * T, false); web(8 * T, 14 * T, true); web(1 * T, 19 * T + 6, false);
+    const candleSet = (X, Y) => { for (const [dx, h] of [[0, 6], [4, 4], [7, 7]]) { px(c, X + dx, Y - h, 2, h, '#efe6cf'); px(c, X + dx, Y - h, 1, h, '#fff8e6'); px(c, X + dx, Y - h - 3, 2, 2, '#ffd46b'); px(c, X + dx, Y - h - 4, 1, 1, '#fff2b0'); px(c, X + dx + 1, Y - h - 1, 1, 1, '#ff9a3c'); } };
+    candleSet(1 * T + 3, 16 * T + 14); candleSet(8 * T + 3, 16 * T + 14); candleSet(5 * T + 3, 14 * T + 14);
+    const shroom = (X, Y, col) => { px(c, X + 1, Y + 2, 1, 2, '#e8dcc0'); px(c, X, Y, 3, 2, col); px(c, X + 4, Y + 3, 1, 1, '#e8dcc0'); px(c, X + 3, Y + 2, 3, 1, col); };
+    shroom(3 * T + 2, 14 * T + 10, '#9a6ad8'); shroom(6 * T + 9, 19 * T + 8, '#5ac8a0'); shroom(1 * T + 9, 18 * T + 3, '#9a6ad8');
+    for (const [x, y] of [[4, 16], [6, 14], [3, 19]]) { px(c, x * T + 2, y * T + 6, 10, 4, 'rgba(110,230,120,0.35)'); px(c, x * T + 4, y * T + 5, 6, 6, 'rgba(110,230,120,0.25)'); }
+    // Gözlemevi: halıda altın takımyıldızlar, zeminde yıldız kakmaları
+    const cons = [[36, 4, 2, 3], [37, 5, 12, 2], [38, 4, 8, 6], [39, 6, 4, 10], [37, 6, 6, 12]];
+    for (let i = 0; i < cons.length; i++) {
+      const [x, y, dx, dy] = cons[i], X = x * T + dx, Y = y * T + dy;
+      px(c, X, Y, 2, 2, '#fff0a0');
+      if (i) { const [px0, py0, ddx, ddy] = cons[i - 1], X0 = px0 * T + ddx, Y0 = py0 * T + ddy, n = Math.max(Math.abs(X - X0), Math.abs(Y - Y0)); for (let k = 2; k < n; k += 2) px(c, Math.round(X0 + (X - X0) * k / n), Math.round(Y0 + (Y - Y0) * k / n), 1, 1, '#e3c27a'); }
+    }
+    for (const [x, y] of [[35, 7], [40, 7], [34, 5], [38, 2], [35, 2]]) { const X = x * T + 8, Y = y * T + 8; px(c, X - 2, Y, 5, 1, '#c9a24a'); px(c, X, Y - 2, 1, 5, '#c9a24a'); }
+    // Gizli Kütüphane: kürsünün çevresinde yuvarlak mor halı
+    for (let yy = -18; yy <= 18; yy++) for (let xx = -26; xx <= 26; xx++) {
+      const d = (xx * xx) / (26 * 26) + (yy * yy) / (18 * 18);
+      if (d > 1) continue;
+      const X = 37 * T + 8 + xx, Y = 16 * T + 8 + yy;
+      if (at(Math.floor(X / T), Math.floor(Y / T)) !== ',') continue;
+      px(c, X, Y, 1, 1, d > 0.86 ? '#d8b870' : d > 0.72 ? '#5a3a7a' : (xx + yy) % 6 === 0 ? '#7a5aa0' : '#6a4a8a');
+    }
+    // Sera: cam duvarlardan sarkan sarmaşıklar ve ara sıra çiçek
+    for (let y = 13; y <= 19; y++) for (const x of [23, 33]) {
+      if (at(x, y) !== 'G') continue;
+      const X = x * T + (x === 23 ? 10 : 1), Y = y * T;
+      for (let k = 0; k < T; k += 2) px(c, X + Math.round(Math.sin((y * T + k) * 0.4) * 2), Y + k, 2, 2, k % 6 === 0 ? '#6ab06a' : '#4a8a4a');
+      if (hash(x, y) > 0.5) { px(c, X, Y + 7, 3, 3, '#f6a8c8'); px(c, X + 1, Y + 8, 1, 1, '#ffe060'); }
+    }
+    // Kütüphane: masaların arasında sıcak renkli halı
+    for (let yy = 0; yy < 2 * T; yy++) for (let xx = 0; xx < 2 * T; xx++) {
+      const X = 4 * T + xx, Y = 6 * T + yy, edge = xx < 2 || yy < 2 || xx > 2 * T - 3 || yy > 2 * T - 3;
+      if (at(Math.floor(X / T), Math.floor(Y / T)) !== ',') continue;
+      px(c, X, Y, 1, 1, edge ? '#d8b870' : (xx + yy) % 8 < 1 ? '#c86a5a' : '#a84a4a');
+    }
+    // Kule: tepede baykuşhane samanı ve tüyler, altta mavi yuvarlak halı
+    for (let x = 25; x <= 32; x++) for (let y = 2; y <= 3; y++) {
+      if (at(x, y) !== '.') continue;
+      for (let k = 0; k < 6; k++) { const X = x * T + Math.floor(hash(x * 9 + k, y) * 14), Y = y * T + Math.floor(hash(y * 9 + k, x) * 14); px(c, X, Y, 3, 1, k % 2 ? '#d8c070' : '#c8a850'); }
+      if (hash(x, y) > 0.5) { const X = x * T + 5, Y = y * T + 9; px(c, X, Y, 1, 1, '#f3ead2'); px(c, X + 1, Y - 1, 1, 1, '#f3ead2'); px(c, X + 2, Y - 2, 2, 1, '#cfc4a8'); }
+    }
+    for (let yy = -12; yy <= 12; yy++) for (let xx = -40; xx <= 40; xx++) {
+      const d = (xx * xx) / 1600 + (yy * yy) / 144, X = 28.5 * T + xx, Y = 7.5 * T + yy;
+      if (d > 1 || at(Math.floor(X / T), Math.floor(Y / T)) !== '.') continue;
+      px(c, X, Y, 1, 1, d > 0.85 ? '#d8b870' : d > 0.65 ? '#2a3a7a' : (xx * 3 + yy) % 9 === 0 ? '#e3c27a' : '#3a4c8a');
     }
     // Kuleler arasında renkli bayrak dizisi
     const flagCols = ['#e05a50', '#f0c040', '#5aa8e0', '#7ac06a', '#f6a8c8'];
@@ -1409,6 +1477,36 @@ const Castle = (() => {
     }
   }
   const signNear = () => nearTile([18, 22], 22);
+  const voidTiles = tilesOf('v');
+  const FLY_BOOKS = [{ cx: 37.5, cy: 16, r: 2.2, sp: 0.5 }, { cx: 37.5, cy: 15.5, r: 1.4, sp: -0.7 }, { cx: 5, cy: 5.5, r: 2.4, sp: 0.35 }];
+  function drawRooms() {
+    for (const [x, y] of voidTiles) { // kule boşluğunda göz kırpan yıldızlar
+      if (hash(x * 5 + Math.floor(t * 2), y) < 0.82) continue;
+      const X = x * T - cam.x + Math.floor(hash(y, x + Math.floor(t * 2)) * 14), Y = y * T - cam.y + Math.floor(hash(x, y + Math.floor(t * 2)) * 14);
+      if (X < 0 || X > VW || Y < 0 || Y > VH) continue;
+      px(ctx, X, Y, 1, 1, '#ffffff'); px(ctx, X - 1, Y, 3, 1, 'rgba(200,190,255,0.6)'); px(ctx, X, Y - 1, 1, 3, 'rgba(200,190,255,0.6)');
+    }
+    for (let i = 0; i < 6; i++) { // zindanda yükselen yeşil buhar
+      const k = (t * 0.25 + i / 6) % 1, wx = (1.5 + hash(i, 41) * 7) * T + Math.sin(t + i) * 4, wy = (19.5 - k * 6) * T;
+      const X = Math.round(wx - cam.x), Y = Math.round(wy - cam.y);
+      if (X < 0 || X > VW || Y < 0 || Y > VH) continue;
+      ctx.globalAlpha = 0.35 * Math.sin(k * Math.PI); px(ctx, X, Y, 3, 2, '#8af09a');
+    }
+    ctx.globalAlpha = 1;
+    for (const b of FLY_BOOKS) { // kitaplar kendi kendine süzülür, sayfalarını çırpar
+      const a = t * b.sp, X = Math.round(b.cx * T + Math.cos(a) * b.r * T - cam.x), Y = Math.round(b.cy * T + Math.sin(a) * b.r * T * 0.5 - 10 - cam.y + Math.sin(t * 3) * 1.5);
+      if (X < -8 || X > VW + 8 || Y < -8 || Y > VH + 8) continue;
+      const f = Math.floor(t * 6 + b.cx) % 2;
+      px(ctx, X - 4, Y + (f ? 0 : 1), 4, 2, '#f2e8c0'); px(ctx, X, Y + (f ? 0 : 1), 4, 2, '#e8dcb0'); px(ctx, X - 1, Y + 2, 2, 2, '#7a2a3a');
+      px(ctx, X - 4, Y + 6, 8, 1, 'rgba(0,0,0,0.18)');
+    }
+    if (Scene.skyPhase() !== 'night') for (let i = 0; i < 6; i++) { // serada ve avluda kelebekler
+      const inG = i < 3, wx = (inG ? 25 + hash(i, 51) * 7 : 11 + hash(i, 52) * 10) * T + Math.sin(t * 0.5 + i * 2) * 18, wy = (14 + hash(i, 53) * 4) * T + Math.sin(t * 0.8 + i) * 8;
+      const X = Math.round(wx - cam.x), Y = Math.round(wy - cam.y), col = ['#ffb0d0', '#fff070', '#a8d0ff'][i % 3], up = Math.floor(t * 9 + i) % 2;
+      if (X < 0 || X > VW || Y < 0 || Y > VH) continue;
+      px(ctx, X - 2, Y - up, 2, up ? 2 : 1, col); px(ctx, X + 1, Y - up, 2, up ? 2 : 1, col); px(ctx, X, Y, 1, 2, '#3a2a3e');
+    }
+  }
 
   function talk(n) {
     const q = questOf(n);
@@ -1847,7 +1945,7 @@ const Castle = (() => {
     drawDynamic();
     updatePet();
     const petActor = { kind: 'pet', x: petFollow.x, y: petFollow.y - 0.5 }; // aynı hizadaysa oyuncunun arkasında
-    drawLake(); drawGrounds(); drawGlasses(); drawRings();
+    drawLake(); drawGrounds(); drawRooms(); drawGlasses(); drawRings();
     const actors = [...NPCS.filter(n => !FREE_FLYERS.has(n.kind)), player, petActor, ...othersMap.values(), ...roamers].sort((a, b) => a.y - b.y);
     for (const a of actors) drawActor(a);
     if (player.seated && Math.sin(t * 5) > 0.3) px(ctx, Math.round(player.x - cam.x + 5), Math.round(player.y - cam.y - 2), 1, 1, '#ffe9a0');
@@ -1868,6 +1966,9 @@ const Castle = (() => {
   // Düşük çözünürlükte çizildiği için büyütülünce yumuşak, pikselli halkalar oluşur.
   let LIGHTS = null; // çeşme konumu buildBg sonrası belli olduğu için ilk çizimde kurulur
   const buildLights = () => [
+    ...[[1, 16], [8, 16], [5, 14]].map(([x, y]) => ({ x: x * T + 7, y: y * T + 8, r: 26, a: 0.6, col: '255,200,120', glow: 0.14, flick: 0.6 })),
+    { x: 28.5 * T, y: 5.5 * T, r: 60, a: 0.35, col: '150,140,255', glow: 0.1 },
+    { x: 37.5 * T, y: 16 * T, r: 40, a: 0.4, col: '200,160,255', glow: 0.1 },
     ...torches.map(tc => ({ x: tc.X + 8, y: tc.Y + 12, r: 46, a: 0.95, col: '255,170,90', glow: 0.22, flick: 1 })),
     ...CANDLES.map(([cx, cy], i) => ({ x: cx * T + 1, y: cy * T - 2, r: 28, a: 0.7, col: '255,200,120', glow: 0.14, flick: 0.5, bob: i * 1.3 })),
     ...tilesOf('W').map(([x, y]) => ({ x: x * T + 8, y: y * T + 22, r: 30, a: 0.55, col: '150,180,255', glow: 0.12, win: true })),
