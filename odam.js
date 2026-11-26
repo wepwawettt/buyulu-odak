@@ -133,12 +133,164 @@ const Odam = (() => {
     },
   };
 
+  // ---------- Kale müziği: üç özgün parça (haritanın altındaki düğmelerle seçilir) ----------
+  // Her parça ölçü ölçü zamanlanır: bar(ölçü, t0, tur, çalgılar). Notalar MIDI, süreler "birim" cinsinden.
+  const TRACKS = [
+    { // Müzik kutusu: La minör, yavaş 6/8 ninni. Arpej + seyrek çınlayan melodi
+      name: 'Müzik Kutusu', unit: 0.24, len: 6,
+      bars: [
+        [[57, 60, 64, 69], [[88, 3], [84, 3]]],
+        [[57, 62, 65, 69], [[86, 3], [81, 2], [84, 1]]],
+        [[56, 59, 62, 64], [[83, 3], [80, 3]]],
+        [[57, 60, 64, 69], [[81, 6]]],
+        [[57, 60, 65, 69], [[84, 2], [86, 1], [88, 3]]],
+        [[57, 62, 65, 69], [[89, 3], [86, 3]]],
+        [[56, 59, 64, 68], [[88, 2], [83, 1], [80, 3]]],
+        [[56, 59, 62, 64], [[80, 3], [83, 3]]],
+      ],
+      bar([ch, mel], t0, loop, I) {
+        [0, 2, 1, 3, 2, 1].forEach((k, j) => I.box(ch[k], t0 + j * this.unit, 1.1, 0.05));
+        let at = 0;
+        for (const [m, d] of mel) {
+          I.box(m, t0 + at * this.unit, 1.6, 0.12);
+          if (loop % 2) I.box(m - 12, t0 + at * this.unit + 0.01, 1.2, 0.05); // ikinci turda alttan eşlik
+          at += d;
+        }
+        I.pad(ch.map(m => m - 12), t0, this.len * this.unit, 0.018);
+      },
+    },
+    { // Gizemli koridor: Re minör, ağır 4/4. Yumuşak yaylı zemin, pizzicato bas, arp ve çelesta
+      name: 'Gizemli Koridor', unit: 0.62, len: 4,
+      bars: [
+        [[50, 53, 57], 38, [[74, 1], [77, 1], [81, 2]]],
+        [[50, 53, 58], 34, [[82, 1.5], [81, 0.5], [77, 2]]],
+        [[50, 55, 58], 43, [[79, 1], [82, 1], [86, 1], [85, 1]]],
+        [[49, 52, 55, 57], 33, [[81, 4]]],
+        [[50, 53, 57], 38, [[86, 1], [85, 1], [86, 1], [89, 1]]],
+        [[50, 53, 58], 34, [[86, 2], [82, 2]]],
+        [[50, 55, 58], 43, [[79, 1], [77, 1], [76, 1], [79, 1]]],
+        [[49, 52, 55, 57], 33, [[73, 2], [76, 1], [81, 1]]],
+      ],
+      bar([ch, bass, mel], t0, loop, I) {
+        const u = this.unit;
+        I.pad(ch, t0, 4 * u, 0.05);
+        I.pluck(bass, t0, 0.5, 0.22); I.pluck(bass + 7, t0 + 2 * u, 0.4, 0.14);
+        const arp = [...ch.map(m => m + 12), ...ch.map(m => m + 24)];
+        for (let j = 0; j < 8; j++) I.harp(arp[j % arp.length], t0 + j * u / 2, 0.6, 0.03);
+        let at = 0;
+        for (const [m, d] of mel) { I.bell(m, t0 + at * u, d * u * 1.3, 0.1); at += d; }
+      },
+    },
+    { // Neşeli şato: Do lidya, hızlı 8-bit macera. Kare dalga melodi, üçgen bas, gürültü davul
+      name: 'Neşeli Şato', unit: 0.19, len: 8,
+      bars: [
+        [[60, 64, 67], 36, [[72, 1], [76, 1], [79, 2], [78, 1], [79, 1], [81, 2]]],
+        [[62, 66, 69], 38, [[81, 2], [78, 2], [74, 4]]],
+        [[64, 67, 71], 40, [[76, 1], [79, 1], [83, 2], [81, 1], [79, 1], [76, 2]]],
+        [[57, 60, 64], 33, [[81, 3], [79, 1], [76, 4]]],
+        [[60, 64, 67], 36, [[84, 2], [83, 1], [81, 1], [79, 2], [78, 2]]],
+        [[62, 66, 69], 38, [[78, 1], [79, 1], [81, 2], [86, 4]]],
+        [[55, 59, 62], 31, [[83, 2], [81, 1], [79, 1], [78, 2], [74, 2]]],
+        [[60, 64, 67], 36, [[76, 2], [79, 2], [84, 4]]],
+      ],
+      bar([ch, bass, mel], t0, loop, I) {
+        const u = this.unit;
+        for (let j = 0; j < 8; j++) {
+          I.tri(bass + (j % 2 ? 12 : 0), t0 + j * u, u * 0.9, 0.16);
+          if (j % 2) I.hat(t0 + j * u, 0.03);
+          if (j === 0 || j === 4) I.drum(t0 + j * u);
+          if (j === 2 || j === 6) I.hat(t0 + j * u, 0.06, 0.09);
+        }
+        for (const b of [1, 3, 5, 7]) ch.forEach(m => I.chip(m, t0 + b * u, u * 0.6, 0.02));
+        let at = 0;
+        for (const [m, d] of mel) { I.chip(m + (loop % 2 ? 12 : 0), t0 + at * u, d * u * 0.85, 0.07); at += d; }
+      },
+    },
+  ];
+  function castleMusic(c, track) {
+    const bus = gain(c, 0), hz = m => 440 * 2 ** ((m - 69) / 12);
+    bus.gain.linearRampToValueAtTime(0.8, c.currentTime + 1.5); // yavaşça açılır
+    const dry = filter(c, 'lowpass', 4200);
+    bus.connect(dry).connect(master);
+    // Taş salon yankısı
+    const delay = c.createDelay(1), fb = gain(c, 0.28), wet = gain(c, 0.22);
+    delay.delayTime.value = 0.36;
+    dry.connect(delay).connect(fb).connect(delay);
+    delay.connect(wet).connect(master);
+    const soft = filter(c, 'lowpass', 900); soft.connect(bus); // yaylı zemin için yumuşatıcı
+    const hiss = noise(c, 0.3);
+    function tone(m, t0, len, vol, type, mult = 1, attack = 0.006, out = bus) {
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = type; o.frequency.value = hz(m) * mult;
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(vol, t0 + attack);
+      g.gain.exponentialRampToValueAtTime(0.0006, t0 + Math.max(len, attack + 0.05));
+      o.connect(g).connect(out); o.start(t0); o.stop(t0 + Math.max(len, attack + 0.05) + 0.05);
+    }
+    const I = {
+      box: (m, t, len, v) => { tone(m, t, len, v, 'sine'); tone(m, t, len * 0.25, v * 0.3, 'sine', 3); },
+      bell: (m, t, len, v) => { tone(m, t, len, v, 'triangle'); tone(m, t, 0.4, v * 0.3, 'sine', 4); },
+      harp: (m, t, len, v) => tone(m, t, len, v, 'triangle'),
+      pluck: (m, t, len, v) => tone(m, t, len, v, 'triangle'),
+      pad: (ch, t, len, v) => ch.forEach(m => tone(m, t, len, v, 'sawtooth', 1, len * 0.4, soft)),
+      tri: (m, t, len, v) => tone(m, t, len, v, 'triangle'),
+      chip: (m, t, len, v) => tone(m, t, len, v, 'square', 1, 0.004),
+      hat(t, v, len = 0.03) {
+        const n = c.createBufferSource(), g = c.createGain();
+        n.buffer = hiss; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0006, t + len);
+        n.connect(filter(c, 'highpass', 6000)).connect(g).connect(bus); n.start(t); n.stop(t + len + 0.02);
+      },
+      drum(t) {
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = 'triangle'; o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(50, t + 0.12);
+        g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        o.connect(g).connect(bus); o.start(t); o.stop(t + 0.2);
+      },
+    };
+    let bar = 0, loopN = 0, next = c.currentTime + 0.3;
+    function schedule() {
+      while (next < c.currentTime + 3) {
+        track.bar(track.bars[bar], next, loopN, I);
+        next += track.len * track.unit;
+        if (++bar === track.bars.length) { bar = 0; loopN++; }
+      }
+    }
+    schedule();
+    const timer = setInterval(schedule, 500);
+    return () => {
+      clearInterval(timer);
+      const t = c.currentTime;
+      bus.gain.cancelScheduledValues(t); bus.gain.setValueAtTime(bus.gain.value, t); bus.gain.linearRampToValueAtTime(0, t + 0.8);
+      setTimeout(() => { bus.disconnect(); wet.disconnect(); }, 3500); // yankı sönsün
+    };
+  }
+  let castleStop = null, castlePlaying = -1;
+  const castleOn = () => data.castleMusic !== false;
+  const trackNo = () => (data.castleTrack ?? 0) % TRACKS.length;
+  const trackLabel = () => `Parça: ${TRACKS[trackNo()].name} ›`;
+  // Kaledeyken ve odak sürmüyorken çalar; odadaki lo-fi açıksa onunla karışmasın diye susar
+  function syncCastleMusic() {
+    const want = data.view === 'castle' && castleOn() && !(running && mode === 'focus') && !amb().lofi;
+    if (castleStop && (!want || castlePlaying !== trackNo())) { castleStop(); castleStop = null; }
+    if (want && !castleStop) {
+      const c = audio(); if (!c) return;
+      ensureMaster(c);
+      castleStop = castleMusic(c, TRACKS[trackNo()]);
+      castlePlaying = trackNo();
+    }
+    $('castleTrackBtn').textContent = trackLabel();
+    $('castleMusicBtn')?.classList.toggle('on', castleOn());
+  }
+
   function amb() { return (data.ambient ||= { rain: false, fire: false, night: false, vol: 60 }); }
+  function ensureMaster(c) {
+    if (!master) { master = c.createGain(); master.connect(c.destination); }
+    master.gain.value = (amb().vol / 100) * 0.9;
+  }
   function applyAmbient() {
     const c = audio();
     if (!c) return;
-    if (!master) { master = c.createGain(); master.connect(c.destination); }
-    master.gain.value = (amb().vol / 100) * 0.9;
+    ensureMaster(c);
     for (const k of Object.keys(AMB)) {
       if (amb()[k] && !playing[k]) playing[k] = MAKERS[k](c);
       if (!amb()[k] && playing[k]) { playing[k](); delete playing[k]; }
@@ -306,10 +458,13 @@ const Odam = (() => {
   function renderBar() {
     document.querySelectorAll('#roomBar [data-amb]').forEach(b => b.classList.toggle('on', !!amb()[b.dataset.amb]));
     $('ambVol').value = amb().vol;
+    $('castleVol').value = amb().vol;
+    $('castleMusicBtn').classList.toggle('on', castleOn());
+    $('castleTrackBtn').textContent = trackLabel();
     $('deepBtn').classList.toggle('on', !!data.deep);
     $('brewBtn').textContent = brewDone() ? 'İksir hazır!' : potion() ? `İksir %${Math.min(100, Math.round(100 * data.brew.sec / (potion().min * 60)))}` : 'İksir demle';
   }
-  let lastBrewDraw = 0;
+  let lastBrewDraw = 0, unlocked = false; // ses ilk tıklamadan sonra açılabilir
   let deepSkip = false; // Esc ile bu odak oturumu için derin odaktan çıkıldı
   // render() her çağrıldığında: derin odak yalnızca odada ve odak sürerken
   function sync() {
@@ -317,6 +472,7 @@ const Odam = (() => {
     if (!focusOn) deepSkip = false;
     document.body.classList.toggle('deep', !!data.deep && !deepSkip && focusOn && data.view !== 'castle');
     if ($('roomBar')) renderBar();
+    if (unlocked) syncCastleMusic();
     // Kazan paneli açıksa demleme ilerlemesini ara ara tazele
     if (potion() && $('brewDlg')?.open && Date.now() - lastBrewDraw > 2000) { lastBrewDraw = Date.now(); renderBrew(); }
   }
@@ -340,6 +496,18 @@ const Odam = (() => {
     document.querySelectorAll('#roomBar [data-amb]').forEach(b => (b.onclick = () => toggleAmbient(b.dataset.amb)));
     $('ambVol').oninput = e => { amb().vol = +e.target.value; if (master) master.gain.value = (amb().vol / 100) * 0.9; };
     $('ambVol').onchange = save;
+    $('castleVol').oninput = $('ambVol').oninput;
+    $('castleVol').onchange = save;
+    $('castleTrackBtn').onclick = () => {
+      data.castleTrack = (trackNo() + 1) % TRACKS.length;
+      data.castleMusic = true;
+      save(); syncCastleMusic();
+      toast(`Kale müziği: ${TRACKS[trackNo()].name}`);
+    };
+    $('castleMusicBtn').onclick = () => {
+      data.castleMusic = !castleOn(); save(); syncCastleMusic();
+      toast(castleOn() ? (amb().lofi ? 'Kale müziği açık (odadaki lo-fi açıkken susar)' : 'Kale müziği açık') : 'Kale müziği kapalı');
+    };
     $('brewBtn').onclick = () => togglePanel($('brewDlg'), renderBrew);
     $('deepBtn').onclick = () => {
       data.deep = !data.deep; save(); sync();
@@ -351,11 +519,14 @@ const Odam = (() => {
     });
 
     // Kayıtlı sesler: tarayıcı ilk tıklama/tuştan önce ses çalmaya izin vermez
-    const kick = () => { removeEventListener('pointerdown', kick); removeEventListener('keydown', kick); audio()?.resume(); applyAmbient(); };
+    const kick = () => { removeEventListener('pointerdown', kick); removeEventListener('keydown', kick); audio()?.resume(); unlocked = true; applyAmbient(); syncCastleMusic(); };
     addEventListener('pointerdown', kick); addEventListener('keydown', kick);
     syncScene();
     renderBar();
   }
 
-  return { init, sync, onFocus, renderBrew, nextRecipe, learnRecipe, brewStatus };
+  // Görünüm değişince (oda ↔ kale) müzik hemen başlasın/sussun
+  const music = () => { if (unlocked) syncCastleMusic(); };
+
+  return { init, sync, music, onFocus, renderBrew, nextRecipe, learnRecipe, brewStatus };
 })();

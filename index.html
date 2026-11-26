@@ -12,11 +12,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Büyülü Odak">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="icon" href="icon.svg?v=202611261601" type="image/svg+xml">
+  <link rel="icon" href="icon.svg?v=202611261901" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=202611261601">
+  <link rel="stylesheet" href="style.css?v=202611261901">
 </head>
 <body data-mode="focus">
   <!-- Giriş kapağı (cover.js çizer ve kapatır) -->
@@ -70,6 +70,7 @@
         </div>
         <button type="button" data-key="KeyE" class="act">E <small>konuş / al</small></button>
       </div>
+      <div class="room-bar-row castle-music"><button id="castleMusicBtn" class="btn small" type="button">♪ Kale müziği</button><button id="castleTrackBtn" class="btn small" type="button">Parça</button><input id="castleVol" type="range" min="0" max="100" title="Ses seviyesi"></div>
       <p>Yürü: ok tuşları / WASD ya da tıkla · Konuş: E · Odak başlayınca en yakın masaya oturursun · Molada parıldayan yerlerden iksir malzemesi topla</p>
       <div class="quests"><h3>Günün görevleri</h3><ul id="questList"></ul></div>
     </div>
@@ -261,6 +262,7 @@
       <li>Odak başlayınca karakterin en yakın masaya oturur (kütüphane ya da Büyük Salon); molada serbestçe gezersin.</li>
       <li><b>Günün görevleri</b>: her gün 3 görev gelir (haritanın altında). Başında <b>?</b> olan karakterin görevi var, <b>!</b> çıkınca görev bitmiştir: yanına gidip konuş, altın ödülünü al.</li>
       <li>Portrelerle E ile konuşabilir, molada seradaki çığlık köklerini sulayabilirsin.</li>
+      <li>Kalede gezerken piksel bir müzik çalar. Haritanın altındaki <b>♪ Kale müziği</b> düğmesiyle kapatıp açabilir, <b>Parça</b> düğmesiyle üç parça arasında geçebilirsin: Müzik Kutusu, Gizemli Koridor, Neşeli Şato. Yanındaki çubuk sesi ayarlar. Odak sırasında ve odadaki lo-fi müzik açıkken susar.</li>
     </ul>
 
     <h3>⚗️ İksirler</h3>
@@ -419,20 +421,20 @@
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
-  <script src="firebase-config.js?v=202611261601"></script>
-  <script src="cloud.js?v=202611261601"></script>
-  <script src="scene.js?v=202611261601"></script>
-  <script src="map.js?v=202611261601"></script>
-  <script src="room.js?v=202611261601"></script>
-  <script src="odam.js?v=202611261601"></script>
-  <script src="badges.js?v=202611261601"></script>
-  <script src="pet.js?v=202611261601"></script>
-  <script src="levels.js?v=202611261601"></script>
-  <script src="friends.js?v=202611261601"></script>
-  <script src="events.js?v=202611261601"></script>
-  <script src="recap.js?v=202611261601"></script>
-  <script src="app.js?v=202611261601"></script>
-  <script src="cover.js?v=202611261601"></script>
+  <script src="firebase-config.js?v=202611261901"></script>
+  <script src="cloud.js?v=202611261901"></script>
+  <script src="scene.js?v=202611261901"></script>
+  <script src="map.js?v=202611261901"></script>
+  <script src="room.js?v=202611261901"></script>
+  <script src="odam.js?v=202611261901"></script>
+  <script src="badges.js?v=202611261901"></script>
+  <script src="pet.js?v=202611261901"></script>
+  <script src="levels.js?v=202611261901"></script>
+  <script src="friends.js?v=202611261901"></script>
+  <script src="events.js?v=202611261901"></script>
+  <script src="recap.js?v=202611261901"></script>
+  <script src="app.js?v=202611261901"></script>
+  <script src="cover.js?v=202611261901"></script>
   <script>
     // Çevrimdışı yedek ve telefona kurulabilmek için
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});

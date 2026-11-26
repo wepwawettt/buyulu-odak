@@ -908,6 +908,7 @@ function setView(v) {
   document.querySelectorAll('.views button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
   Castle.show(castle);
   if (data.view !== v) { data.view = v; save(); }
+  Odam.music();
 }
 document.querySelectorAll('.views button').forEach(b => (b.onclick = () => setView(b.dataset.view)));
 

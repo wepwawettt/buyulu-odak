@@ -578,3 +578,8 @@ dialog.recap { width: min(420px, calc(100vw - 32px)); text-align: center; }
 dialog.recap .row { display: flex; justify-content: space-between; gap: 10px; }
 dialog.recap .row .btn { white-space: nowrap; }
 dialog.recap .recap-card .row { justify-content: center; }
+
+/* Kale müziği düğmesi */
+.castle-music { margin: 0 0 8px; }
+.castle-music .btn.on { background: var(--gold); color: var(--ink); }
+.castle-music input[type=range] { accent-color: var(--gold); width: 110px; }
