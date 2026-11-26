@@ -4,7 +4,7 @@
 const Castle = (() => {
   const T = 16;                // karo boyu (piksel)
   const VW = 213, VH = 160;    // görünen alan (640px genişlikte ~3x piksel ölçeği)
-  const MW = 43, MH = 31;      // harita (karo); 34. sütundan sonrası doğu kanadı, 21. satırdan sonrası okul bahçesi
+  const MW = 51, MH = 31;      // harita (karo); 34. sütundan sonrası doğu kanadı, 43'ten sonrası Kehanet Kulesi, 21. satırdan sonrası okul bahçesi
 
   // ---------- Harita ----------
   // Duvarlar: '#' taş  'W' pencere  'P' portre  'i' meşale  'G' sera camı  'S' büyülü tavan
@@ -83,7 +83,23 @@ const Castle = (() => {
   put([[32, 14]], 'x'); put([[32, 16]], 'n');
   // Doğu kanadı: koridor sağa uzar. 'Q' Gözlemevi kapısı (3. Sınıf), 'U' Gizli Kütüphane kapısı (6. Sınıf)
   //   'X' teleskop  'O' kürsüde eski kitap
-  fill(32, 10, 40, 11, 'r'); fill(41, 10, 41, 11, '.'); put([[41, 10]], 'n');
+  fill(32, 10, 48, 11, 'r'); fill(49, 10, 49, 11, '.'); put([[49, 10]], 'n');
+  // Kehanet Kulesi (en doğu): 's' mor tahta zemin  '(' kristal küreli yuvarlak masa  ')' minder
+  fill(43, 2, 49, 8, 's');
+  put([[44, 1], [48, 1]], 'W'); fill(45, 9, 46, 9, 'D');
+  fill(45, 4, 47, 6, 'u');
+  put([[46, 2], [44, 4], [48, 4], [44, 7], [48, 7]], '(');
+  put([[44, 5], [48, 5], [44, 8], [48, 8], [45, 2], [47, 2]], ')');
+  put([[43, 2], [49, 2]], 'J'); put([[43, 8], [49, 8]], 'Y'); put([[43, 5]], 'n');
+  put([[48, 12], [43, 9]], 'i');
+  // Ortak Salon (Kehanet Kulesi'nin altı): şömine, halı, koltuklar, kitaplıklar, çalışma masaları
+  fill(43, 13, 49, 19, ',');
+  put([[44, 12]], 'D'); fill(46, 12, 47, 12, 'V');
+  fill(45, 15, 48, 17, 'u');
+  put([[43, 13], [43, 14], [49, 13], [49, 14], [43, 18], [49, 18], [49, 19]], 'B');
+  put([[44, 15], [44, 17], [49, 16]], 'k');
+  put([[45, 18], [47, 18]], 'd'); put([[45, 19], [47, 19]], 'k');
+  put([[43, 16], [48, 13]], 'n'); put([[43, 19]], 'Y');
   put([[35, 9], [40, 9], [35, 12], [40, 12]], 'i');
   fill(37, 9, 38, 9, 'Q'); fill(37, 12, 38, 12, 'U');
   // Gözlemevi (sağ üst)
@@ -99,9 +115,10 @@ const Castle = (() => {
   // Okul bahçesi (kalenin güneyi, avludan kapıyla çıkılır)
   //   'b' göl  '$' nilüfer  '%' saz  '_' toprak patika  '~' sürülmüş tarla  'N' balkabağı  '=' çit  '&' korkuluk
   //   'C' bahçıvan kulübesi  '+' yön tabelası  '*' çiçekli ağaç  '^' çam  'I' uçuş sahası  'M' halka  'Z' orman
-  fill(1, 21, 41, 29, 'g');
-  fill(0, 21, 0, 30, 'Z'); fill(42, 21, 42, 30, 'Z'); fill(0, 30, 42, 30, 'Z');
-  for (const x of [1, 2, 9, 10, 11, 22, 23, 41]) put([[x, 29]], 'Z');
+  fill(1, 21, MW - 2, 29, 'g');
+  fill(0, 21, 0, 30, 'Z'); fill(MW - 1, 21, MW - 1, 30, 'Z'); fill(0, 30, MW - 1, 30, 'Z');
+  for (const x of [1, 2, 9, 10, 11, 22, 23, 41, 44, 48, 49]) put([[x, 29]], 'Z');
+  put([[44, 22], [47, 25], [45, 28], [49, 23]], '^'); put([[48, 22], [43, 25]], '*'); put([[46, 23], [42, 27], [49, 26]], 'f'); put([[47, 28]], 't');
   fill(15, 20, 17, 20, 'D');
   // Kıvrımlı toprak patikalar: kapıdan göle, tarlaya, kulübeye ve sahaya
   put([[16, 21], [16, 22], [16, 23], [15, 23], [14, 23], [13, 23], [12, 24], [11, 24], [10, 24], [9, 24], [8, 24], [7, 24],
@@ -136,12 +153,12 @@ const Castle = (() => {
   put([[6, 22], [26, 22], [10, 22], [36, 21], [2, 23], [19, 22], [24, 23]], 'f');
   put([[18, 22]], '+');
 
-  const SOLID = new Set(['$', '=', '&', '+', '*', '^', 'E', 'R', 'b', 'M', 'N', 'C', 'Z', '#', 'W', 'P', 'i', 'V', 'G', 'S', 'B', 'd', 'T', 'H', 'h', 'w', 'F', 't', 'o', 'c', 'J', 'L', 'm', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l', 'X', 'O']);
+  const SOLID = new Set(['(', '$', '=', '&', '+', '*', '^', 'E', 'R', 'b', 'M', 'N', 'C', 'Z', '#', 'W', 'P', 'i', 'V', 'G', 'S', 'B', 'd', 'T', 'H', 'h', 'w', 'F', 't', 'o', 'c', 'J', 'L', 'm', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l', 'X', 'O']);
   const LOCKS = { Q: { name: 'Gözlemevi', open: () => Levels.observatory(), lv: () => Levels.OBSERVATORY },
     U: { name: 'Gizli Kütüphane', open: () => Levels.library(), lv: () => Levels.LIBRARY } };
   const isWall = ch => ch === '#' || ch === 'W' || ch === 'P' || ch === 'i' || ch === 'V';
   // Eşyanın altındaki zemin, bulunduğu bölgeye göre
-  const region = (x, y) => (y >= 21 ? 'g' : y <= 8 && x >= 11 && x <= 23 ? '.' : x >= 34 ? (y >= 13 ? ',' : '.') : y >= 13 ? (x <= 8 ? 'q' : x <= 22 ? 'g' : 'y') : y <= 8 && x <= 9 ? ',' : '.');
+  const region = (x, y) => (y >= 21 ? 'g' : x >= 43 && y <= 8 ? 's' : y <= 8 && x >= 11 && x <= 23 ? '.' : x >= 34 ? (y >= 13 ? ',' : '.') : y >= 13 ? (x <= 8 ? 'q' : x <= 22 ? 'g' : 'y') : y <= 8 && x <= 9 ? ',' : '.');
   const at = (x, y) => (x < 0 || y < 0 || x >= MW || y >= MH ? '#' : grid[y][x]);
   const tilesOf = ch => grid.flatMap((row, y) => row.map((c, x) => (c === ch ? [x, y] : null)).filter(Boolean));
 
@@ -163,6 +180,7 @@ const Castle = (() => {
   // Kütüphanedeki çalışma sandalyeleri (masanın hemen altı); Rose hep (7,8)'de oturur
   const SEATS = [[2, 5], [3, 5], [6, 5], [7, 5], [2, 8], [3, 8], [6, 8]];
   for (const x of HALL_TABLES) for (let y = 5; y <= 8; y++) SEATS.push([x - 1, y, 'right'], [x + 1, y, 'left']);
+  SEATS.push([44, 5], [48, 5], [44, 8], [48, 8], [45, 19], [47, 19]); // Kehanet Kulesi minderleri, Ortak Salon masaları
   // Oturunca karakter masaya doğru kayar
   const SEAT_OFF = { up: [0, -7], right: [4, -3], left: [-4, -3] };
   const seatOff = s => SEAT_OFF[s[2] || 'up'];
@@ -255,6 +273,7 @@ const Castle = (() => {
     else if (r === 'q') floorStone(c, X, Y, x, y, '#5e566a', '#544c60', '#6a7a62');
     else if (r === 'g') grass(c, X, Y, x, y);
     else if (r === 'y') { px(c, X, Y, T, T, '#c4a080'); px(c, X, Y, T, 1, '#b08e70'); px(c, X, Y, 1, T, '#b08e70'); }
+    else if (r === 's') { px(c, X, Y, T, T, '#5a3a62'); for (let k = 0; k < 4; k++) px(c, X, Y + k * 4 + 3, T, 1, '#4a2e52'); }
     else floorStone(c, X, Y, x, y);
   }
   function floorWood(c, X, Y, x, y) {
@@ -487,6 +506,23 @@ const Castle = (() => {
         case 'R': // seyirci kulesinin ayakları (üstü sonradan çizilir)
           grass(c, X, Y, x, y);
           px(c, X + 2, Y, 2, T, '#6a4a30'); px(c, X + 12, Y, 2, T, '#6a4a30'); px(c, X + 4, Y + 6, 8, 1, '#7a5a40');
+          break;
+        case 's': // Kehanet Kulesi: mor tahta zemin, ara sıra altın yıldız kakması
+          px(c, X, Y, T, T, '#5a3a62');
+          for (let k = 0; k < 4; k++) { px(c, X, Y + k * 4 + 3, T, 1, '#4a2e52'); px(c, X + Math.floor(hash(x * 4 + k, y) * 16), Y + k * 4, 1, 4, '#4a2e52'); }
+          if (hash(x, y) > 0.75) { px(c, X + 7, Y + 6, 3, 1, '#d8b870'); px(c, X + 8, Y + 5, 1, 3, '#d8b870'); }
+          break;
+        case '(': // yuvarlak masa, mor örtü ve kristal küre (küre dinamik parlar)
+          px(c, X, Y, T, T, '#5a3a62');
+          disc(c, X + 8, Y + 9, 7, (d) => (d > 40 ? '#3a2240' : '#7a4a8a'));
+          for (let k = 0; k < 5; k++) px(c, X + 3 + k * 2, Y + 15, 1, 1, '#d8b870');
+          px(c, X + 5, Y + 10, 6, 2, '#c9a24a');
+          disc(c, X + 8, Y + 6, 4, (d, dx, dy) => (dx + dy < -2 ? '#e8e0ff' : '#a890e0'));
+          break;
+        case ')': // minder
+          px(c, X, Y, T, T, '#5a3a62');
+          disc(c, X + 8, Y + 9, 6, (d, dx, dy) => (d > 26 ? '#8a3a5a' : dx + dy < -2 ? '#e88ab0' : '#c85a8a'));
+          px(c, X + 7, Y + 8, 2, 2, '#e3b23c'); px(c, X + 2, Y + 9, 1, 1, '#e3b23c'); px(c, X + 13, Y + 9, 1, 1, '#e3b23c');
           break;
         case 'N': // balkabağı (tarlada toprağın üstünde)
           px(c, X, Y, T, T, '#8a6444');
@@ -732,14 +768,14 @@ const Castle = (() => {
       px(c, X + 7, Y - 22, 1, 4, '#5a4a3a'); px(c, X + 8, Y - 22, 4, 2, h.a);
     }
     // Koridor halısı: altın kenar ve aralıklı motifler
-    for (let x = 2; x <= 40; x++) {
+    for (let x = 2; x <= 48; x++) {
       if (at(x, 10) !== 'r') continue;
       px(c, x * T, 10 * T + 4, T, 1, '#e3c27a'); px(c, x * T, 12 * T - 4, T, 1, '#e3c27a');
       if (x % 4 === 0) { const cx = x * T + 8, cy = 11 * T; for (let k = 0; k < 4; k++) px(c, cx - k, cy - 3 + k, k * 2 + 1, 1, '#e3c27a'); for (let k = 0; k < 3; k++) px(c, cx - 2 + k, cy + 1 + k, 5 - k * 2, 1, '#e3c27a'); px(c, cx, cy, 1, 1, '#9c1c1c'); }
     }
     // Koridor duvarında bina renklerinde duvar halıları
     const tapCols = ['kizil', 'zumrut', 'safir', 'kehribar'];
-    [3, 8, 11, 14, 19, 23, 31, 33, 39].forEach((x, i) => {
+    [3, 8, 11, 14, 19, 23, 31, 33, 39, 47].forEach((x, i) => {
       if (at(x, 9) !== '#') return;
       const h = Scene.HOUSES[tapCols[i % 4]], X = x * T + 4, Y = 9 * T + 1;
       px(c, X - 1, Y, 10, 1, '#8a6a3a'); px(c, X, Y + 1, 8, 11, h.a); px(c, X, Y + 1, 1, 11, h.b); px(c, X + 7, Y + 1, 1, 11, h.b);
@@ -794,6 +830,10 @@ const Castle = (() => {
       if (d > 1 || at(Math.floor(X / T), Math.floor(Y / T)) !== '.') continue;
       px(c, X, Y, 1, 1, d > 0.85 ? '#d8b870' : d > 0.65 ? '#2a3a7a' : (xx * 3 + yy) % 9 === 0 ? '#e3c27a' : '#3a4c8a');
     }
+    // Kule sahanlığında baykuş postası: mektup ve paket yığınları
+    const parcel = (X, Y, w, h, col) => { px(c, X, Y, w, h, col); px(c, X, Y, w, 1, '#e8dcb0'); px(c, X + (w >> 1), Y, 1, h, '#c03a3a'); px(c, X, Y + (h >> 1), w, 1, '#c03a3a'); };
+    parcel(26 * T + 2, 7 * T + 4, 9, 6, '#b08a5e'); parcel(26 * T + 4, 7 * T, 6, 4, '#c8a070'); parcel(31 * T + 3, 7 * T + 6, 8, 5, '#a07a50');
+    for (const [dx, dy] of [[0, 0], [3, 2], [6, -1], [2, 5]]) { const X = 29 * T + 2 + dx, Y = 7 * T + 4 + dy; px(c, X, Y, 6, 4, '#f6eed8'); px(c, X + 2, Y + 1, 2, 1, '#c03a3a'); }
     // Kuleler arasında renkli bayrak dizisi
     const flagCols = ['#e05a50', '#f0c040', '#5aa8e0', '#7ac06a', '#f6a8c8'];
     for (let i = 0; i < TOWERS.length - 1; i++) {
@@ -900,6 +940,13 @@ const Castle = (() => {
       focus: 'Uçuş molada; şimdi ders zamanı!' },
     { name: 'Pıtpıt', kind: 'toad', area: [8, 23, 11, 24], start: [9, 24], speed: 22,
       lines: ['Vırak!', '(göle bakıp iç çekiyor)', 'Vıraak… vırak.'], focus: 'Vırak.' },
+    { name: 'Madam Velora', look: { house: 'safir', hair: 'gumus', skin: 2 }, hat: 'hat', long: true,
+      extra: { H: '#6a3a7a', h: '#8a5a9a', O: '#4a2a5a', C: '#e3b23c', c: '#d8b870' }, area: [45, 7, 47, 8], start: [46, 8],
+      lines: ['Kehanet Kulesi\'ne hoş geldin. Büyük küreye bak; sis bugün sana bir şey söyleyecek.', 'Gelecek, bugün çalıştığın sayfalarda yazılı.', 'Minderlere otur, çayını yudumla, zihnini dinlendir.'],
+      focus: 'Şşş… kürenin sisi odaklananları sever.' },
+    { name: 'Nia', ...student('kizil', 'mavi', 1), long: true, seat: [44, 16, 'right'],
+      lines: ['Ortak Salon\'un şöminesi kalenin en sıcak yeri.', 'Burada kitap okurken zaman nasıl geçiyor anlamıyorum.', 'Molada buraya gel, birlikte dinlenelim!'],
+      focus: '(Nia şöminenin karşısında kitabını okuyor)' },
     { name: 'Pip', kind: 'owl', start: [29, 3],
       lines: ['Huu! Oturum bitince sana mektup getiririm.', 'Baykuşhane kulenin en tepesinde.', 'Huu huu! Kanatlarım hazır.'],
       focus: 'Huu… odaklan.' },
@@ -932,7 +979,7 @@ const Castle = (() => {
   const fireplaces = tilesOf('V');
   const flames = [...tilesOf('Y').map(p => [...p, 'Y']), ...tilesOf('l').map(p => [...p, 'l'])];
   const torches = tilesOf('i').map(([x, y]) => ({ X: x * T, Y: y * T }));
-  const lakeTiles = tilesOf('b');
+  const lakeTiles = tilesOf('b'), ballTiles = tilesOf('(');
   const cauldrons = tilesOf('c').map(([x, y], i) => ({ X: x * T, Y: y * T, col: ['#7ae07a', '#c07ae0', '#f0a040', '#6ac8f0'][i % 4] }));
   const perches = tilesOf('o').map(([x, y], i) => ({ X: x * T, Y: y * T, col: ['#8a6a4a', '#a8a8b0', '#6a4a3a', '#b08050', '#7a7a6a'][i % 5], p: i * 1.7 }));
   const SKY_STARS = Array.from({ length: 40 }, (_, i) => ({ x: Math.floor(hash(i, 51) * 206), y: Math.floor(hash(i, 52) * 30), p: hash(i, 53) * 6 }));
@@ -977,12 +1024,90 @@ const Castle = (() => {
     save(); render();
     return txt;
   }
-  function dailyBonus(dayKey, flag, who, list, anchor) {
+  function dailyBonus(dayKey, flag, who, list, anchor, bumpKey) {
     if (data[dayKey] === todayKey()) return say(who, 'Bugün buna zaten baktın; yarın yine gel!', anchor, 4);
     const no = canPlay(who);
     if (no) return say(who, no, anchor, 5);
     (data.flags ||= {})[flag] = true;
     say(who, list[Math.floor(Math.random() * list.length)] + spendTicket(dayKey, 2), anchor, 6);
+    if (bumpKey) bump(bumpKey);
+  }
+  // Kehanet Kulesi: büyük kristal küre
+  const BALL = [
+    'Kürede bir anahtar görüyorum: bugün başladığın iş, yarın kapı açacak.',
+    'Sis dağılıyor… Küçük adımların toplamı, sandığından büyük.',
+    'Bir yıldız parlıyor: zor konuyu sabah çalışırsan kolaylaşacak.',
+    'Kürede bir kum saati var. Mola vermeyi unutma; o da büyünün parçası.',
+    'Mor bir ışık… Bugün birine yardım edersen, sen de daha iyi öğreneceksin.',
+    'Bir kitap açılıyor: aradığın cevap, tekrar ettiğin notlarda saklı.',
+  ];
+  const bigBall = [46, 2];
+  const gazeBall = () => dailyBonus('ballDay', 'ball', 'Kristal küre', BALL, { x: bigBall[0] * T + 8, y: bigBall[1] * T }, 'ball');
+
+  // Baykuşhane: dört tünekteki baykuşu sırayla besle (hak, dördü de doyunca harcanır)
+  const perchTiles = tilesOf('o');
+  const owlState = () => { if (data.owlFeed?.date !== todayKey()) data.owlFeed = { date: todayKey(), fed: [] }; return data.owlFeed; };
+  function feedOwl(i) {
+    const st = owlState(), [x, y] = perchTiles[i], anchor = { x: x * T + 8, y: y * T };
+    if (data.owlDay === todayKey()) return say('Baykuşhane', 'Baykuşlar bugün tok; yarın yine besle!', anchor, 4);
+    if (st.fed.includes(i)) return say('Baykuş', 'Huu! Bu baykuş zaten yedi; diğerlerine bak.', anchor, 3);
+    const no = canPlay('Baykuş beslemek');
+    if (no) return say('Baykuşhane', no, anchor, 4);
+    st.fed.push(i);
+    if (st.fed.length < perchTiles.length) { save(); return say('Baykuş', `Huu huu! Mutlu bir baykuş. (${st.fed.length}/${perchTiles.length})`, anchor, 3); }
+    say('Pip', `Bütün baykuşlar doydu, kanatları parlıyor!${spendTicket('owlDay', 2)}`, anchor, 5);
+    bump('owls');
+  }
+  const perchNear = () => { let best = -1, bd = 24; perchTiles.forEach(([x, y], i) => { const d = tileDist([x, y]); if (d < bd) { bd = d; best = i; } }); return best; };
+
+  // Kayıp kitaplar: Madam Quillby'den görev; kalede 3 parlayan kitap belirir, bulup ona getirirsin
+  let hunt = null; // { books: [{ x, y, got }] }
+  function startHunt(n) {
+    const [px0, py0] = tileOf(player), books = [];
+    const zones = [[11, 4, 23, 8], [2, 10, 40, 11], [11, 13, 22, 19], [24, 15, 32, 19], [2, 14, 8, 19], [25, 7, 32, 8], [3, 21, 40, 24], [43, 3, 49, 7]];
+    for (let k = 0; k < 60 && books.length < 3; k++) {
+      const [x0, y0, x1, y1] = zones[Math.floor(Math.random() * zones.length)];
+      const x = x0 + Math.floor(Math.random() * (x1 - x0 + 1)), y = y0 + Math.floor(Math.random() * (y1 - y0 + 1));
+      if (!walkable(x, y) || '_vjD'.includes(at(x, y)) || books.some(b => Math.abs(b.x - x) + Math.abs(b.y - y) < 8)) continue;
+      if (findPath(px0, py0, x, y)) books.push({ x, y, got: false });
+    }
+    hunt = { books };
+    say(n.name, 'Üç kitabım kalede kayboldu! Parıldayan kitapları bul, bana getir. (Molada ara.)', n, 5);
+  }
+  function updateHunt() {
+    if (!hunt || !isBreak()) return;
+    for (const b of hunt.books) {
+      if (b.got || Math.hypot(player.x - b.x * T - 8, player.y - b.y * T - 10) > 14) continue;
+      b.got = true;
+      const n = hunt.books.filter(q => q.got).length;
+      say('Kayıp kitap', n < 3 ? `Bir kitap buldun! (${n}/3)` : 'Üç kitabın hepsini buldun! Madam Quillby\'ye götür.', player, 3);
+    }
+  }
+  function drawHunt() {
+    if (!hunt) return;
+    for (const b of hunt.books) {
+      if (b.got) continue;
+      const X = b.x * T + 8 - cam.x, Y = b.y * T + 6 - cam.y + Math.round(Math.sin(t * 3 + b.x) * 1.5);
+      if (X < -10 || X > VW + 10 || Y < -10 || Y > VH + 10) continue;
+      ctx.fillStyle = `rgba(255,240,170,${0.18 + 0.1 * Math.sin(t * 4)})`; ctx.fillRect(X - 6, Y - 6, 12, 11);
+      px(ctx, X - 4, Y - 2, 8, 5, '#7a3a6a'); px(ctx, X - 4, Y - 2, 8, 1, '#a85a8a'); px(ctx, X - 3, Y + 3, 7, 1, '#efe3b8'); px(ctx, X - 1, Y - 1, 2, 2, '#e3b23c');
+      if (Math.sin(t * 5 + b.y) > 0.5) px(ctx, X + 4, Y - 5, 1, 1, '#ffffff');
+    }
+  }
+  function drawOwlHearts() {
+    const st = data.owlFeed?.date === todayKey() ? data.owlFeed.fed : [];
+    for (const i of st) {
+      const [x, y] = perchTiles[i], X = x * T + 9 - cam.x, Y = y * T - 6 - cam.y - (t * 4 + i) % 4;
+      if (X < -6 || X > VW || Y < -6 || Y > VH) continue;
+      px(ctx, X, Y, 2, 1, '#f080a0'); px(ctx, X + 3, Y, 2, 1, '#f080a0'); px(ctx, X, Y + 1, 5, 1, '#f080a0'); px(ctx, X + 1, Y + 2, 3, 1, '#f080a0'); px(ctx, X + 2, Y + 3, 1, 1, '#f080a0');
+    }
+  }
+  function drawBalls() { // kristal kürelerin içinde dönen sis
+    for (const [x, y] of ballTiles) {
+      const X = x * T + 8 - cam.x, Y = y * T + 6 - cam.y;
+      if (X < -8 || X > VW + 8 || Y < -8 || Y > VH + 8) continue;
+      for (let k = 0; k < 3; k++) { const a = t * 1.5 + k * 2.1 + x; px(ctx, X + Math.round(Math.cos(a) * 2), Y + Math.round(Math.sin(a) * 2), 1, 1, ['#ffffff', '#f0c0ff', '#a0e8ff'][k]); }
+    }
   }
   const lookScope = () => dailyBonus('skyDay', 'sky', 'Teleskop', FORTUNES, { x: scope[0] * T + 8, y: scope[1] * T });
   const readBook = () => dailyBonus('bookDay', 'book', 'Eski kitap', PAGES, { x: lectern[0] * T + 8, y: lectern[1] * T });
@@ -992,6 +1117,10 @@ const Castle = (() => {
   function specialNear() {
     if (scope && nearTile(scope)) return { fn: lookScope, d: tileDist(scope) };
     if (nearTile(DOCK, 16)) return { fn: startFishing, d: tileDist(DOCK) };
+    // Bekleyen etkinlik varsa yakındaki NPC'den önce gelir (d: 0)
+    if (nearTile(bigBall, 24)) return { fn: gazeBall, d: data.ballDay === todayKey() ? tileDist(bigBall) : 0 };
+    const pi = perchNear();
+    if (pi >= 0) return { fn: () => feedOwl(pi), d: data.owlDay === todayKey() || owlState().fed.includes(pi) ? tileDist(perchTiles[pi]) : 0 };
     if (signNear()) return { fn: () => say('Tabela', '← Göl ve iskele (balık) · ↓ Balkabağı tarlası ve kulübe · Uçuş sahası (halka yarışı) →', { x: 18 * T + 8, y: 22 * T }, 5), d: tileDist([18, 22]) };
     for (const [x, y] of GLASSES) if (nearTile([x, y], 24)) return { fn: readGlasses, d: tileDist([x, y]) };
     const rm = roamerNear();
@@ -1144,7 +1273,7 @@ const Castle = (() => {
     } else player.moving = false;
 
     for (const n of NPCS) updateNpc(n, dt);
-    updateFishing(); updateRace(); updateRoamers(dt);
+    updateFishing(); updateRace(); updateRoamers(dt); updateHunt();
     for (const o of othersMap.values()) {
       const dx = o.tx - o.x, dy = o.ty - o.y, d = Math.hypot(dx, dy);
       if (d > 80) { o.x = o.tx; o.y = o.ty; } // çok uzaksa ışınla (ör. masaya oturdu)
@@ -1217,10 +1346,13 @@ const Castle = (() => {
     { id: 'fount', giver: 'Felix', where: 'Avlu', reward: 1, ask: 'Bir molada avludaki çeşmenin başında dinlen.', need: 1, count: c => c.fountain },
     { id: 'fish1', giver: 'Bahçıvan Hollis', where: 'Göl', reward: 2, ask: 'Bir molada iskelenin ucunda bir balık yakala.', need: 1, count: c => c.fish || 0 },
     { id: 'race1', giver: 'Hoca Swift', where: 'Uçuş sahası', reward: 2, ask: 'Bir molada halka yarışını bitir.', need: 1, count: c => c.race || 0 },
+    { id: 'owls', giver: 'Pip', where: 'Baykuşhane', reward: 2, ask: 'Bir molada baykuşhanedeki dört baykuşu besle (tüneklerine gidip E).', need: 1, count: c => c.owls || 0 },
+    { id: 'books', giver: 'Madam Quillby', where: 'Kütüphane', reward: 2, ask: 'Bir molada kalede kaybolan üç kitabımı bulup getir.', need: 1, count: c => c.books || 0 },
+    { id: 'ball', giver: 'Madam Velora', where: 'Kehanet Kulesi', reward: 2, ask: 'Bir molada büyük kristal küreye bak.', need: 1, count: c => c.ball || 0 },
     { id: 'tasksess', giver: 'Rose', where: 'Kütüphane', reward: 3, ask: 'Seçili bir görevine 2 odak oturumu ayır.', need: 2, count: c => c.taskSess },
   ];
   const isBreak = () => mode === 'short' || mode === 'long';
-  const roomOf = (x, y) => (y >= 21 ? 'grounds' : y <= 8 ? (x <= 9 ? 'lib' : x <= 23 ? 'hall' : 'tower') : y <= 11 ? 'corridor' : x <= 8 ? 'dungeon' : x <= 22 ? 'courtyard' : 'greenhouse');
+  const roomOf = (x, y) => (y >= 21 ? 'grounds' : y <= 8 ? (x <= 9 ? 'lib' : x <= 23 ? 'hall' : x >= 43 ? 'seer' : 'tower') : y <= 11 ? 'corridor' : x <= 8 ? 'dungeon' : x <= 22 ? 'courtyard' : 'greenhouse');
 
   function quests() {
     const key = todayKey();
@@ -1520,6 +1652,13 @@ const Castle = (() => {
       const c = document.querySelector('.coins');
       c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop');
       say(n.name, `Harika iş! Ödülün: +${q.reward * mult} altın.${mult > 1 ? ' (Bilgelik iksiri!)' : ''}`, n);
+      if (!player.seated) faceTo(player, n);
+      return;
+    }
+    if (n.name === 'Madam Quillby' && !(q && isDone(q)) && (hunt || data.huntDay !== todayKey())) {
+      if (hunt && hunt.books.every(b => b.got)) { hunt = null; say(n.name, `Kitaplarım! Çok teşekkürler.${spendTicket('huntDay', 2)}`, n, 5); bump('books'); }
+      else if (hunt) say(n.name, `Daha ${hunt.books.filter(b => !b.got).length} kitap kayıp. Parıltıya bak!`, n, 4);
+      else { const no = canPlay('Kitap avı'); if (no) say(n.name, no, n, 4); else startHunt(n); }
       if (!player.seated) faceTo(player, n);
       return;
     }
@@ -1945,7 +2084,7 @@ const Castle = (() => {
     drawDynamic();
     updatePet();
     const petActor = { kind: 'pet', x: petFollow.x, y: petFollow.y - 0.5 }; // aynı hizadaysa oyuncunun arkasında
-    drawLake(); drawGrounds(); drawRooms(); drawGlasses(); drawRings();
+    drawLake(); drawGrounds(); drawRooms(); drawGlasses(); drawRings(); drawBalls(); drawOwlHearts(); drawHunt();
     const actors = [...NPCS.filter(n => !FREE_FLYERS.has(n.kind)), player, petActor, ...othersMap.values(), ...roamers].sort((a, b) => a.y - b.y);
     for (const a of actors) drawActor(a);
     if (player.seated && Math.sin(t * 5) > 0.3) px(ctx, Math.round(player.x - cam.x + 5), Math.round(player.y - cam.y - 2), 1, 1, '#ffe9a0');
@@ -1966,6 +2105,7 @@ const Castle = (() => {
   // Düşük çözünürlükte çizildiği için büyütülünce yumuşak, pikselli halkalar oluşur.
   let LIGHTS = null; // çeşme konumu buildBg sonrası belli olduğu için ilk çizimde kurulur
   const buildLights = () => [
+    ...tilesOf('(').map(([x, y]) => ({ x: x * T + 8, y: y * T + 6, r: 30, a: 0.55, col: '200,160,255', glow: 0.14, flick: 0.3 })),
     ...[[1, 16], [8, 16], [5, 14]].map(([x, y]) => ({ x: x * T + 7, y: y * T + 8, r: 26, a: 0.6, col: '255,200,120', glow: 0.14, flick: 0.6 })),
     { x: 28.5 * T, y: 5.5 * T, r: 60, a: 0.35, col: '150,140,255', glow: 0.1 },
     { x: 37.5 * T, y: 16 * T, r: 40, a: 0.4, col: '200,160,255', glow: 0.1 },
