@@ -92,14 +92,14 @@ const Castle = (() => {
   put([[44, 5], [48, 5], [44, 8], [48, 8], [45, 2], [47, 2]], ')');
   put([[43, 2], [49, 2]], 'J'); put([[43, 8], [49, 8]], 'Y'); put([[43, 5]], 'n');
   put([[48, 12], [43, 9]], 'i');
-  // Ortak Salon (Kehanet Kulesi'nin altı): şömine, halı, koltuklar, kitaplıklar, çalışma masaları
-  fill(43, 13, 49, 19, ',');
-  put([[44, 12]], 'D'); fill(46, 12, 47, 12, 'V');
-  fill(45, 15, 48, 17, 'u');
-  put([[43, 13], [43, 14], [49, 13], [49, 14], [43, 18], [49, 18], [49, 19]], 'B');
-  put([[44, 15], [44, 17], [49, 16]], 'k');
-  put([[45, 18], [47, 18]], 'd'); put([[45, 19], [47, 19]], 'k');
-  put([[43, 16], [48, 13]], 'n'); put([[43, 19]], 'Y');
+  // Kupa Odası (Kehanet Kulesi'nin altı): '!' kupa dolabı (kazandığın rozetler)  '?' büyük bina kupası  '|' rekor tahtası
+  fill(43, 13, 49, 19, '.');
+  put([[44, 12]], 'D');
+  fill(45, 15, 47, 17, 'u');
+  const CABINETS = [[46, 13], [47, 13], [48, 13], [43, 15], [43, 17], [49, 14], [49, 16], [49, 18]];
+  put(CABINETS, '!');
+  put([[46, 16]], '?'); put([[45, 19]], '|');
+  put([[43, 19], [49, 13]], 'A'); put([[48, 19], [43, 13]], 'Y');
   put([[35, 9], [40, 9], [35, 12], [40, 12]], 'i');
   fill(37, 9, 38, 9, 'Q'); fill(37, 12, 38, 12, 'U');
   // Gözlemevi (sağ üst)
@@ -153,12 +153,12 @@ const Castle = (() => {
   put([[6, 22], [26, 22], [10, 22], [36, 21], [2, 23], [19, 22], [24, 23]], 'f');
   put([[18, 22]], '+');
 
-  const SOLID = new Set(['(', '$', '=', '&', '+', '*', '^', 'E', 'R', 'b', 'M', 'N', 'C', 'Z', '#', 'W', 'P', 'i', 'V', 'G', 'S', 'B', 'd', 'T', 'H', 'h', 'w', 'F', 't', 'o', 'c', 'J', 'L', 'm', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l', 'X', 'O']);
+  const SOLID = new Set(['!', '?', '|', '(', '$', '=', '&', '+', '*', '^', 'E', 'R', 'b', 'M', 'N', 'C', 'Z', '#', 'W', 'P', 'i', 'V', 'G', 'S', 'B', 'd', 'T', 'H', 'h', 'w', 'F', 't', 'o', 'c', 'J', 'L', 'm', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l', 'X', 'O']);
   const LOCKS = { Q: { name: 'Gözlemevi', open: () => Levels.observatory(), lv: () => Levels.OBSERVATORY },
     U: { name: 'Gizli Kütüphane', open: () => Levels.library(), lv: () => Levels.LIBRARY } };
   const isWall = ch => ch === '#' || ch === 'W' || ch === 'P' || ch === 'i' || ch === 'V';
   // Eşyanın altındaki zemin, bulunduğu bölgeye göre
-  const region = (x, y) => (y >= 21 ? 'g' : x >= 43 && y <= 8 ? 's' : y <= 8 && x >= 11 && x <= 23 ? '.' : x >= 34 ? (y >= 13 ? ',' : '.') : y >= 13 ? (x <= 8 ? 'q' : x <= 22 ? 'g' : 'y') : y <= 8 && x <= 9 ? ',' : '.');
+  const region = (x, y) => (y >= 21 ? 'g' : x >= 43 && y <= 8 ? 's' : x >= 43 && y >= 13 ? '.' : y <= 8 && x >= 11 && x <= 23 ? '.' : x >= 34 ? (y >= 13 ? ',' : '.') : y >= 13 ? (x <= 8 ? 'q' : x <= 22 ? 'g' : 'y') : y <= 8 && x <= 9 ? ',' : '.');
   const at = (x, y) => (x < 0 || y < 0 || x >= MW || y >= MH ? '#' : grid[y][x]);
   const tilesOf = ch => grid.flatMap((row, y) => row.map((c, x) => (c === ch ? [x, y] : null)).filter(Boolean));
 
@@ -180,7 +180,7 @@ const Castle = (() => {
   // Kütüphanedeki çalışma sandalyeleri (masanın hemen altı); Rose hep (7,8)'de oturur
   const SEATS = [[2, 5], [3, 5], [6, 5], [7, 5], [2, 8], [3, 8], [6, 8]];
   for (const x of HALL_TABLES) for (let y = 5; y <= 8; y++) SEATS.push([x - 1, y, 'right'], [x + 1, y, 'left']);
-  SEATS.push([44, 5], [48, 5], [44, 8], [48, 8], [45, 19], [47, 19]); // Kehanet Kulesi minderleri, Ortak Salon masaları
+  SEATS.push([44, 5], [48, 5], [44, 8], [48, 8]); // Kehanet Kulesi minderleri
   // Oturunca karakter masaya doğru kayar
   const SEAT_OFF = { up: [0, -7], right: [4, -3], left: [-4, -3] };
   const seatOff = s => SEAT_OFF[s[2] || 'up'];
@@ -507,6 +507,24 @@ const Castle = (() => {
           grass(c, X, Y, x, y);
           px(c, X + 2, Y, 2, T, '#6a4a30'); px(c, X + 12, Y, 2, T, '#6a4a30'); px(c, X + 4, Y + 6, 8, 1, '#7a5a40');
           break;
+        case '!': { // kupa dolabı: ahşap çerçeve, cam, üç raf (kupalar dinamik)
+          baseFloor(c, X, Y, x, y);
+          px(c, X + 1, Y, 14, T, '#6a4a2e'); px(c, X + 1, Y, 14, 1, '#8a6a46');
+          px(c, X + 2, Y + 1, 12, 14, '#2a2438'); px(c, X + 2, Y + 1, 12, 14, 'rgba(180,200,240,0.12)');
+          px(c, X + 2, Y + 5, 12, 1, '#8a6a46'); px(c, X + 2, Y + 10, 12, 1, '#8a6a46');
+          px(c, X + 3, Y + 2, 1, 3, 'rgba(255,255,255,0.35)');
+          break;
+        }
+        case '?': // büyük bina kupası (kaidesi; kupa dinamik parlar)
+          baseFloor(c, X, Y, x, y);
+          px(c, X + 3, Y + 11, 10, 5, '#5a5468'); px(c, X + 3, Y + 11, 10, 1, '#7a748a'); px(c, X + 5, Y + 13, 6, 1, '#d8b870');
+          break;
+        case '|': // rekor tahtası
+          baseFloor(c, X, Y, x, y);
+          px(c, X + 2, Y + 1, 12, 11, '#6a4a2e'); px(c, X + 3, Y + 2, 10, 9, '#2a3a2e');
+          for (let k = 0; k < 4; k++) px(c, X + 4, Y + 3 + k * 2, 3 + ((k * 5) % 5), 1, '#e8e0c8');
+          px(c, X + 3, Y + 12, 2, 4, '#5a3a24'); px(c, X + 11, Y + 12, 2, 4, '#5a3a24');
+          break;
         case 's': // Kehanet Kulesi: mor tahta zemin, ara sıra altın yıldız kakması
           px(c, X, Y, T, T, '#5a3a62');
           for (let k = 0; k < 4; k++) { px(c, X, Y + k * 4 + 3, T, 1, '#4a2e52'); px(c, X + Math.floor(hash(x * 4 + k, y) * 16), Y + k * 4, 1, 4, '#4a2e52'); }
@@ -830,6 +848,11 @@ const Castle = (() => {
       if (d > 1 || at(Math.floor(X / T), Math.floor(Y / T)) !== '.') continue;
       px(c, X, Y, 1, 1, d > 0.85 ? '#d8b870' : d > 0.65 ? '#2a3a7a' : (xx * 3 + yy) % 9 === 0 ? '#e3c27a' : '#3a4c8a');
     }
+    // Kupa Odası: halının çevresinde damalı mermer zemin
+    for (let y = 13; y <= 19; y++) for (let x = 43; x <= 49; x++) {
+      if (at(x, y) !== '.') continue;
+      for (let k = 0; k < 4; k++) px(c, x * T + (k % 2) * 8, y * T + (k >> 1) * 8, 8, 8, (k + x + y) % 2 ? '#d8d0c8' : '#a8a0a8');
+    }
     // Kule sahanlığında baykuş postası: mektup ve paket yığınları
     const parcel = (X, Y, w, h, col) => { px(c, X, Y, w, h, col); px(c, X, Y, w, 1, '#e8dcb0'); px(c, X + (w >> 1), Y, 1, h, '#c03a3a'); px(c, X, Y + (h >> 1), w, 1, '#c03a3a'); };
     parcel(26 * T + 2, 7 * T + 4, 9, 6, '#b08a5e'); parcel(26 * T + 4, 7 * T, 6, 4, '#c8a070'); parcel(31 * T + 3, 7 * T + 6, 8, 5, '#a07a50');
@@ -944,9 +967,9 @@ const Castle = (() => {
       extra: { H: '#6a3a7a', h: '#8a5a9a', O: '#4a2a5a', C: '#e3b23c', c: '#d8b870' }, area: [45, 7, 47, 8], start: [46, 8],
       lines: ['Kehanet Kulesi\'ne hoş geldin. Büyük küreye bak; sis bugün sana bir şey söyleyecek.', 'Gelecek, bugün çalıştığın sayfalarda yazılı.', 'Minderlere otur, çayını yudumla, zihnini dinlendir.'],
       focus: 'Şşş… kürenin sisi odaklananları sever.' },
-    { name: 'Nia', ...student('kizil', 'mavi', 1), long: true, seat: [44, 16, 'right'],
-      lines: ['Ortak Salon\'un şöminesi kalenin en sıcak yeri.', 'Burada kitap okurken zaman nasıl geçiyor anlamıyorum.', 'Molada buraya gel, birlikte dinlenelim!'],
-      focus: '(Nia şöminenin karşısında kitabını okuyor)' },
+    { name: 'Nia', ...student('kizil', 'mavi', 1), long: true, area: [44, 14, 48, 18], start: [44, 18],
+      lines: ['Dolaplardaki kupalar senin rozetlerin! Her yenisinde bir kupa daha parlıyor.', 'Ortadaki büyük kupa, haftayı kazanan binanın.', 'Rekor tahtasına bak; en uzun serin orada yazıyor.'],
+      focus: '(Nia kupaları parlatıyor)' },
     { name: 'Pip', kind: 'owl', start: [29, 3],
       lines: ['Huu! Oturum bitince sana mektup getiririm.', 'Baykuşhane kulenin en tepesinde.', 'Huu huu! Kanatlarım hazır.'],
       focus: 'Huu… odaklan.' },
@@ -1102,6 +1125,48 @@ const Castle = (() => {
       px(ctx, X, Y, 2, 1, '#f080a0'); px(ctx, X + 3, Y, 2, 1, '#f080a0'); px(ctx, X, Y + 1, 5, 1, '#f080a0'); px(ctx, X + 1, Y + 2, 3, 1, '#f080a0'); px(ctx, X + 2, Y + 3, 1, 1, '#f080a0');
     }
   }
+  // Kupa Odası: kazandığın her rozet dolaplarda bir kupa olarak parlar (dolap başına 3 raf)
+  const cabTiles = tilesOf('!'), bigCup = tilesOf('?')[0], recordBoard = tilesOf('|')[0];
+  function drawTrophies() {
+    const got = Badges.count();
+    cabTiles.forEach(([x, y], ci) => {
+      const X = x * T - cam.x, Y = y * T - cam.y;
+      if (X < -T || X > VW || Y < -T || Y > VH) return;
+      for (let s = 0; s < 3; s++) {
+        const i = ci * 3 + s, sx = X + 6, sy = Y + 1 + s * 5;
+        if (i >= got.total) continue;
+        if (i < got.n) { // altın kupa
+          px(ctx, sx, sy + 1, 4, 2, '#e3b23c'); px(ctx, sx + 1, sy + 3, 2, 1, '#c9a24a'); px(ctx, sx, sy + 4, 4, 0.9, '#a8842c');
+          px(ctx, sx - 1, sy + 1, 1, 1, '#e3b23c'); px(ctx, sx + 4, sy + 1, 1, 1, '#e3b23c');
+          if (Math.sin(t * 2 + i) > 0.85) px(ctx, sx + 1, sy + 1, 1, 1, '#ffffff');
+        } else px(ctx, sx + 1, sy + 3, 2, 1, 'rgba(200,200,220,0.25)'); // boş yer
+      }
+    });
+    if (bigCup) {
+      const X = bigCup[0] * T - cam.x, Y = bigCup[1] * T - cam.y;
+      if (X > -T && X < VW && Y > -T && Y < VH) {
+        const wins = data.houseWins || 0, col = Scene.HOUSES[data.look.house];
+        if (wins) { ctx.fillStyle = `rgba(255,220,120,${0.12 + 0.06 * Math.sin(t * 2)})`; ctx.fillRect(X - 2, Y - 6, 20, 20); }
+        px(ctx, X + 4, Y - 2, 8, 6, '#e3b23c'); px(ctx, X + 5, Y + 4, 6, 2, '#c9a24a'); px(ctx, X + 7, Y + 6, 2, 3, '#c9a24a'); px(ctx, X + 5, Y + 9, 6, 2, '#a8842c');
+        px(ctx, X + 2, Y - 1, 2, 3, '#e3b23c'); px(ctx, X + 12, Y - 1, 2, 3, '#e3b23c'); px(ctx, X + 6, Y, 4, 2, col.a);
+        if (wins && Math.sin(t * 3) > 0.5) px(ctx, X + 5, Y - 1, 1, 1, '#ffffff');
+      }
+    }
+  }
+  function readTrophies(i) {
+    const got = Badges.count();
+    say('Kupa dolabı', `Kazandığın her rozet burada bir kupa: ${got.n}/${got.total}.${got.last ? ` Son kupan: ${got.last}.` : ' İlk rozetini kazan, ilk kupa parlasın!'}`, { x: cabTiles[i][0] * T + 8, y: cabTiles[i][1] * T }, 5);
+  }
+  function readCup() {
+    const w = data.houseWins || 0;
+    say('Bina Kupası', w ? `${Scene.HOUSES[data.look.house].name} binası bu kupayı ${w} kez kazandı! Bu hafta da salonun kum saatlerini doldur.` : 'Haftanın kazanan binası bu kupayı alır. Büyük Salon\'daki kum saatlerinde binanı öne geçir!', { x: bigCup[0] * T + 8, y: bigCup[1] * T - 8 }, 5);
+  }
+  function readRecords() {
+    const hrs = Math.floor(Object.values(data.days).reduce((a, d) => a + (d.sec || 0), 0) / 3600), fish = Object.keys(data.fishBook || {}).length;
+    say('Rekor tahtası', `En uzun seri: ${Badges.longest()} gün · Toplam odak: ${hrs} sa · Halka yarışı: ${data.raceBest ? data.raceBest.toFixed(1) + ' sn' : '—'} · Balık defteri: ${fish}/6 · Bina kupası: ${data.houseWins || 0}`, { x: recordBoard[0] * T + 8, y: recordBoard[1] * T }, 7);
+  }
+  const cabNear = () => { let best = -1, bd = 22; cabTiles.forEach(([x, y], i) => { const d = tileDist([x, y]); if (d < bd) { bd = d; best = i; } }); return best; };
+
   function drawBalls() { // kristal kürelerin içinde dönen sis
     for (const [x, y] of ballTiles) {
       const X = x * T + 8 - cam.x, Y = y * T + 6 - cam.y;
@@ -1121,6 +1186,10 @@ const Castle = (() => {
     if (nearTile(bigBall, 24)) return { fn: gazeBall, d: data.ballDay === todayKey() ? tileDist(bigBall) : 0 };
     const pi = perchNear();
     if (pi >= 0) return { fn: () => feedOwl(pi), d: data.owlDay === todayKey() || owlState().fed.includes(pi) ? tileDist(perchTiles[pi]) : 0 };
+    if (bigCup && nearTile(bigCup, 24)) return { fn: readCup, d: tileDist(bigCup) };
+    if (recordBoard && nearTile(recordBoard, 22)) return { fn: readRecords, d: tileDist(recordBoard) };
+    const ci = cabNear();
+    if (ci >= 0) return { fn: () => readTrophies(ci), d: tileDist(cabTiles[ci]) };
     if (signNear()) return { fn: () => say('Tabela', '← Göl ve iskele (balık) · ↓ Balkabağı tarlası ve kulübe · Uçuş sahası (halka yarışı) →', { x: 18 * T + 8, y: 22 * T }, 5), d: tileDist([18, 22]) };
     for (const [x, y] of GLASSES) if (nearTile([x, y], 24)) return { fn: readGlasses, d: tileDist([x, y]) };
     const rm = roamerNear();
@@ -1425,7 +1494,7 @@ const Castle = (() => {
     data.houseWeek = wk;
     if (Object.keys(data.days).some(k => k >= wk && k < end && data.days[k].pomos)) {
       const win = Object.entries(housePoints(-1)).sort((a, b) => b[1] - a[1])[0][0];
-      if (win === data.look.house) { data.coins += 5; toastLater(`Geçen haftanın bina kupası senin binanın: ${Scene.HOUSES[win].name}! Katkın için +5 altın`); }
+      if (win === data.look.house) { data.coins += 5; data.houseWins = (data.houseWins || 0) + 1; toastLater(`Geçen haftanın bina kupası senin binanın: ${Scene.HOUSES[win].name}! Katkın için +5 altın`); }
       else toastLater(`Geçen haftanın bina kupasını ${Scene.HOUSES[win].name} kazandı. Bu hafta binan için çalış!`);
     }
     save();
@@ -2084,7 +2153,7 @@ const Castle = (() => {
     drawDynamic();
     updatePet();
     const petActor = { kind: 'pet', x: petFollow.x, y: petFollow.y - 0.5 }; // aynı hizadaysa oyuncunun arkasında
-    drawLake(); drawGrounds(); drawRooms(); drawGlasses(); drawRings(); drawBalls(); drawOwlHearts(); drawHunt();
+    drawLake(); drawGrounds(); drawRooms(); drawGlasses(); drawRings(); drawBalls(); drawOwlHearts(); drawHunt(); drawTrophies();
     const actors = [...NPCS.filter(n => !FREE_FLYERS.has(n.kind)), player, petActor, ...othersMap.values(), ...roamers].sort((a, b) => a.y - b.y);
     for (const a of actors) drawActor(a);
     if (player.seated && Math.sin(t * 5) > 0.3) px(ctx, Math.round(player.x - cam.x + 5), Math.round(player.y - cam.y - 2), 1, 1, '#ffe9a0');
@@ -2105,6 +2174,7 @@ const Castle = (() => {
   // Düşük çözünürlükte çizildiği için büyütülünce yumuşak, pikselli halkalar oluşur.
   let LIGHTS = null; // çeşme konumu buildBg sonrası belli olduğu için ilk çizimde kurulur
   const buildLights = () => [
+    { x: 46 * T + 8, y: 16 * T + 4, r: 46, a: 0.5, col: '255,220,140', glow: 0.12 },
     ...tilesOf('(').map(([x, y]) => ({ x: x * T + 8, y: y * T + 6, r: 30, a: 0.55, col: '200,160,255', glow: 0.14, flick: 0.3 })),
     ...[[1, 16], [8, 16], [5, 14]].map(([x, y]) => ({ x: x * T + 7, y: y * T + 8, r: 26, a: 0.6, col: '255,200,120', glow: 0.14, flick: 0.6 })),
     { x: 28.5 * T, y: 5.5 * T, r: 60, a: 0.35, col: '150,140,255', glow: 0.1 },

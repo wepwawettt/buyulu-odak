@@ -72,5 +72,12 @@ const Badges = (() => {
     }
   }
 
-  return { check, render, longest };
+  // Kupa Odası için: kazanılan rozet sayısı ve sonuncusunun adı
+  function count() {
+    const got = data.badges || {}, ids = Object.keys(got).filter(id => LIST.some(b => b.id === id));
+    const last = ids.sort((a, b) => (got[a] < got[b] ? -1 : 1)).pop();
+    return { n: ids.length, total: LIST.length, last: LIST.find(b => b.id === last)?.name };
+  }
+
+  return { check, render, longest, count };
 })();
