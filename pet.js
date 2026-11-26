@@ -9,6 +9,12 @@ const Pet = (() => {
   const pet = () => (data.pet ||= { sec: 0, species: null, name: '', last: todayKey() });
   const stage = () => STAGES.reduce((s, st, i) => (pet().sec >= st.h * 3600 ? i : s), 0);
   const daysAway = () => Math.round((new Date(todayKey() + 'T12:00') - new Date(pet().last + 'T12:00')) / 864e5);
+  let sad = false, sadTimer; // odak koruyucu: sekmeden uzun ayrılınca bir süre üzgün (kaydedilmez)
+  function setSad(v) {
+    sad = v;
+    clearTimeout(sadTimer);
+    if (v) sadTimer = setTimeout(() => (sad = false), 10 * 60000);
+  }
   const title = () => pet().name || SPECIES[pet().species] || 'Yumurta';
 
   // app.js addFocus her odak saniyesinde çağırır
@@ -29,7 +35,7 @@ const Pet = (() => {
   // Çizim için (Scene.drawPet)
   function info() {
     const p = pet();
-    return { species: p.species, stage: p.species ? stage() : 0, sleepy: daysAway() >= 2, cape: Scene.HOUSES[data.look.house]?.a };
+    return { species: p.species, stage: p.species ? stage() : 0, sleepy: daysAway() >= 2, sad, cape: Scene.HOUSES[data.look.house]?.a };
   }
 
   // Odadaki hayvana tıklanınca: ilk seferde ad sorulur, sonra durumu söylenir
@@ -45,10 +51,11 @@ const Pet = (() => {
       return;
     }
     if (daysAway() >= 2) return toast(`${p.name} uyuyor… Bir oturum bitir, uyansın!`);
+    if (sad) return toast(`${p.name} biraz üzgün; sen yokken seni bekledi. Birlikte bir oturum bitirin, keyfi yerine gelsin.`);
     const next = STAGES[st + 1];
     toast(next ? `${p.name} (${SPECIES[p.species]}) · ${STAGES[st].name} · ${next.name} olmasına ${Math.ceil(next.h - p.sec / 3600)} sa odak kaldı`
       : `${p.name} (${SPECIES[p.species]}) tamamen büyüdü. Seninle gurur duyuyor!`);
   }
 
-  return { onFocus, info, click };
+  return { onFocus, info, click, setSad, title };
 })();

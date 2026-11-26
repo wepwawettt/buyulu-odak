@@ -12,11 +12,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Büyülü Odak">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="icon" href="icon.svg?v=202611260900" type="image/svg+xml">
+  <link rel="icon" href="icon.svg?v=202611261403" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=202611260900">
+  <link rel="stylesheet" href="style.css?v=202611261403">
 </head>
 <body data-mode="focus">
   <!-- Giriş kapağı (cover.js çizer ve kapatır) -->
@@ -38,6 +38,7 @@
             <g fill="#fff0a0"><rect x="3" y="5" width="1" height="1"/><rect x="2" y="6" width="3" height="1"/><rect x="3" y="7" width="1" height="1"/></g>
           </svg><b id="streak">0</b>
         </button>
+        <button id="festChip" class="streak fest" type="button" hidden>❄ <b id="festCount">0</b></button>
         <div class="coins" title="Her 10 dakika odak = 1 altın">
           <span class="coin"></span><b id="coins">0</b>
         </div>
@@ -100,6 +101,14 @@
       <div class="mana" title="Oturum ilerlemesi"><div id="manaFill"></div></div>
 
       <div id="roomNote" class="room-note" hidden></div>
+      <form id="noteBox" class="note-box" hidden>
+        <label for="noteInput">Bu oturumda ne yaptın?</label>
+        <div class="row">
+          <input id="noteInput" name="note" maxlength="100" placeholder="ör. 3. bölümün özetini çıkardım" autocomplete="off">
+          <button class="btn small add">Kaydet</button>
+          <button type="button" id="noteSkip" class="btn small ghost" title="Geç">×</button>
+        </div>
+      </form>
       <div class="controls">
         <button id="reset" class="btn ghost" title="Sıfırla">↺</button>
         <button id="start" class="btn primary">Başla</button>
@@ -158,9 +167,11 @@
         <div id="tagStats"></div>
       </div>
       <div class="heat">
-        <div class="heat-head"><h3>Son 12 ay</h3><small id="heatSum"></small></div>
+        <div class="heat-head"><h3>Son 12 ay</h3><small id="heatSum"></small><button id="openRecap" class="btn small" type="button">✦ Yıl özetin</button></div>
         <div id="heatGrid" class="heat-grid"></div>
         <div class="heat-legend">Az <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> Hedef tamam</div>
+        <small class="heat-hint">Bir güne tıkla: o günün dersleri ve seans notları</small>
+        <div id="dayDetail" class="day-detail" hidden></div>
       </div>
     </section>
   </div>
@@ -263,6 +274,7 @@
     <h3>🛍️ Dükkan ve karakter</h3>
     <ul>
       <li>Altınla <b>Dükkan</b>'dan odana eşya, karakterine kıyafet al.</li>
+      <li><b>Oda temaları</b> odanın duvarını ve zeminini baştan değiştirir: Gece Kulesi (30), Orman Kulübesi (45), Kristal Salon (65), Kraliyet Salonu (90). Aldığın temalar arasında istediğin zaman geçiş yaparsın.</li>
       <li><b>Karakter</b> panelinden bina rengi, saç, saç modeli, ten ve kıyafet seç.</li>
     </ul>
 
@@ -272,6 +284,7 @@
       <li>Yavruya tıklayıp <b>adını koy</b>; sonra her tıklamada ne kadar büyüdüğünü söyler.</li>
       <li>Odaklandıkça büyür: <b>Yavru</b> → 10 saatte <b>Genç</b> → 30 saatte <b>Yetişkin</b> (yetişkinken kendine özel bir süsü olur).</li>
       <li>Kalede seni peşinden takip eder. <b>2 gün çalışmazsan uyur</b>; bir oturum bitirince uyanır.</li>
+      <li><b>Odak koruyucu</b>'yu açtıysan (Ayarlar) ve odaktayken sekmeden uzun süre ayrılırsan biraz üzülür; birlikte bir oturum bitirince keyfi yerine gelir.</li>
     </ul>
 
     <h3>🎓 Sınıflar ve kalenin gizli bölümleri</h3>
@@ -287,7 +300,22 @@
       <li>Her gün en az bir odak oturumu bitir: üstteki alev <b>serini</b> sayar (bugün henüz oturum yoksa gri durur). Her 7 günde <b>+5 altın</b>.</li>
       <li><b>Rozetler</b>'de 22 başarım var (ilk oturum, 10 saat odak, gece kuşu, ilk iksir…); her biri <b>+2 altın</b>. Kazanılmayanların nasıl kazanılacağı altında yazar.</li>
       <li>İstatistiklerin altında <b>son 12 ayın takvimi</b> var: ne kadar çok çalıştıysan kare o kadar koyu, hedefini tamamladığın günler altın renginde.</li>
+      <li>Takvimdeki bir kareye ya da haftalık çubuklardan birine tıkla: o günün süresi, dersleri ve <b>seans notların</b> görünür. Her oturum bitince "Bu oturumda ne yaptın?" diye sorulur; istemezsen Ayarlar'dan kapatabilirsin.</li>
+      <li><b>Yıl özetin</b> (takvimin yanındaki düğme): yılın toplam odağı, en uzun serin, en çok çalıştığın ders, en verimli ayın ve evcil hayvanın kart kart gösterilir. Sonunda paylaşabileceğin bir resim çıkar.</li>
       <li>Görev eklerken bir <b>ders etiketi</b> seç (ör. Matematik, "+ Yeni etiket…" ile kendin oluştur); istatistiklerde haftanın <b>derslere göre</b> dağılımını görürsün.</li>
+    </ul>
+
+    <h3>❄️ Kış Şenliği (her Aralık)</h3>
+    <ul>
+      <li>Aralık boyunca bitirdiğin her odak oturumu <b>1 kar tanesi</b> kazandırır (üstte ❄ sayacı). Kar taneleri her yıl sıfırdan başlar.</li>
+      <li><b>8 ❄</b> pervazda bir <b>Kardan Adam</b>, <b>20 ❄</b> <b>Ayaz Cübbesi</b>, <b>40 ❄</b> <b>Buz Sarayı</b> oda teması. Bunlar dükkanda satılmaz; zaten sendeyse yerine +5 altın alırsın.</li>
+      <li>Şenlik boyunca kalenin avlusuna kar yağar, ağaçlar ışıl ışıl yanar.</li>
+    </ul>
+
+    <h3>🎯 Odak koruyucu (isteğe bağlı)</h3>
+    <ul>
+      <li><b>Ayarlar</b>'dan açılır. Odaktayken sekmeden ya da uygulamadan 15 saniyeden uzun ayrılıp dönersen "Hoş geldin, şu kadar uzaktaydın" diye hatırlatır.</li>
+      <li>20 dakika ve üzeri bir oturumu hiç ayrılmadan bitirirsen <b>+1 altın</b>. Ders için başka sekmede kaynak açman gerekiyorsa kapalı bırak.</li>
     </ul>
 
     <h3>🌅 Odanın havası</h3>
@@ -335,12 +363,24 @@
 
   <dialog id="badgeDlg" class="side">
     <button class="x-close" data-close aria-label="Kapat" title="Kapat">×</button>
+    <div id="festBox" class="class-box fest-box" hidden></div>
     <h2>Sınıfın</h2>
     <div id="classBox" class="class-box"></div>
     <h2>Rozetler <small id="badgeCount"></small></h2>
     <p class="room-msg">Her rozet +2 altın. Her 7 günlük seride de +5 altın.</p>
     <div id="badgeList" class="badge-list"></div>
     <button class="btn small close" data-close>Kapat</button>
+  </dialog>
+
+  <dialog id="recapDlg" class="recap">
+    <button class="x-close" data-close aria-label="Kapat" title="Kapat">×</button>
+    <h2 id="recapTitle">Yıl özetin</h2>
+    <div id="recapCard" class="recap-card"></div>
+    <div id="recapDots" class="recap-dots"></div>
+    <div class="row">
+      <button type="button" id="recapPrev" class="btn small ghost">‹ Geri</button>
+      <button type="button" id="recapNext" class="btn small add">İleri ›</button>
+    </div>
   </dialog>
 
   <dialog id="setDlg">
@@ -353,6 +393,8 @@
       <label class="check"><input type="checkbox" name="sound"> Bitince sihirli ses çal</label>
       <label class="check"><input type="checkbox" name="autoBreak"> Molayı otomatik başlat</label>
       <label class="check"><input type="checkbox" name="autoFocus"> Moladan sonra odağı otomatik başlat</label>
+      <label class="check"><input type="checkbox" name="notes"> Oturum bitince "ne yaptın?" notu sor</label>
+      <label class="check"><input type="checkbox" name="guard"> Odak koruyucu: odaktayken sekmeden ayrılırsam hatırlat (tam odaklanılan oturuma +1 altın)</label>
       <div id="installBox" class="cloud-box" hidden><b>Uygulama</b><p></p><button type="button" class="btn small">Ana ekrana kur</button></div>
       <div id="cloudBox" class="cloud-box" hidden><b>Hesap</b><p></p><button type="button" class="btn small">Google ile giriş yap</button></div>
       <button type="button" id="resetAll" class="btn small danger">Tüm ilerlemeyi sıfırla</button>
@@ -366,18 +408,20 @@
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
-  <script src="firebase-config.js?v=202611260900"></script>
-  <script src="cloud.js?v=202611260900"></script>
-  <script src="scene.js?v=202611260900"></script>
-  <script src="map.js?v=202611260900"></script>
-  <script src="room.js?v=202611260900"></script>
-  <script src="odam.js?v=202611260900"></script>
-  <script src="badges.js?v=202611260900"></script>
-  <script src="pet.js?v=202611260900"></script>
-  <script src="levels.js?v=202611260900"></script>
-  <script src="friends.js?v=202611260900"></script>
-  <script src="app.js?v=202611260900"></script>
-  <script src="cover.js?v=202611260900"></script>
+  <script src="firebase-config.js?v=202611261403"></script>
+  <script src="cloud.js?v=202611261403"></script>
+  <script src="scene.js?v=202611261403"></script>
+  <script src="map.js?v=202611261403"></script>
+  <script src="room.js?v=202611261403"></script>
+  <script src="odam.js?v=202611261403"></script>
+  <script src="badges.js?v=202611261403"></script>
+  <script src="pet.js?v=202611261403"></script>
+  <script src="levels.js?v=202611261403"></script>
+  <script src="friends.js?v=202611261403"></script>
+  <script src="fest.js?v=202611261403"></script>
+  <script src="recap.js?v=202611261403"></script>
+  <script src="app.js?v=202611261403"></script>
+  <script src="cover.js?v=202611261403"></script>
   <script>
     // Çevrimdışı yedek ve telefona kurulabilmek için
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});

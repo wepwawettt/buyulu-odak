@@ -107,6 +107,17 @@ const Scene = (() => {
   };
   let skyKey = '';
 
+  // Oda temaları (dükkandan alınır): duvar deseni ve renkleri, zemin. b: üç tuğla/tahta tonu, hl: üst kenar
+  const THEMES = {
+    tas:      { wall: '#26222f', b: ['#3a3448', '#433c52', '#4b4459'], hl: '#544c63', floor: '#4a3222', fl: '#3b2719', edge: '#2d1f16' },
+    gece:     { wall: '#121633', b: ['#1c2450', '#222c5c', '#29346a'], hl: '#34427a', floor: '#2a2640', fl: '#1e1a30', edge: '#151226', spark: '#c8d4ff' },
+    orman:    { kind: 'plank', wall: '#3a2414', b: ['#6a4428', '#74502e', '#7e5a34'], hl: '#4e321c', floor: '#3e4a28', fl: '#2e3a1e', edge: '#2a2414' },
+    kristal:  { wall: '#2e2648', b: ['#4a3e6e', '#54487a', '#5e5288'], hl: '#6e62a0', floor: '#38344e', fl: '#2a2640', edge: '#221e34', spark: '#e8d8ff', spark2: '#a8e0ff' },
+    kraliyet: { kind: 'paper', wall: '#2a1436', b: ['#3e2616', '#3a1e48', '#4a2e1a'], hl: '#c9a24a', floor: '#3a2418', fl: '#2a180e', edge: '#20120a' },
+    buz:      { wall: '#3a5a7a', b: ['#6a90b8', '#7aa0c6', '#8ab0d2'], hl: '#b8d4ee', floor: '#8aa8c8', fl: '#7090b0', edge: '#4a6a8a', spark: '#ffffff' },
+  };
+  let theme = 'tas';
+
   // ---------- Evcil hayvan (yumurtadan çıkan sürpriz yaratık; oda ve kale birlikte kullanır) ----------
   // K kontur  A ana renk  W karın/yüz  E göz  P burun/yanak  S yumurta beneği
   const PET_PAL = {
@@ -145,7 +156,7 @@ const Scene = (() => {
     }
     const rows = PET_SPR[info.species][info.stage >= 2 ? 1 : 0];
     const w = rows[0].length, h = rows.length;
-    const bob = info.sleepy ? 0 : Math.sin(time * 4) > 0.3 ? 1 : 0;
+    const bob = info.sleepy || info.sad ? 0 : Math.sin(time * 4) > 0.3 ? 1 : 0;
     const ox = Math.round(cx - w / 2), oy = Math.round(by - h - bob);
     const pal = { K: '#5a4050', E: info.sleepy ? '#5a4050' : '#2a1e2e', ...PET_PAL[info.species] };
     sprite(c, rows, pal, ox, oy);
@@ -166,6 +177,10 @@ const Scene = (() => {
       }
     }
     if (info.sleepy && Math.sin(time * 1.5) > 0) px(c, ox + w, oy - 3, 2, 1, '#c8c8e8'); // uyuyor (z)
+    if (info.sad && !info.sleepy) { // üzgün: gözünden süzülen minik gözyaşı
+      const eye = rows.findIndex(r => r.includes('E')), ex = rows[eye].indexOf('E');
+      px(c, ox + ex, oy + eye + 1 + (Math.floor(time * 2) % 3), 1, 1, '#7ab8f0');
+    }
   }
 
   let ctx, bg, look = { house: 'kizil', hair: 'kahve', skin: 1 }, state = 'idle';
@@ -205,19 +220,40 @@ const Scene = (() => {
   }
 
   // ---------- Statik arka plan (sadece görünüm değişince yeniden çizilir) ----------
-  function buildBg() {
-    const c = bg.getContext('2d');
+  function buildBg(c = bg.getContext('2d')) {
     const house = HOUSES[look.house];
 
-    // Taş duvar
-    px(c, 0, 0, W, 92, '#26222f');
-    for (let r = 0; r < 12; r++) {
-      const y = r * 8, off = r % 2 ? 6 : 0;
-      for (let x = -off; x < W; x += 12) {
-        const v = hash(x + 40, r + 7);
-        px(c, x + 1, y + 1, 10, 6, v < 0.15 ? '#3a3448' : v < 0.8 ? '#433c52' : '#4b4459');
-        px(c, x + 1, y + 1, 10, 1, '#544c63');
+    // Duvar (oda temasına göre: taş, ahşap ya da desenli duvar kâğıdı)
+    const th = THEMES[theme] || THEMES.tas, [b0, b1, b2] = th.b;
+    px(c, 0, 0, W, 92, th.wall);
+    if (th.kind === 'plank') {
+      for (let x = 0; x < W; x += 10) {
+        const v = hash(x, 5);
+        px(c, x, 0, 9, 92, v < 0.3 ? b0 : v < 0.75 ? b1 : b2);
+        px(c, x, 0, 1, 92, th.hl);
+        for (let y = 6; y < 92; y += 23 + Math.floor(hash(x, 9) * 9)) px(c, x + 3 + Math.floor(hash(x, y) * 3), y, 2, 1, th.wall); // budak
       }
+    } else if (th.kind === 'paper') {
+      px(c, 0, 0, W, 92, b1);
+      for (let y = 4; y < 72; y += 10) for (let x = (y / 10) % 2 ? 0 : 6; x < W; x += 12) {
+        px(c, x + 1, y, 1, 1, th.hl); px(c, x, y + 1, 3, 1, th.hl); px(c, x + 1, y + 2, 1, 1, th.hl);
+      }
+      px(c, 0, 72, W, 20, b0); px(c, 0, 72, W, 1, th.hl); // ahşap lambri
+      for (let x = 4; x < W; x += 16) px(c, x, 76, 12, 12, b2);
+    } else {
+      for (let r = 0; r < 12; r++) {
+        const y = r * 8, off = r % 2 ? 6 : 0;
+        for (let x = -off; x < W; x += 12) {
+          const v = hash(x + 40, r + 7);
+          px(c, x + 1, y + 1, 10, 6, v < 0.15 ? b0 : v < 0.8 ? b1 : b2);
+          px(c, x + 1, y + 1, 10, 1, th.hl);
+        }
+      }
+    }
+    if (th.spark) for (let i = 0; i < 26; i++) { // duvarda parıltılar
+      const x = Math.floor(hash(i, 31) * W), y = Math.floor(hash(i, 37) * 88);
+      px(c, x, y, 1, 1, th.spark);
+      if (hash(i, 41) > 0.6) { px(c, x - 1, y, 1, 1, th.spark2 || th.spark); px(c, x + 1, y, 1, 1, th.spark2 || th.spark); }
     }
 
     // Kemerli pencere (gökyüzü gerçek saate göre)
@@ -327,13 +363,13 @@ const Scene = (() => {
     }
 
     // Zemin
-    px(c, 0, 92, W, 28, '#4a3222');
+    px(c, 0, 92, W, 28, th.floor);
     for (let y = 92; y < H; y += 6) {
-      px(c, 0, y, W, 1, '#3b2719');
+      px(c, 0, y, W, 1, th.fl);
       const off = Math.floor(hash(y, 1) * 30);
-      for (let x = off; x < W; x += 40) px(c, x, y, 1, 6, '#3b2719');
+      for (let x = off; x < W; x += 40) px(c, x, y, 1, 6, th.fl);
     }
-    px(c, 0, 89, W, 3, '#2d1f16');
+    px(c, 0, 89, W, 3, th.edge);
 
     // Halı (bina renklerinde)
     px(c, 26, 103, 108, 12, house.b);
@@ -406,6 +442,7 @@ const Scene = (() => {
     kar:      { pal: { H: '#dde6f2', h: '#ffffff', O: '#b8c8e0', K: '#4a5a7a' }, sleeve: '#c8d6ea', fx: 'snow' },
     // Sınıf atlayınca açılanlar (dükkanda satılmaz)
     bilgin:   { pal: { H: '#2a5a5a', h: '#4a8a80', O: '#20463f' }, sleeve: '#2a5650' },
+    ayaz:     { pal: { H: '#2a6a8a', h: '#5aa8c8', O: '#1e4a62', g: '#e8f4ff' }, sleeve: '#2a5a78', rows: GOLD_BRIM, fx: 'snow' }, // Kış Şenliği
     kidemli:  { pal: { H: '#6a2a3a', h: '#9a4a5a', O: '#4a2030', g: '#e3b23c' }, sleeve: '#5a2632', rows: GOLD_BRIM },
     mezun:    { pal: { H: '#2a2632', h: '#4a4458', O: '#1e1a26', g: '#e3b23c' }, sleeve: '#2a2632', rows: GOLD_BRIM, fx: 'stars' },
     kedi:     { pal: { H: '#efe6d6', h: '#ffffff', P: '#f0a0b0', O: '#6a5a8a' }, sleeve: '#7a6a9a', rows: CAT_BEANIE,
@@ -640,6 +677,23 @@ const Scene = (() => {
         px(ctx, 113, 106, 2, 1, '#221c2c');
         px(ctx, 115, s ? 104 : 105, 1, 2, '#221c2c');
         px(ctx, 116, s ? 103 : 105, 1, 1, '#221c2c');
+      },
+    },
+
+    // Kış Şenliği ödülü: pencere pervazında atkılı kardan adam (atkı bina renginde)
+    snowman: {
+      layer: 'back', box: [12, 46, 15, 18],
+      draw() {
+        const cx = 19, sc = HOUSES[look.house];
+        for (let y = -3; y <= 3; y++) for (let x = -3; x <= 3; x++) if (x * x + y * y <= 10) px(ctx, cx + x, 59 + y, 1, 1, x + y > 2 ? '#c8d8ec' : '#f4f8ff');
+        for (let y = -2; y <= 2; y++) for (let x = -2; x <= 2; x++) if (x * x + y * y <= 5) px(ctx, cx + x, 53 + y, 1, 1, x + y > 1 ? '#c8d8ec' : '#f4f8ff');
+        px(ctx, cx - 1, 52, 1, 1, '#1c1c2a'); px(ctx, cx + 1, 52, 1, 1, '#1c1c2a');
+        px(ctx, cx, 53, 2, 1, '#f08a3a');
+        px(ctx, cx - 3, 50, 7, 1, '#1c1c2a'); px(ctx, cx - 2, 47, 5, 3, '#1c1c2a'); px(ctx, cx - 2, 49, 5, 1, sc.a);
+        px(ctx, cx - 2, 55, 5, 1, sc.a); px(ctx, cx + 1, 56, 2, 3, sc.a); px(ctx, cx + 1, 58, 2, 1, sc.b);
+        px(ctx, cx, 58, 1, 1, '#1c1c2a'); px(ctx, cx, 60, 1, 1, '#1c1c2a');
+        px(ctx, cx - 4, 56, 1, 1, '#6b4a2f'); px(ctx, cx - 5, 55, 1, 1, '#6b4a2f'); // dal kollar
+        px(ctx, cx + 4, 57, 1, 1, '#6b4a2f'); px(ctx, cx + 5, 56, 1, 1, '#6b4a2f');
       },
     },
 
@@ -965,6 +1019,17 @@ const Scene = (() => {
     skyPhase, season,
     setLook(l) { look = { ...look, ...l }; buildBg(); },
     setItems(list) { items = list; },
+    setTheme(id) { if (THEMES[id] && id !== theme) { theme = id; buildBg(); } },
+    // Dükkan ikonu: temanın duvarından ve zemininden küçük bir kesit
+    themeIcon(id) {
+      const saved = theme, full = document.createElement('canvas');
+      full.width = W; full.height = H;
+      theme = id; buildBg(full.getContext('2d')); theme = saved;
+      const out = document.createElement('canvas');
+      out.width = 24; out.height = 50;
+      out.getContext('2d').drawImage(full, 89, 52, 24, 50, 0, 0, 24, 50);
+      return out.toDataURL();
+    },
     setBrew(b) { brew = b; },
     setPet(p) { pet = p; },
     setChart(v) { if (v !== chart) { chart = v; buildBg(); } }, // 5. sınıf ödülü: duvarda yıldız haritası

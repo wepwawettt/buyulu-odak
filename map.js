@@ -1246,6 +1246,28 @@ const Castle = (() => {
     }
   }
 
+  // Kış Şenliği (Aralık): avludaki ağaçlarda yanıp sönen ışıklar ve tepede yıldız, avluya kar yağar
+  const FEST_TREES = tilesOf('t');
+  function drawFest() {
+    if (!Fest.active()) return;
+    const cols = ['#ff6a6a', '#ffd46b', '#7ad0ff', '#9aff8a'];
+    for (const [x, y] of FEST_TREES) {
+      const X = x * T - cam.x, Y = y * T - cam.y;
+      if (X < -T || X > VW || Y < -T || Y > VH) continue;
+      [[3, 5], [12, 4], [6, 9], [10, 10], [8, 2], [4, 10], [13, 8]].forEach(([dx, dy], i) => {
+        if (Math.sin(t * 3 + i * 1.7 + x) > -0.3) px(ctx, X + dx, Y + dy, 2, 2, cols[(i + x) % 4]);
+      });
+      px(ctx, X + 7, Y - 3, 2, 4, '#ffe890'); px(ctx, X + 6, Y - 2, 4, 2, '#ffe890');
+      if (Math.sin(t * 4 + y) > 0) { px(ctx, X + 5, Y - 1, 1, 1, '#fff6c0'); px(ctx, X + 10, Y - 1, 1, 1, '#fff6c0'); px(ctx, X + 7, Y - 4, 2, 1, '#fff6c0'); }
+    }
+    const x0 = 10 * T, y0 = 13 * T, w = 13 * T, h = 7 * T; // avlu
+    for (let i = 0; i < 70; i++) {
+      const sx = x0 + ((hash(i, 3) * w + Math.sin(t * 0.8 + i) * 4) % w), sy = y0 + ((hash(i, 7) * h + t * (10 + hash(i, 5) * 8)) % h);
+      const X = Math.round(sx - cam.x), Y = Math.round(sy - cam.y);
+      if (X >= 0 && X < VW && Y >= 0 && Y < VH) px(ctx, X, Y, 1, 1, '#f4f8ff');
+    }
+  }
+
   function drawQuestMarks() {
     for (const n of NPCS) {
       const q = questOf(n);
@@ -1288,6 +1310,7 @@ const Castle = (() => {
     drawQuestMarks();
     drawMailOwl();
     drawLighting();
+    drawFest(); // şenlik ışıkları karanlıkta da parlasın
     drawOverlays();
   }
 

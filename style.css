@@ -531,3 +531,47 @@ body.deep .frame { box-shadow: 0 0 0 4px var(--ink), 0 0 0 8px var(--gold-dark),
 #openRoom.alert { background: var(--gold); color: var(--ink); animation: alert-blink 1s steps(2) infinite; }
 @keyframes alert-blink { 50% { filter: brightness(1.35); } }
 .toast { white-space: normal; width: max-content; max-width: 88%; text-align: center; line-height: 1.1; }
+
+/* Kış Şenliği sayacı ve paneli */
+.streak.fest { color: #dff0ff; box-shadow: 0 0 0 3px var(--ink), 0 0 0 5px #5aa8c8; }
+.streak[hidden], .class-box[hidden] { display: none; }
+.fest-box { box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px #5aa8c8; }
+.fest-box > b { color: #dff0ff; }
+.fest-box .bar div { background: #9ad8f0; }
+
+/* Seans notu */
+.note-box { align-self: stretch; box-sizing: border-box; width: 100%; background: var(--panel-2); box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px var(--gold-dark); padding: 8px 10px; margin: 4px 0 12px; }
+.note-box label { display: block; color: var(--gold); font-size: 19px; margin-bottom: 4px; }
+.note-box .row { display: flex; gap: 6px; }
+.note-box input { flex: 1; min-width: 0; font: inherit; font-size: 19px; background: var(--ink); color: var(--text); border: 0; padding: 4px 8px; }
+
+/* Takvimde seçilen gün */
+.heat-hint { display: block; color: var(--muted); font-size: 16px; text-align: right; margin-top: 2px; }
+.heat-head #openRecap { margin-left: auto; }
+.heat-grid i[data-k], .bars .col { cursor: pointer; }
+.day-detail { margin-top: 10px; background: var(--panel-2); box-shadow: 0 0 0 2px var(--ink); padding: 8px 10px; }
+.day-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.day-head b { font-weight: normal; color: var(--gold); font-size: 20px; }
+.day-tags { margin: 4px 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.day-detail ul { margin: 4px 0 0; padding: 0; list-style: none; font-size: 19px; line-height: 1.15; }
+.day-detail li { padding: 2px 0; }
+.day-detail li small { color: var(--muted); }
+
+/* Yıl özeti */
+dialog.recap { width: min(420px, calc(100vw - 32px)); text-align: center; }
+.recap-card { min-height: 260px; display: flex; flex-direction: column; justify-content: center; gap: 6px; font-size: 22px; }
+.recap-card p { margin: 0; }
+.recap-card b { font-weight: normal; color: #f2d27a; }
+.recap-card .big { font-family: 'Press Start 2P', monospace; font-size: 22px; color: var(--gold); margin: 8px 0; line-height: 1.3; }
+.recap-card .tag-row { text-align: left; font-size: 19px; }
+.recap-months { display: flex; align-items: flex-end; gap: 4px; height: 80px; margin: 6px 0; }
+.recap-months i { flex: 1; background: var(--panel-2); box-shadow: 0 0 0 1px var(--ink); }
+.recap-months i.on { background: var(--gold); }
+.recap-pet-cv { width: 144px; height: 96px; image-rendering: pixelated; margin: 0 auto; display: block; }
+.recap-img { width: 216px; max-width: 100%; margin: 4px auto; display: block; box-shadow: 0 0 0 2px var(--ink); }
+.recap-dots { display: flex; justify-content: center; gap: 6px; margin: 12px 0; }
+.recap-dots i { width: 8px; height: 8px; background: var(--panel-2); }
+.recap-dots i.on { background: var(--gold); }
+dialog.recap .row { display: flex; justify-content: space-between; gap: 10px; }
+dialog.recap .row .btn { white-space: nowrap; }
+dialog.recap .recap-card .row { justify-content: center; }
