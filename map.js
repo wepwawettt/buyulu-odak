@@ -938,10 +938,11 @@ const Castle = (() => {
 
   // ---------- İksir malzemeleri ----------
   // Her nokta günde bir kez toplanır; odak sırasında toplanamaz. Malzemeler odadaki iksirlerde kullanılır.
+  // Kilerde her malzemeden en fazla PANTRY_MAX tutulur (biriktirilemesin, her gün toplamak anlamlı olsun).
   const INGREDIENTS = { leaf: 'Ay Yaprağı', dust: 'Kristal Toz', feather: 'Baykuş Tüyü' };
+  const PANTRY_MAX = 3;
   const GATHER = [
     { id: 'g1', kind: 'leaf', x: 24, y: 14 }, { id: 'g2', kind: 'leaf', x: 30, y: 14 },
-    { id: 'g3', kind: 'leaf', x: 25, y: 17 }, { id: 'g4', kind: 'leaf', x: 31, y: 17 },
     { id: 'g5', kind: 'dust', x: 2, y: 13 }, { id: 'g6', kind: 'dust', x: 7, y: 13 },
     { id: 'g7', kind: 'feather', x: 26, y: 2 }, { id: 'g8', kind: 'feather', x: 30, y: 2 },
   ];
@@ -955,8 +956,11 @@ const Castle = (() => {
   function gather(g) {
     const at = { x: g.x * T + 8, y: g.y * T };
     if (focusing()) return say(INGREDIENTS[g.kind], 'Odak bitince topla; şimdi çalışma zamanı!', at);
-    gatherDay().done[g.id] = true;
     data.pantry ||= { leaf: 0, dust: 0, feather: 0 };
+    if (data.pantry[g.kind] >= PANTRY_MAX) { // nokta harcanmaz, iksir yapınca gelip alabilirsin
+      return say(INGREDIENTS[g.kind], `Kilerin dolu: en fazla ${PANTRY_MAX} ${INGREDIENTS[g.kind]} tutabilirsin. Önce bir iksir demle!`, at, 5);
+    }
+    gatherDay().done[g.id] = true;
     data.pantry[g.kind]++;
     save();
     say('Malzeme', `+1 ${INGREDIENTS[g.kind]} (sende ${data.pantry[g.kind]})`, at);

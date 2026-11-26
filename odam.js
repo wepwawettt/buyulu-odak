@@ -157,7 +157,7 @@ const Odam = (() => {
   // İksir = kalede molada toplanan malzemeler + odadaki odak süresi
   const POTIONS = [
     { id: 'wake', name: 'Uyanıklık İksiri', min: 25, color: '#7ae0c0', needs: { leaf: 1 }, desc: '25 dk odak · Bitince +2 altın.' },
-    { id: 'gold', name: 'Sıvı Altın', min: 60, color: '#f0c040', needs: { leaf: 2, dust: 1 }, desc: '60 dk odak · Bitince +6 altın.' },
+    { id: 'gold', name: 'Sıvı Altın', min: 60, color: '#f0c040', needs: { leaf: 2, dust: 1 }, desc: '60 dk odak · Bitince +4 altın.' },
     { id: 'wisdom', name: 'Bilgelik İksiri', min: 90, color: '#b08ae0', needs: { leaf: 1, dust: 1, feather: 1 }, desc: '90 dk odak · Sonraki kale görevi ödülün 2 katı.' },
   ];
   const ING = { leaf: 'Ay Yaprağı', dust: 'Kristal Toz', feather: 'Baykuş Tüyü' };
@@ -217,7 +217,7 @@ const Odam = (() => {
     if (!p || !brewDone()) return;
     let msg;
     if (p.id === 'wake') { data.coins += 2; msg = '+2 altın'; }
-    if (p.id === 'gold') { data.coins += 6; msg = '+6 altın'; }
+    if (p.id === 'gold') { data.coins += 4; msg = '+4 altın'; }
     if (p.id === 'wisdom') { data.wisdom = true; msg = 'Sonraki kale görevi ödülün 2 katı!'; }
     data.brew = null;
     data.potionsMade = (data.potionsMade || 0) + 1;
@@ -251,7 +251,7 @@ const Odam = (() => {
     }
     const pan = document.createElement('div');
     pan.className = 'pantry';
-    pan.innerHTML = '<b>Malzemelerin</b><span></span><small>Molada kalede parıldayan yerlerden topla: seradaki saksılar (Ay Yaprağı), zindandaki kavanozlar (Kristal Toz), baykuşhanedeki tünekler (Baykuş Tüyü). Her nokta günde bir kez.</small>';
+    pan.innerHTML = '<b>Malzemelerin</b><span></span><small>Molada kalede parıldayan yerlerden topla: seradaki saksılar (Ay Yaprağı), zindandaki kavanozlar (Kristal Toz), baykuşhanedeki tünekler (Baykuş Tüyü). Her nokta günde bir kez; kilerde her malzemeden en fazla 3 tutulur.</small>';
     pan.querySelector('span').textContent = Object.keys(ING).map(k => `${ING[k]} ${pantry()[k]}`).join(' · ');
     box.appendChild(pan);
     box.insertAdjacentHTML('beforeend', '<p class="room-msg">Malzemeleri kazana koy; iksir odak süresiyle demlenir. Aynı anda bir iksir.</p>');
