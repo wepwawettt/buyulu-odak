@@ -601,3 +601,5 @@ dialog.recap .recap-card .row { justify-content: center; }
 .pet-card .pet-cv { width: 55px; height: 40px; display: block; margin: 0 auto; }
 .pet-card small { display: block; font-size: 15px; line-height: 1; }
 .pet-card i { display: block; font-style: normal; font-size: 13px; color: #f2d27a; }
+
+.ticket-info { text-align: center; color: #f2d27a; font-size: 18px; margin: 0 0 8px; }

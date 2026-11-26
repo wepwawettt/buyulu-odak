@@ -786,14 +786,24 @@ const Castle = (() => {
   ];
   const lockMsg = ch => { const L = LOCKS[ch], need = Levels.need(L.lv()); return `${L.name} kilitli: ${need.name}'a geçince açılır (toplam ${need.h} sa odak).`; };
   // Günde bir kez +2 altın veren keşif noktaları
+  // Mola ödülleri: yalnızca gerçek molada ve bir mola hakkı (🎟, her odak oturumunda 1) harcanarak.
+  // Döner: altın verildiyse '' dışında bir ek metin; verilmediyse nedenini anlatan kısa not.
+  function breakReward(dayKey, coins, label) {
+    if (data[dayKey] === todayKey()) return '';
+    if (!isBreak()) return ' (Altın sadece molada: önce bir odak oturumu bitir.)';
+    if (!(data.breakTickets > 0)) return ' (Mola hakkın kalmadı: bir odak oturumu bitirince 🎟 kazanırsın.)';
+    data.breakTickets--;
+    data[dayKey] = todayKey();
+    data.coins += coins;
+    save(); render();
+    return ` +${coins} altın${label ? ` (${label})` : ''}`;
+  }
   function dailyBonus(dayKey, flag, who, list, anchor) {
     const msg = list[Math.floor(Math.random() * list.length)];
-    if (data[dayKey] === todayKey()) return say(who, msg, anchor, 6);
-    data[dayKey] = todayKey();
     (data.flags ||= {})[flag] = true;
-    data.coins += 2;
-    save(); render();
-    say(who, `${msg} (+2 altın)`, anchor, 6);
+    const extra = breakReward(dayKey, 2);
+    save();
+    say(who, msg + extra, anchor, 6);
   }
   const lookScope = () => dailyBonus('skyDay', 'sky', 'Teleskop', FORTUNES, { x: scope[0] * T + 8, y: scope[1] * T });
   const readBook = () => dailyBonus('bookDay', 'book', 'Eski kitap', PAGES, { x: lectern[0] * T + 8, y: lectern[1] * T });
@@ -1148,7 +1158,7 @@ const Castle = (() => {
     const book = (data.fishBook ||= {}), isNew = !book[f.id];
     book[f.id] = (book[f.id] || 0) + 1;
     let bonus = '';
-    if (data.fishDay !== todayKey()) { data.fishDay = todayKey(); data.coins++; bonus = ' +1 altın (günün ilk balığı)'; render(); }
+    bonus = breakReward('fishDay', 1, 'günün ilk balığı');
     save();
     say('İskele', `${f.name} yakaladın!${isNew ? ' Yeni tür!' : ''}${bonus} Balık defterin: ${Object.keys(book).length}/${FISH.length}`, player, 5);
   }
@@ -1180,7 +1190,7 @@ const Castle = (() => {
         const best = !data.raceBest || el < data.raceBest;
         if (best) data.raceBest = el;
         let bonus = '';
-        if (data.raceDay !== todayKey()) { data.raceDay = todayKey(); data.coins += 2; bonus = ' +2 altın!'; render(); }
+        bonus = breakReward('raceDay', 2);
         save();
         return say('Hoca Swift', `Bitti! ${el.toFixed(1)} saniye${best ? ', yeni rekor' : ''}.${bonus}`, swift(), 5);
       }

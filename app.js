@@ -188,6 +188,7 @@ function completeFocus() {
   guardClean = false;
   Pet.setSad(false);
   Events.onSession();
+  data.breakTickets = Math.min(2, (data.breakTickets || 0) + 1); // kale ödülleri için mola hakkı
   today().pomos++;
   data.cycle++;
   const task = activeTask();
@@ -373,6 +374,9 @@ function render() {
   $('goalText').textContent = mins >= goal ? `${mins} / ${goal} dk — Hedef tamam!` : `${mins} / ${goal} dk`;
   $('goalFill').style.width = Math.min(100, 100 * mins / goal) + '%';
   $('coins').textContent = data.coins;
+  const tk = data.breakTickets || 0, brk = mode !== 'focus';
+  $('ticketInfo').textContent = `🎟 Mola hakkın: ${tk}/2 · ` + (brk ? (tk ? 'Ödüllü etkinlikler (balık, yarış, teleskop, eski kitap) bir hak harcar.' : 'Hak yok; oynayabilirsin ama altın çıkmaz.')
+    : 'Kale ödülleri sadece molada verilir. Her odak oturumu 1 hak kazandırır.');
   $('coinNext').textContent = `Sonraki altına ${Math.ceil((600 - data.coinAcc) / 60)} dk odak · bugün ${today().pomos} oturum`;
 
   const guest = Room.isGuest();

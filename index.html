@@ -12,11 +12,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Büyülü Odak">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="icon" href="icon.svg?v=202611262102" type="image/svg+xml">
+  <link rel="icon" href="icon.svg?v=202611262202" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=202611262102">
+  <link rel="stylesheet" href="style.css?v=202611262202">
 </head>
 <body data-mode="focus">
   <!-- Giriş kapağı (cover.js çizer ve kapatır) -->
@@ -72,6 +72,7 @@
       </div>
       <div class="room-bar-row castle-music"><button id="castleMusicBtn" class="btn small" type="button">♪ Kale müziği</button><button id="castleTrackBtn" class="btn small" type="button">Parça</button><button id="autoWalkBtn" class="btn small" type="button" title="Açıkken karakterin molada kalede kendi kendine dolaşır; bir tuşa basınca kontrol sende">🚶 Kendi gezsin</button><input id="castleVol" type="range" min="0" max="100" title="Ses seviyesi"></div>
       <p>Yürü: ok tuşları / WASD ya da tıkla · Konuş: E · Odak başlayınca en yakın masaya oturursun · Molada parıldayan yerlerden iksir malzemesi topla</p>
+      <p id="ticketInfo" class="ticket-info"></p>
       <div class="quests"><h3>Günün görevleri</h3><ul id="questList"></ul></div>
     </div>
     <div id="roomBar" class="room-bar">
@@ -267,8 +268,9 @@
       <li><b>Büyük Salon</b>'da dört bina masası, iki yanında banklar, yükseltilmiş öğretmen masası ve altın baykuşlu kürsü var. Odak başlayınca bir banka oturup masaya dönersin.</li>
       <li>Salonun iki yanındaki <b>bina kum saatleri</b> bu haftanın puanlarını gösterir (yanına gidip E). Odak dakikaların kendi binana puan olarak eklenir; pazartesi kazanan bina senin binansa <b>+5 altın</b>.</li>
       <li>Avlunun güneyindeki kapıdan <b>okul bahçesine</b> çık: göl ve iskele, balkabağı tarlası ve bahçıvan kulübesi, halkalı uçuş sahası. Bahçıvan Hollis ve Hoca Swift orada. Karanlık ormana fazla yaklaşma!</li>
-      <li>🎣 <b>Balık tutma:</b> molada iskelenin ucuna git, E ile oltayı at; mantar suya batınca hemen E! Altı balık türü var (ikisi nadir); günün ilk balığı <b>+1 altın</b>.</li>
-      <li>🧹 <b>Halka yarışı:</b> uçuş sahasında Hoca Swift'le konuş, süpürgene bin ve altı altın halkadan 45 saniyede geç. Günün ilk başarısı <b>+2 altın</b>, en iyi süren kaydedilir.</li>
+      <li>🎟 <b>Mola hakkı:</b> kaledeki altınlı etkinlikler (balık, halka yarışı, teleskop, eski kitap) <b>sadece molada</b> ve bir <b>mola hakkı</b> harcanarak ödül verir. Her bitirdiğin odak oturumu 1 hak kazandırır (en fazla 2 birikir). Hak yokken de oynayabilirsin, sadece altın çıkmaz. Böylece oyun hiçbir zaman dersin önüne geçmez.</li>
+      <li>🎣 <b>Balık tutma:</b> molada iskelenin ucuna git, E ile oltayı at; mantar suya batınca hemen E! Altı balık türü var (ikisi nadir); günün ilk balığı molada <b>+1 altın</b>.</li>
+      <li>🧹 <b>Halka yarışı:</b> uçuş sahasında Hoca Swift'le konuş, süpürgene bin ve altı altın halkadan 45 saniyede geç. Molada günün ilk başarısı <b>+2 altın</b>, en iyi süren kaydedilir.</li>
       <li>🐾 Yanında olmayan evcil hayvanların bahçıvan kulübesinin önünde, balkabaklarının arasında dolaşır; yanlarına gidip E'ye bas.</li>
       <li>Kalede gezerken piksel bir müzik çalar. Haritanın altındaki <b>♪ Kale müziği</b> düğmesiyle kapatıp açabilir, <b>Parça</b> düğmesiyle üç parça arasında geçebilirsin: Müzik Kutusu, Gizemli Koridor, Neşeli Şato. Yanındaki çubuk sesi ayarlar. Odak sırasında ve odadaki lo-fi müzik açıkken susar.</li>
       <li><b>🚶 Kendi gezsin</b> açıksa karakterin molada 6 saniye dokunmazsan kalede kendi kendine dolaşır, NPC'lerin yanına gider; odak başlayınca kendisi gidip oturur. Bir tuşa basınca ya da haritaya tıklayınca kontrol sana geçer.</li>
@@ -305,7 +307,7 @@
       <li>Toplam odak saatin arttıkça <b>sınıf atlarsın</b>: 1. Sınıf'tan <b>Mezun</b>'a 8 seviye. Sınıfını ve sonraki sınıfa kalan saati <b>Rozetler</b> panelinin üstünde görürsün.</li>
       <li>Ödüller: altın, dükkanda açılan özel cübbeler (Bilgin, Kıdemli, Mezuniyet) ve odanın duvarına <b>yıldız haritası</b>.</li>
       <li>Kale koridorunun en sağında iki <b>kilitli kapı</b> var: <b>Gözlemevi</b> 3. Sınıf'ta (12 sa), <b>Gizli Kütüphane</b> 6. Sınıf'ta (60 sa) açılır.</li>
-      <li>Gözlemevindeki <b>teleskoba</b> ve Gizli Kütüphanedeki <b>eski kitaba</b> E ile bak: her gün bir yıldız falı / çalışma tavsiyesi ve <b>+2 altın</b>.</li>
+      <li>Gözlemevindeki <b>teleskoba</b> ve Gizli Kütüphanedeki <b>eski kitaba</b> E ile bak: her gün bir yıldız falı / çalışma tavsiyesi ve molada (mola hakkıyla) <b>+2 altın</b>.</li>
     </ul>
 
     <h3>🔥 Seri, rozetler ve istatistik</h3>
@@ -439,20 +441,20 @@
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
-  <script src="firebase-config.js?v=202611262102"></script>
-  <script src="cloud.js?v=202611262102"></script>
-  <script src="scene.js?v=202611262102"></script>
-  <script src="map.js?v=202611262102"></script>
-  <script src="room.js?v=202611262102"></script>
-  <script src="odam.js?v=202611262102"></script>
-  <script src="badges.js?v=202611262102"></script>
-  <script src="pet.js?v=202611262102"></script>
-  <script src="levels.js?v=202611262102"></script>
-  <script src="friends.js?v=202611262102"></script>
-  <script src="events.js?v=202611262102"></script>
-  <script src="recap.js?v=202611262102"></script>
-  <script src="app.js?v=202611262102"></script>
-  <script src="cover.js?v=202611262102"></script>
+  <script src="firebase-config.js?v=202611262202"></script>
+  <script src="cloud.js?v=202611262202"></script>
+  <script src="scene.js?v=202611262202"></script>
+  <script src="map.js?v=202611262202"></script>
+  <script src="room.js?v=202611262202"></script>
+  <script src="odam.js?v=202611262202"></script>
+  <script src="badges.js?v=202611262202"></script>
+  <script src="pet.js?v=202611262202"></script>
+  <script src="levels.js?v=202611262202"></script>
+  <script src="friends.js?v=202611262202"></script>
+  <script src="events.js?v=202611262202"></script>
+  <script src="recap.js?v=202611262202"></script>
+  <script src="app.js?v=202611262202"></script>
+  <script src="cover.js?v=202611262202"></script>
   <script>
     // Çevrimdışı yedek ve telefona kurulabilmek için
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
