@@ -191,5 +191,8 @@ const Pet = (() => {
     box.append(grid);
   }
 
-  return { onFocus, info, click, setSad, title, render };
+  // Kalede bahçede dolaşan diğer hayvanlar (en fazla 4)
+  const roam = () => stable().filter(q => q.species).slice(0, 4).map(q => ({ id: q.id || titleOf(q), name: titleOf(q), info: infoOf(q) }));
+
+  return { onFocus, info, click, setSad, title, render, roam };
 })();
