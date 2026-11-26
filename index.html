@@ -12,11 +12,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Büyülü Odak">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="icon" href="icon.svg?v=202611261901" type="image/svg+xml">
+  <link rel="icon" href="icon.svg?v=202611262004" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=202611261901">
+  <link rel="stylesheet" href="style.css?v=202611262004">
 </head>
 <body data-mode="focus">
   <!-- Giriş kapağı (cover.js çizer ve kapatır) -->
@@ -70,7 +70,7 @@
         </div>
         <button type="button" data-key="KeyE" class="act">E <small>konuş / al</small></button>
       </div>
-      <div class="room-bar-row castle-music"><button id="castleMusicBtn" class="btn small" type="button">♪ Kale müziği</button><button id="castleTrackBtn" class="btn small" type="button">Parça</button><input id="castleVol" type="range" min="0" max="100" title="Ses seviyesi"></div>
+      <div class="room-bar-row castle-music"><button id="castleMusicBtn" class="btn small" type="button">♪ Kale müziği</button><button id="castleTrackBtn" class="btn small" type="button">Parça</button><button id="autoWalkBtn" class="btn small" type="button" title="Açıkken karakterin molada kalede kendi kendine dolaşır; bir tuşa basınca kontrol sende">🚶 Kendi gezsin</button><input id="castleVol" type="range" min="0" max="100" title="Ses seviyesi"></div>
       <p>Yürü: ok tuşları / WASD ya da tıkla · Konuş: E · Odak başlayınca en yakın masaya oturursun · Molada parıldayan yerlerden iksir malzemesi topla</p>
       <div class="quests"><h3>Günün görevleri</h3><ul id="questList"></ul></div>
     </div>
@@ -131,6 +131,7 @@
         <button id="openChar" class="btn small">Karakter</button>
         <button id="openBadges" class="btn small">Rozetler</button>
         <button id="openEvents" class="btn small">Etkinlikler</button>
+        <button id="openPets" class="btn small">Hayvanlar</button>
         <button id="openFriends" class="btn small">Sıralama</button>
         <button id="openSettings" class="btn small">Ayarlar</button>
         <button id="openGuide" class="btn small">Nasıl oynanır?</button>
@@ -247,6 +248,7 @@
       <li><b>Başla</b>'ya bas (ya da <b>Boşluk</b>). 25 dk odak, sonra 5 dk kısa mola; her 4 odakta bir uzun mola. Süreleri <b>Ayarlar</b>'dan değiştirebilirsin.</li>
       <li>Her <b>10 dakika odak = 1 altın</b>. Günlük hedef çubuğu ve haftalık istatistik ilerlemeni gösterir.</li>
       <li><b>Görevler</b> listesine işlerini yaz. Birini seçersen biten oturumlar o göreve sayılır.</li>
+      <li><b>Odak = odam, mola = kale:</b> odak başlayınca odana, mola başlayınca kaleye geçersin. Arada istediğin yere gidebilirsin; kaledeyken odak başlarsa karakterin en yakın masaya oturur. İstemezsen Ayarlar'dan kapat.</li>
     </ul>
 
     <h3>🏠 Odam: kişisel çalışma alanın</h3>
@@ -262,7 +264,10 @@
       <li>Odak başlayınca karakterin en yakın masaya oturur (kütüphane ya da Büyük Salon); molada serbestçe gezersin.</li>
       <li><b>Günün görevleri</b>: her gün 3 görev gelir (haritanın altında). Başında <b>?</b> olan karakterin görevi var, <b>!</b> çıkınca görev bitmiştir: yanına gidip konuş, altın ödülünü al.</li>
       <li>Portrelerle E ile konuşabilir, molada seradaki çığlık köklerini sulayabilirsin.</li>
+      <li><b>Büyük Salon</b>'da dört bina masası, iki yanında banklar, yükseltilmiş öğretmen masası ve altın baykuşlu kürsü var. Odak başlayınca bir banka oturup masaya dönersin.</li>
+      <li>Avlunun güneyindeki kapıdan <b>okul bahçesine</b> çık: göl ve iskele, balkabağı tarlası ve bahçıvan kulübesi, halkalı uçuş sahası. Bahçıvan Hollis ve Hoca Swift orada. Karanlık ormana fazla yaklaşma!</li>
       <li>Kalede gezerken piksel bir müzik çalar. Haritanın altındaki <b>♪ Kale müziği</b> düğmesiyle kapatıp açabilir, <b>Parça</b> düğmesiyle üç parça arasında geçebilirsin: Müzik Kutusu, Gizemli Koridor, Neşeli Şato. Yanındaki çubuk sesi ayarlar. Odak sırasında ve odadaki lo-fi müzik açıkken susar.</li>
+      <li><b>🚶 Kendi gezsin</b> açıksa karakterin molada 6 saniye dokunmazsan kalede kendi kendine dolaşır, NPC'lerin yanına gider; odak başlayınca kendisi gidip oturur. Bir tuşa basınca ya da haritaya tıklayınca kontrol sana geçer.</li>
     </ul>
 
     <h3>⚗️ İksirler</h3>
@@ -283,8 +288,9 @@
 
     <h3>🥚 Evcil hayvanın</h3>
     <ul>
-      <li>Odanın sol alt köşesinde bir <b>yumurta</b> var. <b>1 saat odaklanınca</b> çatlar; içinden ne çıkacağı sürpriz: Ay tilkisi, Pofuduk, Kurbağa ya da Tavşan.</li>
-      <li>Yavruya tıklayıp <b>adını koy</b>; sonra her tıklamada ne kadar büyüdüğünü söyler.</li>
+      <li>Odanın sol alt köşesinde bir <b>yumurta</b> var. <b>1 saat odaklanınca</b> çatlar; içinden ne çıkacağı sürpriz. Sekiz tür var; Baykuş az bulunur, Ejderha nadir, Anka Kuşu çok nadir.</li>
+      <li>Yavruya tıklayıp <b>adını koy</b>. Sonraki tıklamalarda (ya da alttaki <b>Hayvanlar</b> düğmesiyle) koleksiyon paneli açılır.</li>
+      <li><b>Koleksiyon:</b> yetişkin olan her hayvan bir <b>yumurta hediye eder</b>; yumurta 25 altına da alınabilir. Yeni yumurta yanına gelir, diğer hayvanların bekler; istediğini "Yanına al" ile değiştirirsin. <b>Albüm</b>'de bulduğun türler görünür, bulmadıkların gölge halinde.</li>
       <li>Odaklandıkça büyür: <b>Yavru</b> → 10 saatte <b>Genç</b> → 30 saatte <b>Yetişkin</b> (yetişkinken kendine özel bir süsü olur).</li>
       <li>Kalede seni peşinden takip eder. <b>2 gün çalışmazsan uyur</b>; bir oturum bitirince uyanır.</li>
       <li><b>Odak koruyucu</b>'yu açtıysan (Ayarlar) ve odaktayken sekmeden uzun süre ayrılırsan biraz üzülür; birlikte bir oturum bitirince keyfi yerine gelir.</li>
@@ -341,7 +347,7 @@
     <ul>
       <li>İlerlemen normalde sadece bu tarayıcıda durur. <b>Ayarlar → Hesap → Google ile giriş yap</b> dersen hesabına kaydedilir; başka cihazda giriş yapınca kaldığın yerden devam edersin.</li>
       <li>Giriş yaptıysan <b>Sıralama</b>'da 6 harfli <b>arkadaş kodun</b> görünür. Arkadaşının kodunu ekle; bu haftanın odak dakikalarına göre sıralanırsınız.</li>
-      <li>Ekleme tek yönlüdür: senin listende görünmesi için sen onu, onun listesinde görünmen için o seni eklemeli.</li>
+      <li>Birinin kodunu eklediğinde sen de onun listesine otomatik eklenirsin (o Sıralama'yı açınca). Her arkadaşın altında son ne zaman güncellendiği yazar; uygulaması kapalıyken dakikası güncellenmez.</li>
     </ul>
 
     <h3>📱 Telefonda</h3>
@@ -364,6 +370,13 @@
     <button class="x-close" data-close aria-label="Kapat" title="Kapat">×</button>
     <h2>Haftalık Sıralama</h2>
     <div id="friendBody"></div>
+    <button class="btn small close" data-close>Kapat</button>
+  </dialog>
+
+  <dialog id="petDlg" class="side">
+    <button class="x-close" data-close aria-label="Kapat" title="Kapat">×</button>
+    <h2>Evcil Hayvanlar</h2>
+    <div id="petBody"></div>
     <button class="btn small close" data-close>Kapat</button>
   </dialog>
 
@@ -406,6 +419,7 @@
       <label class="check"><input type="checkbox" name="sound"> Bitince sihirli ses çal</label>
       <label class="check"><input type="checkbox" name="autoBreak"> Molayı otomatik başlat</label>
       <label class="check"><input type="checkbox" name="autoFocus"> Moladan sonra odağı otomatik başlat</label>
+      <label class="check"><input type="checkbox" name="autoView"> Odak başlayınca odama, mola başlayınca kaleye geç</label>
       <label class="check"><input type="checkbox" name="notes"> Oturum bitince "ne yaptın?" notu sor</label>
       <label class="check"><input type="checkbox" name="guard"> Odak koruyucu: odaktayken sekmeden ayrılırsam hatırlat (tam odaklanılan oturuma +1 altın)</label>
       <div id="installBox" class="cloud-box" hidden><b>Uygulama</b><p></p><button type="button" class="btn small">Ana ekrana kur</button></div>
@@ -421,20 +435,20 @@
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database-compat.js"></script>
-  <script src="firebase-config.js?v=202611261901"></script>
-  <script src="cloud.js?v=202611261901"></script>
-  <script src="scene.js?v=202611261901"></script>
-  <script src="map.js?v=202611261901"></script>
-  <script src="room.js?v=202611261901"></script>
-  <script src="odam.js?v=202611261901"></script>
-  <script src="badges.js?v=202611261901"></script>
-  <script src="pet.js?v=202611261901"></script>
-  <script src="levels.js?v=202611261901"></script>
-  <script src="friends.js?v=202611261901"></script>
-  <script src="events.js?v=202611261901"></script>
-  <script src="recap.js?v=202611261901"></script>
-  <script src="app.js?v=202611261901"></script>
-  <script src="cover.js?v=202611261901"></script>
+  <script src="firebase-config.js?v=202611262004"></script>
+  <script src="cloud.js?v=202611262004"></script>
+  <script src="scene.js?v=202611262004"></script>
+  <script src="map.js?v=202611262004"></script>
+  <script src="room.js?v=202611262004"></script>
+  <script src="odam.js?v=202611262004"></script>
+  <script src="badges.js?v=202611262004"></script>
+  <script src="pet.js?v=202611262004"></script>
+  <script src="levels.js?v=202611262004"></script>
+  <script src="friends.js?v=202611262004"></script>
+  <script src="events.js?v=202611262004"></script>
+  <script src="recap.js?v=202611262004"></script>
+  <script src="app.js?v=202611262004"></script>
+  <script src="cover.js?v=202611262004"></script>
   <script>
     // Çevrimdışı yedek ve telefona kurulabilmek için
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});

@@ -11,7 +11,7 @@ const Scene = (() => {
     kehribar: { name: 'Kehribar & Siyah', a: '#d9a520', b: '#2a2a2a' },
   };
   const HAIR = {
-    siyah: '#2b1d16', kahve: '#6b3e1f', kizil: '#b5481f', sari: '#e3c46a', gumus: '#cfcbe0',
+    siyah: '#2b1d16', kahve: '#6b3e1f', kizil: '#b5481f', sari: '#e3c46a', gumus: '#cfcbe0', mavi: '#3a68c8',
   };
   const SKIN = ['#f6d2b5', '#e8b48f', '#c98a5e', '#8d5a3b'];
 
@@ -128,8 +128,28 @@ const Scene = (() => {
     pofuduk: { A: '#c8a8e8', W: '#f4ecff', P: '#f6a6b0' },
     kurbaga: { A: '#7ac06a', W: '#d8f0b0', P: '#e88a8a' },
     tavsan: { A: '#e8dcd0', W: '#ffffff', P: '#f6a6b0' },
+    kirpi: { A: '#8a6a4a', S: '#7a5a3e', W: '#f0dcc0', P: '#3a2a2a' },
+    baykus: { A: '#8a6a4a', W: '#f0e0c0', P: '#e8a030' },
+    ejder: { A: '#5ab070', W: '#d8f0a0', P: '#2a4a2a', R: '#3a8a5a' },
+    anka: { A: '#e86a3a', W: '#ffd890', P: '#e3b23c', R: '#ffb030' },
   };
   const PET_SPR = {
+    kirpi: [
+      ['.K.K.K..', 'KSKSKSK.', 'KSSSSSSK', 'KWEWWEWK', 'KWWPPWWK', '.KWWWWK.', '..K..K..'],
+      ['.K.K.K.K..', 'KSKSKSKSK.', 'KSSSSSSSSK', 'KSSSSSSSSK', 'KWWEWWEWWK', 'KWWWPPWWWK', '.KWWWWWWK.', '..KK..KK..'],
+    ],
+    baykus: [
+      ['.K....K.', 'KAK..KAK', 'KAAAAAAK', 'KWEWWEWK', 'KAAPPAAK', 'KAWWWWAK', '.KKKKKK.'],
+      ['.K......K.', 'KAK....KAK', 'KAAAAAAAAK', 'KWWAAAAWWK', 'KWEWAAWEWK', 'KWWAPPAWWK', 'KAAWWWWAAK', 'KAWWWWWWAK', '.KAAAAAAK.', '..PP..PP..'],
+    ],
+    ejder: [
+      ['..K...K..', '.KAK.KAK.', 'KAAAAAAAK', 'KAEAAAEAK', 'KAAAPAAAK', '.KWWWWWK.', '..K...K..'],
+      ['...K...K...', '..KAK.KAK..', 'RKAAAAAAAKR', 'RRKAEAAEAKR', 'RRKAAPPAAKR', '.RKWWWWWKR.', '..KWWWWWK..', '..KK...KK..'],
+    ],
+    anka: [
+      ['..K..K..', '.KAKKAK.', 'KAAAAAAK', 'KAEAAEAK', 'KAAPPAAK', '.KWWWWK.', '..P..P..'],
+      ['..R.RR.R..', '...KRRK...', '..KAAAAK..', '.KAEAAEAK.', '.KAAPPAAK.', 'KRAWWWWARK', 'KRAWWWWARK', '.KAAAAAAK.', '..PP..PP..'],
+    ],
     egg: ['..KKK..', '.KWWWK.', 'KWWSWWK', 'KWWWWSK', 'KSWWWWK', 'KWWSWWK', '.KWWWK.', '..KKK..'],
     tilki: [
       ['.K....K.', 'KAK..KAK', 'KAAAAAAK', 'KAEAAEAK', 'KWWAAWWK', '.KWWWWK.', '..K..K..'],
@@ -175,6 +195,16 @@ const Scene = (() => {
       } else if (info.species === 'pofuduk') { // taç ve minik kanatlar
         px(c, ox + 3, oy - 2, 4, 1, '#e3b23c'); px(c, ox + 3, oy - 3, 1, 1, '#e3b23c'); px(c, ox + 6, oy - 3, 1, 1, '#e3b23c');
         px(c, ox - 2, oy + 3, 2, 2, '#ffffff'); px(c, ox + w, oy + 3, 2, 2, '#ffffff');
+      } else if (info.species === 'kirpi') { // dikenlerinde elma
+        px(c, ox + 5, oy - 1, 2, 2, '#e04848'); px(c, ox + 6, oy - 2, 1, 1, '#4a8a3a');
+      } else if (info.species === 'baykus') { // mezuniyet kepi
+        px(c, ox + 2, oy - 1, w - 4, 1, '#1c1c2a'); px(c, ox + 3, oy - 2, w - 6, 1, '#2a2a3a'); px(c, ox + w - 3, oy - 1, 1, 3, '#e3b23c');
+      } else if (info.species === 'ejder') { // burnundan duman
+        const k = (time * 0.8) % 1;
+        if (k < 0.7) { c.globalAlpha = 0.7 - k; px(c, ox + 4 + Math.round(k * 2), oy + 2 - Math.round(k * 8), 2, 2, '#c8c8d0'); c.globalAlpha = 1; }
+      } else if (info.species === 'anka') { // kanatlarında kıvılcım
+        if (Math.sin(time * 4) > 0) px(c, ox - 1, oy + 4, 1, 1, '#fff0a0');
+        if (Math.sin(time * 4 + 2) > 0) px(c, ox + w, oy + 5, 1, 1, '#fff0a0');
       } else if (info.species === 'kurbaga') { // büyücü şapkası
         px(c, ox + 2, oy - 1, 6, 1, '#4a4068'); px(c, ox + 3, oy - 2, 4, 1, '#6a5e90'); px(c, ox + 4, oy - 4, 2, 2, '#6a5e90'); px(c, ox + 5, oy - 5, 1, 1, '#e3b23c');
       }
@@ -478,8 +508,10 @@ const Scene = (() => {
     }
     if (of.fx === 'snow' || of.fx === 'petals') {
       for (let i = 0; i < 9; i++) {
-        const fy = iconMode ? (i * 11) % 34 : (t * 5 + i * 7.3) % 36;
-        const fx = (i * 17) % 34 - 4 + Math.round(Math.sin(t * 1.5 + i) * 1.5);
+        const fy = iconMode ? (i * 11) % 30 : (t * 5 + i * 7.3) % 32;
+        const side = i % 3, sx = side === 0 ? 1 + (i % 4) : side === 1 ? 21 + (i % 4) : 9 + (i * 5) % 9; // sol, sağ, şapka
+        const fx = sx + Math.round(Math.sin(t * 1.5 + i) * 1.2);
+        if (side === 2 && fy > 9) continue; // ortadakiler şapkada erir, yüze düşmez
         ctx.globalAlpha = 0.85;
         px(ctx, ox + fx, oy - 2 + Math.round(fy), 1, 1, of.fx === 'petals' ? (i % 2 ? '#ffb0d0' : '#ffe0ec') : '#ffffff');
       }

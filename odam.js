@@ -461,6 +461,7 @@ const Odam = (() => {
     $('castleVol').value = amb().vol;
     $('castleMusicBtn').classList.toggle('on', castleOn());
     $('castleTrackBtn').textContent = trackLabel();
+    $('autoWalkBtn').classList.toggle('on', !!data.autoWalk);
     $('deepBtn').classList.toggle('on', !!data.deep);
     $('brewBtn').textContent = brewDone() ? 'İksir hazır!' : potion() ? `İksir %${Math.min(100, Math.round(100 * data.brew.sec / (potion().min * 60)))}` : 'İksir demle';
   }
@@ -498,6 +499,10 @@ const Odam = (() => {
     $('ambVol').onchange = save;
     $('castleVol').oninput = $('ambVol').oninput;
     $('castleVol').onchange = save;
+    $('autoWalkBtn').onclick = () => {
+      data.autoWalk = !data.autoWalk; save(); renderBar();
+      toast(data.autoWalk ? 'Karakterin molada kalede kendi kendine gezecek. Bir tuşa basınca kontrol sende.' : 'Kendi kendine gezinti kapalı');
+    };
     $('castleTrackBtn').onclick = () => {
       data.castleTrack = (trackNo() + 1) % TRACKS.length;
       data.castleMusic = true;

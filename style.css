@@ -583,3 +583,21 @@ dialog.recap .recap-card .row { justify-content: center; }
 .castle-music { margin: 0 0 8px; }
 .castle-music .btn.on { background: var(--gold); color: var(--ink); }
 .castle-music input[type=range] { accent-color: var(--gold); width: 110px; }
+
+/* Evcil hayvan koleksiyonu */
+.pet-cv { width: 66px; height: 48px; image-rendering: pixelated; flex: none; }
+.pet-now { display: flex; align-items: center; gap: 10px; }
+.pet-now > div { flex: 1; min-width: 0; }
+.pet-now b { display: block; font-weight: normal; font-size: 24px; color: var(--gold); }
+.pet-now small { display: block; color: var(--muted); font-size: 17px; }
+.pet-egg .row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pet-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.pet-list li { display: flex; align-items: center; gap: 8px; background: var(--panel-2); box-shadow: 0 0 0 2px var(--ink); padding: 2px 8px; font-size: 18px; }
+.pet-list li span { flex: 1; }
+.pet-list .pet-cv { width: 44px; height: 32px; }
+.pet-album { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.pet-card { background: var(--panel-2); box-shadow: 0 0 0 2px var(--ink); text-align: center; padding: 4px 2px; opacity: .6; }
+.pet-card.got { opacity: 1; }
+.pet-card .pet-cv { width: 55px; height: 40px; display: block; margin: 0 auto; }
+.pet-card small { display: block; font-size: 15px; line-height: 1; }
+.pet-card i { display: block; font-style: normal; font-size: 13px; color: #f2d27a; }

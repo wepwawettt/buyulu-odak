@@ -1,7 +1,7 @@
 // ---------- Kayıt ----------
 const STORE = 'buyulu-odak-v1';
 const DEFAULTS = {
-  settings: { focus: 25, short: 5, long: 15, goal: 120, sound: true, autoBreak: true, autoFocus: false, notes: true, guard: false },
+  settings: { focus: 25, short: 5, long: 15, goal: 120, sound: true, autoBreak: true, autoFocus: false, notes: true, guard: false, autoView: true },
   look: { house: 'kizil', hair: 'kahve', skin: 1, outfit: 'klasik', hairStyle: 'uzun' },
   outfits: ['klasik'], // sahip olunan kıyafetler
   coins: 0,
@@ -344,7 +344,19 @@ const fmt = s => {
   return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
 };
 
+// Odak = oda, mola = kale: geçiş anında görünümü değiştirir; arada istediğin yere gidebilirsin
+let lastFocusOn = false, lastMode = 'focus';
+function autoView() {
+  const on = mode === 'focus' && running;
+  if (data.settings.autoView) {
+    if (on && !lastFocusOn) setView('room');
+    else if (mode !== 'focus' && lastMode === 'focus') setView('castle');
+  }
+  lastFocusOn = on; lastMode = mode;
+}
+
 function render() {
+  autoView();
   document.body.dataset.mode = mode;
   $('time').textContent = fmt(remaining);
   document.title = running ? `${fmt(remaining)} · ${LABELS[mode]} — Büyülü Odak` : 'Büyülü Odak';
@@ -381,7 +393,7 @@ function applyHouseColors() {
 }
 
 // Karakter seçenekleri
-const HAIR_LABELS = { siyah: 'Siyah', kahve: 'Kahve', kizil: 'Kızıl', sari: 'Sarı', gumus: 'Gümüş' };
+const HAIR_LABELS = { siyah: 'Siyah', kahve: 'Kahve', kizil: 'Kızıl', sari: 'Sarı', gumus: 'Gümüş', mavi: 'Mavi' };
 function buildCharOptions() {
   const groups = [
     ['houseOpts', 'house', Object.entries(Scene.HOUSES).map(([k, h]) => [k, h.name, `linear-gradient(90deg, ${h.a} 50%, ${h.b} 50%)`])],
@@ -815,10 +827,10 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => { if (spaceIsOurs(e)) e.preventDefault(); });
 
 // Yan paneller (karakter, dükkan): aynı anda biri açık olur
-const charDlg = $('charDlg'), shopDlg = $('shopDlg'), roomDlg = $('roomDlg'), brewDlg = $('brewDlg'), badgeDlg = $('badgeDlg'), friendDlg = $('friendDlg'), eventDlg = $('eventDlg');
+const charDlg = $('charDlg'), shopDlg = $('shopDlg'), roomDlg = $('roomDlg'), brewDlg = $('brewDlg'), badgeDlg = $('badgeDlg'), friendDlg = $('friendDlg'), eventDlg = $('eventDlg'), petDlg = $('petDlg');
 function togglePanel(dlg, build) {
   const wasOpen = dlg.open;
-  charDlg.close(); shopDlg.close(); roomDlg.close(); brewDlg.close(); badgeDlg.close(); friendDlg.close(); eventDlg.close();
+  charDlg.close(); shopDlg.close(); roomDlg.close(); brewDlg.close(); badgeDlg.close(); friendDlg.close(); eventDlg.close(); petDlg.close();
   if (!wasOpen) { build(); dlg.show(); }
 }
 $('openChar').onclick = () => togglePanel(charDlg, buildCharOptions);
@@ -828,6 +840,7 @@ for (const d of [charDlg, shopDlg, roomDlg]) d.querySelector('[data-close]').onc
 $('openRoom').onclick = () => togglePanel(roomDlg, Room.renderPanel);
 $('openFriends').onclick = () => togglePanel(friendDlg, Friends.render);
 $('openBadges').onclick = $('streakBadge').onclick = () => togglePanel(badgeDlg, () => { Levels.render(); Badges.render(); });
+$('openPets').onclick = () => togglePanel(petDlg, Pet.render);
 $('openEvents').onclick = $('festChip').onclick = () => togglePanel(eventDlg, Events.render);
 
 const setDlg = $('setDlg'), form = $('setForm');

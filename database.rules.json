@@ -20,6 +20,15 @@
         ".write": "auth != null && !data.exists() && newData.val() === auth.uid && $code.length <= 12"
       }
     },
+    "invites": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$from": {
+          ".write": "auth != null && (auth.uid === $from || auth.uid === $uid)",
+          ".validate": "newData.isBoolean()"
+        }
+      }
+    },
     "rooms": {
       "$code": {
         ".read": "auth != null",

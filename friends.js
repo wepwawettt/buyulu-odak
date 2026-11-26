@@ -2,8 +2,8 @@
 // Firebase'de:
 //   profiles/{uid} = { name, cls, house, week: 'YYYY-AA-GG' (haftanın pazartesisi), min, at }  — giriş yapan herkes okuyabilir
 //   codes/{kod}    = uid  — arkadaş kodu; bir kez alınır, sonra değişmez
-// Arkadaş listesi data.friends'te (uid'ler) durur ve hesapla birlikte eşitlenir. Ekleme tek yönlüdür:
-// kodunu verdiğin kişi seni kendi listesine eklemedikçe senin sıralamanda görünür ama sen onunkinde görünmezsin.
+//   invites/{uid}/{ekleyen} = true — biri seni ekleyince bırakılır; sen açınca o da listene eklenir (karşılıklı)
+// Arkadaş listesi data.friends'te (uid'ler) durur ve hesapla birlikte eşitlenir.
 const Friends = (() => {
   const MAX = 30;
   const db = () => firebase.database();
@@ -29,6 +29,28 @@ const Friends = (() => {
     if (!force && (sig === lastSig || Date.now() - lastAt < 60000)) return;
     lastSig = sig; lastAt = Date.now();
     db().ref('profiles/' + me().uid).set({ ...prof, at: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
+    if (!invitesChecked) { invitesChecked = true; acceptInvites(); }
+  }
+
+  // Seni ekleyenleri sen de ekle (davet okunduktan sonra silinir)
+  let invitesChecked = false;
+  async function acceptInvites() {
+    if (!me()) return false;
+    let got = false;
+    try {
+      const inv = (await db().ref('invites/' + me().uid).get()).val() || {};
+      for (const uid of Object.keys(inv)) {
+        if (uid !== me().uid && !(data.friends ||= []).includes(uid) && data.friends.length < MAX) {
+          data.friends.push(uid);
+          got = true;
+          const p = (await db().ref('profiles/' + uid).get()).val();
+          toastLater(`${clean(p?.name, 16) || 'Bir büyücü'} seni arkadaş olarak ekledi; o da artık senin sıralamanda!`);
+        }
+        db().ref(`invites/${me().uid}/${uid}`).remove().catch(() => {});
+      }
+      if (got) save();
+    } catch {}
+    return got;
   }
 
   // Arkadaş kodum: yoksa boş bir kod bulup bana ayır
@@ -53,7 +75,10 @@ const Friends = (() => {
       else if (uid === me().uid) msg = 'Bu senin kendi kodun :)';
       else if ((data.friends ||= []).includes(uid)) msg = 'Bu arkadaş zaten listende.';
       else if (data.friends.length >= MAX) msg = `En fazla ${MAX} arkadaş ekleyebilirsin.`;
-      else { data.friends.push(uid); save(); msg = 'Arkadaş eklendi!'; }
+      else {
+        data.friends.push(uid); save(); msg = 'Arkadaş eklendi! Sen de onun listesinde görüneceksin.';
+        db().ref(`invites/${uid}/${me().uid}`).set(true).catch(() => {});
+      }
     } catch { msg = 'Bağlantı sorunu, birazdan tekrar dene.'; }
     render();
   }
@@ -79,14 +104,30 @@ const Friends = (() => {
       el('copyCode').onclick = () => navigator.clipboard?.writeText(code).then(() => toast('Kod kopyalandı'));
     }).catch(() => { box.querySelector('.friend-code').textContent = '(alınamadı)'; });
 
+    await acceptInvites();
+    renderList();
+  }
+
+  // Sıralama listesi: panel açıkken 30 sn'de bir tazelenir
+  let refreshT = 0;
+  const ago = at => {
+    const m = Math.round((Date.now() - at) / 60000);
+    return m < 2 ? 'şimdi çevrimiçi' : m < 60 ? `${m} dk önce` : m < 1440 ? `${Math.round(m / 60)} sa önce` : `${Math.round(m / 1440)} gün önce`;
+  };
+  async function renderList() {
+    clearTimeout(refreshT);
     const ids = [me().uid, ...(data.friends || [])];
-    const profs = await Promise.all(ids.map(id => db().ref('profiles/' + id).get().then(s => s.val()).catch(() => null)));
+    const profs = await Promise.all(ids.map(id => db().ref('profiles/' + id).get().then(s => s.val()).catch(() => undefined)));
     const wk = weekKey();
     const rows = ids.map((id, i) => {
-      const p = profs[i] || {};
-      const mine = id === me().uid;
-      return { id, mine, name: mine ? myName() : clean(p.name, 16) || 'Büyücü', cls: clean(mine ? Levels.name() : p.cls, 16),
-        min: mine ? weekMin() : p.week === wk ? Math.max(0, Math.min(10080, Number(p.min) || 0)) : 0 };
+      const p = profs[i], mine = id === me().uid;
+      const thisWeek = p?.week === wk;
+      // Arkadaşın neden 0 dk göründüğü anlaşılsın
+      const status = mine ? Levels.name()
+        : p === undefined ? 'bağlantı sorunu' : !p ? 'henüz Sıralama\'yı açmadı'
+        : `${clean(p.cls, 16)} · ${thisWeek ? 'güncellendi ' + ago(p.at || 0) : 'bu hafta henüz çalışmadı'}`;
+      return { id, mine, name: mine ? myName() : clean(p?.name, 16) || 'Büyücü', status,
+        min: mine ? weekMin() : thisWeek ? Math.max(0, Math.min(10080, Number(p.min) || 0)) : 0 };
     }).sort((a, b) => b.min - a.min);
     const ol = el('friendList');
     if (!ol) return; // panel bu arada kapandı/yeniden çizildi
@@ -97,7 +138,7 @@ const Friends = (() => {
       li.innerHTML = '<span class="rank"></span><span class="who"><b></b><small></small></span><span class="min"></span>';
       li.querySelector('.rank').textContent = ['🥇', '🥈', '🥉'][i] || i + 1;
       li.querySelector('b').textContent = r.name + (r.mine ? ' (sen)' : '');
-      li.querySelector('small').textContent = r.cls;
+      li.querySelector('small').textContent = r.status;
       li.querySelector('.min').textContent = fmtMin(r.min);
       if (!r.mine) {
         const x = document.createElement('button');
@@ -108,6 +149,7 @@ const Friends = (() => {
       ol.appendChild(li);
     });
     if (rows.length === 1) ol.insertAdjacentHTML('beforeend', '<li class="room-msg">Henüz arkadaş yok. Kodunu paylaş, onların kodunu ekle!</li>');
+    refreshT = setTimeout(() => { if (el('friendDlg').open) { publish(); acceptInvites().then(renderList); } }, 30000);
   }
 
   return { publish, render };
