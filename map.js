@@ -23,10 +23,10 @@ const Castle = (() => {
   fill(1, 2, 9, 8, ',');
   fill(1, 2, 3, 2, 'B'); fill(6, 2, 9, 2, 'B'); fill(1, 6, 1, 8, 'B'); fill(9, 6, 9, 8, 'B');
   fill(4, 1, 5, 1, 'V');
-  fill(4, 2, 5, 4, 'u');
+  fill(4, 2, 5, 8, 'u'); // şömineden kapıya uzanan halı
   put([[2, 4], [3, 4], [6, 4], [7, 4], [2, 7], [3, 7], [6, 7], [7, 7]], 'd');
   put([[2, 5], [3, 5], [6, 5], [7, 5], [2, 8], [3, 8], [6, 8], [7, 8]], 'k');
-  put([[5, 6]], 'K'); put([[9, 4]], 'Y'); put([[1, 4]], 'n');
+  put([[8, 3]], 'K'); put([[9, 4]], 'Y'); put([[1, 4]], 'n');
   put([[2, 1], [8, 1]], 'W');
   // Büyük Salon ve büyülü tavanı (orta üst): masa sütunları ve her masanın bina rengi
   const HALL_TABLES = [12, 15, 19, 22];
@@ -830,12 +830,6 @@ const Castle = (() => {
       const X = x * T + (x === 23 ? 10 : 1), Y = y * T;
       for (let k = 0; k < T; k += 2) px(c, X + Math.round(Math.sin((y * T + k) * 0.4) * 2), Y + k, 2, 2, k % 6 === 0 ? '#6ab06a' : '#4a8a4a');
       if (hash(x, y) > 0.5) { px(c, X, Y + 7, 3, 3, '#f6a8c8'); px(c, X + 1, Y + 8, 1, 1, '#ffe060'); }
-    }
-    // Kütüphane: masaların arasında sıcak renkli halı
-    for (let yy = 0; yy < 2 * T; yy++) for (let xx = 0; xx < 2 * T; xx++) {
-      const X = 4 * T + xx, Y = 6 * T + yy, edge = xx < 2 || yy < 2 || xx > 2 * T - 3 || yy > 2 * T - 3;
-      if (at(Math.floor(X / T), Math.floor(Y / T)) !== ',') continue;
-      px(c, X, Y, 1, 1, edge ? '#d8b870' : (xx + yy) % 8 < 1 ? '#c86a5a' : '#a84a4a');
     }
     // Kule: tepede baykuşhane samanı ve tüyler, altta mavi yuvarlak halı
     for (let x = 25; x <= 32; x++) for (let y = 2; y <= 3; y++) {
@@ -2012,14 +2006,17 @@ const Castle = (() => {
   function drawDynamic() {
     // Şömine ateşi
     for (const [x, y] of fireplaces) {
-      const X = x * T - cam.x, Y = y * T - cam.y;
-      if (X < -T || X > VW || Y < -T || Y > VH) continue;
-      for (let i = 0; i < 5; i++) {
-        const h = 3 + Math.round(Math.abs(Math.sin(t * 7 + i * 1.9)) * 4);
-        px(ctx, X + 2 + i * 2, Y + 15 - h, 2, h, i % 2 ? '#ffb050' : '#ff8a3c');
-        px(ctx, X + 2 + i * 2, Y + 15 - Math.ceil(h / 2), 2, 1, '#ffe08a');
+      if (at(x - 1, y) === 'V') continue; // iki karolu şöminenin ateşi sol yarıdan bir kez çizilir
+      const wide = at(x + 1, y) === 'V';
+      const X = x * T - cam.x + (wide ? 5 : 3), Y = y * T - cam.y, n = wide ? 11 : 5; // ocak ağzının içi
+      if (X < -2 * T || X > VW || Y < -T || Y > VH) continue;
+      for (let i = 0; i < n; i++) {
+        const mid = 1 - Math.abs(i - (n - 1) / 2) / ((n + 1) / 2); // ortada daha yüksek alev
+        const h = 2 + Math.round((Math.abs(Math.sin(t * 7 + i * 1.9)) * 3 + 2) * mid + 1);
+        px(ctx, X + i * 2, Y + 15 - h, 2, h, i % 2 ? '#ffb050' : '#ff8a3c');
+        px(ctx, X + i * 2, Y + 15 - Math.ceil(h / 2), 2, 1, '#ffe08a');
       }
-      px(ctx, X + 1, Y + 14, 14, 2, '#7a5238');
+      px(ctx, X - 1, Y + 14, n * 2 + 2, 2, '#7a5238');
     }
     // Şamdan ve fener alevleri
     for (const [x, y, kind] of flames) {
