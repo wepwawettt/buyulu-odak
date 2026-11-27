@@ -427,9 +427,11 @@ const Scene = (() => {
     for (let i = 0; i < W * H; i++) { const k = i * 4; if (d[k] !== b[k] || d[k + 1] !== b[k + 1] || d[k + 2] !== b[k + 2]) mask[i] = 1; }
     for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
       const i = y * W + x;
-      if (mask[i] || !(mask[i - 1] || mask[i + 1] || mask[i - W] || mask[i + W])) continue;
+      if (mask[i]) continue;
+      const a = mask[i - W] ? 0.5 : mask[i - 1] || mask[i + 1] ? 0.32 : mask[i + W] ? 0.16 : 0; // alt koyu, üst hafif
+      if (!a) continue;
       const k = i * 4;
-      d[k] = d[k] * 0.3 + 30 * 0.7; d[k + 1] = d[k + 1] * 0.3 + 22 * 0.7; d[k + 2] = d[k + 2] * 0.3 + 38 * 0.7;
+      d[k] = d[k] * (1 - a) + 30 * a; d[k + 1] = d[k + 1] * (1 - a) + 22 * a; d[k + 2] = d[k + 2] * (1 - a) + 38 * a;
     }
     c.putImageData(img, 0, 0);
   }
@@ -975,7 +977,7 @@ const Scene = (() => {
   function drawDesk() {
     px(ctx, 30, 102, 100, 3, 'rgba(0,0,0,0.3)');
     const line = '#2a1e26';
-    px(ctx, 31, 79, 98, 5, line); px(ctx, 33, 82, 94, 18, line); px(ctx, 33, 98, 6, 7, line); px(ctx, 121, 98, 6, 7, line);
+    px(ctx, 31, 80, 98, 3, line); px(ctx, 33, 83, 94, 17, line); px(ctx, 33, 99, 6, 6, line); px(ctx, 121, 99, 6, 6, line);
     px(ctx, 32, 80, 96, 3, '#8a5a34');
     px(ctx, 32, 80, 96, 1, '#a06c40');
     px(ctx, 34, 83, 92, 16, '#5e3b22');
