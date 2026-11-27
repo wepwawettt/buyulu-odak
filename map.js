@@ -1435,7 +1435,8 @@ const Castle = (() => {
   const perchNear = () => { let best = -1, bd = 24; perchTiles.forEach(([x, y], i) => { const d = tileDist([x, y]); if (d < bd) { bd = d; best = i; } }); return best; };
 
   // Kayıp kitaplar: Madam Quillby'den görev; kalede 3 parlayan kitap belirir, bulup ona getirirsin
-  let hunt = null; // { books: [{ x, y, got }] }
+  // Av kayıtta durur (sayfa yenilense de sürer); gün değişince biter. data.hunt = { date, books: [{ x, y, got }] }
+  const huntNow = () => (data.hunt?.date === todayKey() ? data.hunt : null);
   function startHunt(n) {
     const [px0, py0] = tileOf(player), books = [];
     const zones = [[11, 4, 23, 8], [2, 10, 40, 11], [11, 13, 22, 19], [24, 15, 32, 19], [2, 14, 8, 19], [25, 7, 32, 8], [3, 21, 40, 24], [43, 3, 49, 7]];
@@ -1445,19 +1446,23 @@ const Castle = (() => {
       if (!walkable(x, y) || '_vjD'.includes(at(x, y)) || books.some(b => Math.abs(b.x - x) + Math.abs(b.y - y) < 8)) continue;
       if (findPath(px0, py0, x, y)) books.push({ x, y, got: false });
     }
-    hunt = { books };
-    say(n.name, 'Üç kitabım kalede kayboldu! Parıldayan kitapları bul, bana getir. (Molada ara.)', n, 5);
+    data.hunt = { date: todayKey(), books };
+    save();
+    say(n.name, 'Üç kitabım kalede kayboldu! Parıldayan kitapların yanından geç, toplayıp bana getir. Odak sürmediği sürece arayabilirsin.', n, 6);
   }
   function updateHunt() {
-    if (!hunt || !isBreak()) return;
+    const hunt = huntNow();
+    if (!hunt || focusing()) return; // mola bitse de (odak başlamadıkça) toplanabilir
     for (const b of hunt.books) {
-      if (b.got || Math.hypot(player.x - b.x * T - 8, player.y - b.y * T - 10) > 14) continue;
+      if (b.got || Math.hypot(player.x - b.x * T - 8, player.y - b.y * T - 10) > 16) continue;
       b.got = true;
+      save();
       const n = hunt.books.filter(q => q.got).length;
       say('Kayıp kitap', n < 3 ? `Bir kitap buldun! (${n}/3)` : 'Üç kitabın hepsini buldun! Madam Quillby\'ye götür.', player, 3);
     }
   }
   function drawHunt() {
+    const hunt = huntNow();
     if (!hunt) return;
     for (const b of hunt.books) {
       if (b.got) continue;
@@ -2128,8 +2133,9 @@ const Castle = (() => {
       if (!player.seated) faceTo(player, n);
       return;
     }
+    const hunt = huntNow();
     if (n.name === 'Madam Quillby' && !(q && isDone(q)) && (hunt || data.huntDay !== todayKey())) {
-      if (hunt && hunt.books.every(b => b.got)) { hunt = null; say(n.name, `Kitaplarım! Çok teşekkürler.${spendTicket('huntDay', 2)}`, n, 5); bump('books'); }
+      if (hunt && hunt.books.every(b => b.got)) { data.hunt = null; say(n.name, `Kitaplarım! Çok teşekkürler.${spendTicket('huntDay', 2)}`, n, 5); bump('books'); }
       else if (hunt) say(n.name, `Daha ${hunt.books.filter(b => !b.got).length} kitap kayıp. Parıltıya bak!`, n, 4);
       else { const no = canPlay('Kitap avı'); if (no) say(n.name, no, n, 4); else startHunt(n); }
       if (!player.seated) faceTo(player, n);
