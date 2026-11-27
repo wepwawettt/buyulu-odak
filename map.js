@@ -814,6 +814,29 @@ const Castle = (() => {
         }
       }
     }
+    // Ortak çizim tarzı: eşyaların piksellerini zeminden ayır (aynı karonun yalnız zeminiyle karşılaştır);
+    // en sonda bu maskenin çevresine karakterlerdeki gibi koyu bir dış hat çizilir
+    const soil = (c2, X, Y) => { px(c2, X, Y, T, T, '#8a6444'); for (let k = 0; k < 4; k++) px(c2, X, Y + 2 + k * 4, T, 1, '#6e4e34'); };
+    const PROP_FLOOR = {};
+    for (const ch of 'dOKYAnwkx!?|XB') PROP_FLOOR[ch] = baseFloor;
+    for (const ch of 'TjoE') PROP_FLOOR[ch] = (c2, X, Y, x, y) => floorStone(c2, X, Y, x, y);
+    for (const ch of 'cJ') PROP_FLOOR[ch] = (c2, X, Y, x, y) => floorStone(c2, X, Y, x, y, '#5e566a', '#544c60', '#6a7a62');
+    for (const ch of 'Hh') PROP_FLOOR[ch] = floorWood;
+    for (const ch of 'Rzel=+C') PROP_FLOOR[ch] = grass;
+    for (const ch of 'N&') PROP_FLOOR[ch] = soil;
+    for (const ch of '()') PROP_FLOOR[ch] = (c2, X, Y) => px(c2, X, Y, T, T, '#5a3a62');
+    for (const ch of 'Lm') PROP_FLOOR[ch] = (c2, X, Y) => px(c2, X, Y, T, T, '#c4a080');
+    const BW = MW * T, BH = MH * T, before = c.getImageData(0, 0, BW, BH).data;
+    const fc = document.createElement('canvas'); fc.width = BW; fc.height = BH;
+    const f2 = fc.getContext('2d'); f2.drawImage(bg, 0, 0);
+    const propTiles = [];
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (PROP_FLOOR[grid[y][x]]) { PROP_FLOOR[grid[y][x]](f2, x * T, y * T, x, y); propTiles.push([x, y]); }
+    const floorOnly = f2.getImageData(0, 0, BW, BH).data, propMask = new Uint8Array(BW * BH);
+    for (const [x, y] of propTiles) for (let yy = y * T; yy < y * T + T; yy++) for (let xx = x * T; xx < x * T + T; xx++) {
+      const i = yy * BW + xx, k = i * 4;
+      if (before[k] !== floorOnly[k] || before[k + 1] !== floorOnly[k + 1] || before[k + 2] !== floorOnly[k + 2]) propMask[i] = 1;
+    }
+
     // Eşyaların zemine düşen yumuşak gölgesi (alta ve sağa)
     const CASTS = new Set(['B', 'd', 'T', 'H', 'J', 'L', 'c', 'o', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l', 'X', 'O', 'N', 'C', 'M', 'E', '=', '&', '+', '*', '^']);
     for (let y = 0; y < MH - 1; y++) for (let x = 0; x < MW; x++) {
@@ -907,6 +930,15 @@ const Castle = (() => {
         if ((x - x0) % 6 === 2) { const col = flagCols[((x - x0) / 6 + i) % flagCols.length | 0]; px(c, x - 1, y + 1, 3, 2, col); px(c, x, y + 3, 1, 1, col); }
       }
     }
+    // Eşyaların dış hattı (maskenin hemen dışındaki pikseller koyulaşır)
+    const outImg = c.getImageData(0, 0, BW, BH), od = outImg.data;
+    for (let yy = 1; yy < BH - 1; yy++) for (let xx = 1; xx < BW - 1; xx++) {
+      const i = yy * BW + xx;
+      if (propMask[i] || !(propMask[i - 1] || propMask[i + 1] || propMask[i - BW] || propMask[i + BW])) continue;
+      const k = i * 4;
+      od[k] = od[k] * 0.3 + 30 * 0.7; od[k + 1] = od[k + 1] * 0.3 + 22 * 0.7; od[k + 2] = od[k + 2] * 0.3 + 38 * 0.7;
+    }
+    c.putImageData(outImg, 0, 0);
     // Duvarların dibine yumuşak gölge
     for (let y = 1; y < MH; y++) for (let x = 0; x < MW; x++) {
       const above = at(x, y - 1);

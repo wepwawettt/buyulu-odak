@@ -253,7 +253,7 @@ const Scene = (() => {
   }
 
   // ---------- Statik arka plan (sadece görünüm değişince yeniden çizilir) ----------
-  function buildBg(c = bg.getContext('2d')) {
+  function buildBg(c = bg.getContext('2d'), bare = false) {
     const house = HOUSES[look.house];
 
     // Duvar (oda temasına göre: taş, ahşap ya da desenli duvar kâğıdı)
@@ -289,6 +289,7 @@ const Scene = (() => {
       if (hash(i, 41) > 0.6) { px(c, x - 1, y, 1, 1, th.spark2 || th.spark); px(c, x + 1, y, 1, 1, th.spark2 || th.spark); }
     }
 
+    if (!bare) {
     // Kemerli pencere (gökyüzü gerçek saate göre)
     const { x: wx, y: wy, w: ww, h: wh } = WIN;
     const phase = skyPhase(), sea = season(), S = WIN_SKY[phase];
@@ -395,6 +396,7 @@ const Scene = (() => {
       px(c, 108, 29, 1, 1, '#9fb0e8'); px(c, 95, 36, 1, 1, '#9fb0e8');
     }
 
+    }
     // Zemin
     px(c, 0, 92, W, 28, th.floor);
     for (let y = 92; y < H; y += 6) {
@@ -404,12 +406,32 @@ const Scene = (() => {
     }
     px(c, 0, 89, W, 3, th.edge);
 
+    if (bare) return;
     // Halı (bina renklerinde)
     px(c, 26, 103, 108, 12, house.b);
     px(c, 24, 105, 112, 8, house.b);
     px(c, 28, 105, 104, 8, house.a);
     px(c, 26, 107, 108, 4, house.a);
     for (let x = 34; x < 128; x += 8) px(c, x, 108, 3, 2, house.b);
+    outlineProps(c);
+  }
+
+  // Ortak çizim tarzı: pencere, sancak, kitaplık, harita ve halının çevresine karakterlerdeki gibi koyu dış hat.
+  // Yalnız duvar ve zeminden oluşan bir kopya ile karşılaştırılıp farklı olan pikseller "eşya" sayılır.
+  function outlineProps(c) {
+    const base = document.createElement('canvas');
+    base.width = W; base.height = H;
+    buildBg(base.getContext('2d'), true);
+    const b = base.getContext('2d').getImageData(0, 0, W, H).data, img = c.getImageData(0, 0, W, H), d = img.data;
+    const mask = new Uint8Array(W * H);
+    for (let i = 0; i < W * H; i++) { const k = i * 4; if (d[k] !== b[k] || d[k + 1] !== b[k + 1] || d[k + 2] !== b[k + 2]) mask[i] = 1; }
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+      const i = y * W + x;
+      if (mask[i] || !(mask[i - 1] || mask[i + 1] || mask[i - W] || mask[i + W])) continue;
+      const k = i * 4;
+      d[k] = d[k] * 0.3 + 30 * 0.7; d[k + 1] = d[k + 1] * 0.3 + 22 * 0.7; d[k + 2] = d[k + 2] * 0.3 + 38 * 0.7;
+    }
+    c.putImageData(img, 0, 0);
   }
 
   // ---------- Dinamik parçalar ----------
@@ -952,6 +974,8 @@ const Scene = (() => {
 
   function drawDesk() {
     px(ctx, 30, 102, 100, 3, 'rgba(0,0,0,0.3)');
+    const line = '#2a1e26';
+    px(ctx, 31, 79, 98, 5, line); px(ctx, 33, 82, 94, 18, line); px(ctx, 33, 98, 6, 7, line); px(ctx, 121, 98, 6, 7, line);
     px(ctx, 32, 80, 96, 3, '#8a5a34');
     px(ctx, 32, 80, 96, 1, '#a06c40');
     px(ctx, 34, 83, 92, 16, '#5e3b22');
