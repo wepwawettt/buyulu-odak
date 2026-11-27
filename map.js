@@ -2204,7 +2204,10 @@ const Castle = (() => {
     if (focusing()) return say(INGREDIENTS[g.kind], 'Odak bitince topla; şimdi çalışma zamanı!', at);
     data.pantry ||= { leaf: 0, dust: 0, feather: 0 };
     if (data.pantry[g.kind] >= PANTRY_MAX) { // nokta harcanmaz, iksir yapınca gelip alabilirsin
-      return say(INGREDIENTS[g.kind], `Kilerin dolu: en fazla ${PANTRY_MAX} ${INGREDIENTS[g.kind]} tutabilirsin. Önce bir iksir demle!`, at, 5);
+      const uses = Odam.usesOf(g.kind), can = uses.filter(u => u.known).map(u => u.name);
+      return say(INGREDIENTS[g.kind], `Kilerin dolu (${PANTRY_MAX}/${PANTRY_MAX}). ` + (can.length
+        ? `${can.join(' ya da ')} demleyince yer açılır.`
+        : `${INGREDIENTS[g.kind]} ${uses.map(u => u.name).join(' ve ')} için; tarifini iksir zindanında Professor Ashdown öğretir.`), at, 6);
     }
     gatherDay().done[g.id] = true;
     data.pantry[g.kind]++;

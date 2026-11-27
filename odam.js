@@ -318,6 +318,8 @@ const Odam = (() => {
   const needText = p => 'Gerekli: ' + Object.entries(p.needs).map(([k, n]) => `${ING[k]} ×${n} (${Math.min(pantry()[k], n)}/${n})`).join(', ');
   const potion = () => data.brew && POTIONS.find(p => p.id === data.brew.id);
   const known = () => (data.recipes ||= ['wake']);
+  // Bu malzemeyi kullanan iksirler: [{ name, known }]
+  const usesOf = kind => POTIONS.filter(p => p.needs[kind]).map(p => ({ name: p.name, known: known().includes(p.id) }));
   // Sıradaki öğrenilebilir tarif: 'gold' | 'wisdom' | 'wait' (önce bir iksir içmeli) | null (hepsi biliniyor)
   function nextRecipe() {
     if (!known().includes('gold')) return 'gold';
@@ -399,6 +401,8 @@ const Odam = (() => {
       b.textContent = brewDone() ? 'İksiri iç' : 'Vazgeç';
       b.onclick = brewDone() ? collect : cancelBrew;
       box.appendChild(b);
+      box.insertAdjacentHTML('beforeend', '<p class="room-msg"></p>');
+      box.lastChild.textContent = 'Kilerde kalan: ' + Object.keys(ING).map(k => `${ING[k]} ${pantry()[k]}`).join(' · ');
       return;
     }
     const pan = document.createElement('div');
@@ -533,5 +537,5 @@ const Odam = (() => {
   // Görünüm değişince (oda ↔ kale) müzik hemen başlasın/sussun
   const music = () => { if (unlocked) syncCastleMusic(); };
 
-  return { init, sync, music, onFocus, renderBrew, nextRecipe, learnRecipe, brewStatus };
+  return { init, sync, music, onFocus, renderBrew, nextRecipe, learnRecipe, brewStatus, usesOf };
 })();
