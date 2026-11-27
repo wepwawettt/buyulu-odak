@@ -443,6 +443,16 @@ const Castle = (() => {
   }
 
   let fountain = null;
+  // Şövalye zırhı (16x26, karonun 10 piksel üstünden başlar). o hat, h/l/m/d çelik tonları, s miğfer yarığı, R/r tüy, g altın, w teber sapı, q/p/P kaide
+  const ARMOR = [
+    '.............o..', '.....oo.....oho.', '....oRro....olo.', '....oRro..ooodo.', '....oggo.ohlldoo',
+    '...ohlmdoohlmdmo', '...ohlmdoolmmdo.', '...osssso.ooowo.', '...olmmdo...owo.', '....omdo....owo.',
+    '.ooooldoooo.owo.', 'ohlmohmommdoowo.', 'olmohlmdoddoowo.', 'ohohllmmdomoowo.', 'olohlmmmdomlldo.',
+    'omoggggggoomddo.', 'ololmmmddo.oowo.', 'ohoolmmdo...owo.', '.oohmoomdo..owo.', '..ohhoohdo..owo.',
+    '..ohmoomdo..owo.', '..olmoomdo..owo.', '.ohlmoomddo.owo.', 'oqqqqqqqqqqqqqo.', 'opppppppppppppo.', 'oPPPPPPPPPPPPPo.',
+  ];
+  const ARMOR_COL = { o: '#2a2632', h: '#e6eaf2', l: '#b4bac6', m: '#8a90a0', d: '#5a5e6e', s: '#16141c', R: '#c0404a', r: '#8e2630',
+    g: '#c9a24a', w: '#7a5a3e', q: '#aaa2ae', p: '#8a8290', P: '#5e5866' };
   function buildBg() {
     bg = document.createElement('canvas');
     bg.width = MW * T; bg.height = (MH + NORTH) * T;
@@ -615,9 +625,8 @@ const Castle = (() => {
           px(c, X + 1, Y + 15, 14, 1, '#2e1c12');
           break;
         }
-        case '?': // büyük bina kupası (kaidesi; kupa dinamik parlar)
+        case '?': // büyük bina kupası: karo yalnız zemin; yuvarlak halı, kaide ve kupa üstüne çizilir
           baseFloor(c, X, Y, x, y);
-          px(c, X + 3, Y + 10, 10, 6, '#3a2a2e'); px(c, X + 3, Y + 10, 10, 1, '#c9a24a'); px(c, X + 4, Y + 11, 8, 4, '#6a1e2a'); px(c, X + 6, Y + 12, 4, 1, '#e3b23c');
           break;
         case '|': // rekor tahtası: altın çerçeveli koyu ahşap pano, altın harfler
           baseFloor(c, X, Y, x, y);
@@ -897,29 +906,13 @@ const Castle = (() => {
             px(c, X + (left ? 2 : 0), Y + 3, 14, 13, '#a89a8a'); px(c, X + (left ? 4 : 0), Y + 6, 12, 10, '#2a2024'); }
           px(c, X, Y + 2, T, 2, '#c0b2a0');
           break;
-        case 'A': { // şövalye zırhı: kaide, tüylü miğfer, omuzluklar, göğüs zırhı, bacaklar ve baltalı mızrak (yukarı taşar)
+        case 'A': { // şövalye zırhı: taş kaide üstünde ince zırh, tüylü miğfer, teber (yukarı taşar). Odanın iki yanında ayna simetrik
           baseFloor(c, X, Y, x, y);
-          const L = '#34323e', HI = '#e4e8f0', MD = '#aeb4c2', DK = '#767c8c';
-          const part = (x0, y0, w, h, lit = true) => { // dış hatlı metal parça: sol yan parlak, sağ yan gölgeli
-            px(c, X + x0 - 1, Y + y0 - 1, w + 2, h + 2, L); px(c, X + x0, Y + y0, w, h, MD);
-            if (lit) px(c, X + x0, Y + y0, 1, h, HI); px(c, X + x0 + w - 1, Y + y0, 1, h, DK);
-          };
-          px(c, X + 2, Y + 13, 12, 3, L); px(c, X + 3, Y + 13, 10, 2, '#8a8290'); px(c, X + 3, Y + 13, 10, 1, '#aaa2ae'); // taş kaide
-          px(c, X + 14, Y - 9, 1, 22, '#5a3e2a'); px(c, X + 14, Y - 9, 1, 22, '#7a5a3e'); // mızrak sapı
-          part(4, 6, 3, 7); part(9, 6, 3, 7); // bacaklar
-          px(c, X + 4, Y + 8, 3, 1, HI); px(c, X + 9, Y + 8, 3, 1, HI); // diz kapakları
-          part(3, 11, 4, 2); part(9, 11, 4, 2); // ayaklar
-          part(4, -1, 8, 8); // göğüs zırhı
-          px(c, X + 7, Y, 2, 6, HI); px(c, X + 4, Y + 5, 8, 1, DK); px(c, X + 4, Y + 6, 8, 1, '#5a5a6a'); // orta sırt çizgisi, kemer
-          part(2, 0, 2, 6); part(12, 0, 2, 5, false); // kollar
-          px(c, X + 1, Y - 2, 4, 3, L); px(c, X + 2, Y - 1, 3, 2, MD); px(c, X + 2, Y - 1, 2, 1, HI); // sol omuzluk
-          px(c, X + 11, Y - 2, 4, 3, L); px(c, X + 11, Y - 1, 3, 2, MD); px(c, X + 13, Y - 1, 1, 2, DK); // sağ omuzluk
-          px(c, X + 12, Y + 4, 3, 2, DK); // mızrağı tutan eldiven
-          part(5, -7, 6, 6); // miğfer
-          px(c, X + 6, Y - 4, 4, 1, '#1a1822'); px(c, X + 6, Y - 3, 4, 1, DK); // göz yarığı
-          px(c, X + 6, Y - 7, 4, 1, HI);
-          px(c, X + 7, Y - 10, 2, 3, '#c83a3a'); px(c, X + 5, Y - 9, 2, 2, '#c83a3a'); px(c, X + 4, Y - 8, 1, 2, '#a02a2a'); px(c, X + 8, Y - 10, 1, 1, '#e86868'); // kırmızı tüy
-          px(c, X + 13, Y - 10, 3, 5, L); px(c, X + 13, Y - 9, 2, 3, MD); px(c, X + 13, Y - 9, 1, 3, HI); px(c, X + 14, Y - 12, 1, 2, MD); // balta başı ve sivri uç
+          const flip = x < 46, swap = { h: 'd', d: 'h' };
+          ARMOR.forEach((row, r) => [...row].forEach((ch, col) => {
+            if (ch === '.') return;
+            px(c, X + (flip ? 15 - col : col), Y - 10 + r, 1, 1, ARMOR_COL[flip && swap[ch] || ch]);
+          }));
           break;
         }
         case 'n': { // saksı bitkisi: toprak saksı ve sarkan geniş yapraklar
@@ -1136,13 +1129,13 @@ const Castle = (() => {
       px(c, X, Y, 1, 1, d > 0.85 ? '#d8b870' : d > 0.65 ? '#2a3a7a' : (xx * 3 + yy) % 9 === 0 ? '#e3c27a' : '#3a4c8a');
     }
     // Kupa Odası: kapıdan kupaya uzanan kırmızı-altın halı ve kupanın çevresinde yuvarlak halı
-    for (let y = 13 * T; y < 16 * T + 4; y++) for (let x = 46 * T + 2; x < 47 * T - 2; x++) {
+    for (let y = 13 * T; y < 16 * T + 11; y++) for (let x = 46 * T + 2; x < 47 * T - 2; x++) {
       const e = x === 46 * T + 2 || x === 47 * T - 3;
       px(c, x, y, 1, 1, e ? '#e3b23c' : (y % 8 === 3 && Math.abs(x - 46 * T - 8) < 2) ? '#e3b23c' : '#9c2a32');
     }
     for (let yy = -15; yy <= 15; yy++) for (let xx = -24; xx <= 24; xx++) {
       const d = (xx * xx) / 576 + (yy * yy) / 225, X = 46 * T + 8 + xx, Y = 17 * T + 8 + yy;
-      if (d > 1 || at(Math.floor(X / T), Math.floor(Y / T)) !== ',') continue;
+      if (d > 1 || !',?'.includes(at(Math.floor(X / T), Math.floor(Y / T)))) continue;
       px(c, X, Y, 1, 1, d > 0.86 ? '#e3b23c' : d > 0.74 ? '#7a1e26' : (Math.abs(xx) + Math.abs(yy)) % 7 === 0 ? '#c84a52' : '#9c2a32');
     }
     // Kupa Odası duvarında bina sancakları
@@ -1508,6 +1501,8 @@ const Castle = (() => {
       if (X > -T && X < VW && Y > -T && Y < VH) {
         const wins = data.houseWins || 0, col = Scene.HOUSES[data.look.house];
         if (wins) { ctx.fillStyle = `rgba(255,220,120,${0.12 + 0.06 * Math.sin(t * 2)})`; ctx.fillRect(X - 2, Y - 6, 20, 20); }
+        px(ctx, X + 1, Y + 10, 14, 5, '#2a2632'); px(ctx, X + 2, Y + 10, 12, 3, '#aaa2ae'); px(ctx, X + 2, Y + 13, 12, 1, '#7a7280'); // alt basamak
+        px(ctx, X + 3, Y + 7, 10, 4, '#2a2632'); px(ctx, X + 4, Y + 8, 8, 2, '#c8c0cc'); px(ctx, X + 4, Y + 10, 8, 1, '#8a8290'); // üst basamak
         px(ctx, X + 4, Y - 2, 8, 6, '#e3b23c'); px(ctx, X + 5, Y + 4, 6, 2, '#c9a24a'); px(ctx, X + 7, Y + 6, 2, 3, '#c9a24a'); px(ctx, X + 5, Y + 9, 6, 2, '#a8842c');
         px(ctx, X + 2, Y - 1, 2, 3, '#e3b23c'); px(ctx, X + 12, Y - 1, 2, 3, '#e3b23c'); px(ctx, X + 6, Y, 4, 2, col.a);
         if (wins && Math.sin(t * 3) > 0.5) px(ctx, X + 5, Y - 1, 1, 1, '#ffffff');
