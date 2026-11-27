@@ -374,9 +374,9 @@ function render() {
   $('goalText').textContent = mins >= goal ? `${mins} / ${goal} dk — Hedef tamam!` : `${mins} / ${goal} dk`;
   $('goalFill').style.width = Math.min(100, 100 * mins / goal) + '%';
   $('coins').textContent = data.coins;
-  const tk = data.breakTickets || 0, brk = mode !== 'focus';
-  $('ticketInfo').textContent = `🎟 Mola hakkın: ${tk}/2 · ` + (brk ? (tk ? 'Etkinlikler açık (balık, halka yarışı, baykuş besleme, kayıp kitaplar, kristal küre, teleskop, eski kitap); her biri 1 hak harcar.' : 'Hak yok: etkinlikler kapalı. Bir odak oturumu bitir.')
-    : 'Etkinlikler sadece molada, mola hakkıyla açılır. Her odak oturumu 1 hak kazandırır.');
+  const tk = data.breakTickets || 0, busy = mode === 'focus' && running;
+  $('ticketInfo').textContent = `🎟 Mola hakkın: ${tk}/2 · ` + (busy ? 'Odak sürerken etkinlikler kapalı; oturum bitince 1 hak kazanırsın.'
+    : tk ? 'Etkinlikler açık (balık, halka yarışı, baykuş besleme, kayıp kitaplar, kristal küre, teleskop, eski kitap); her biri 1 hak harcar.' : 'Hak yok: etkinlikler kapalı. Bir odak oturumu bitir.');
   $('coinNext').textContent = `Sonraki altına ${Math.ceil((600 - data.coinAcc) / 60)} dk odak · bugün ${today().pomos} oturum`;
 
   const guest = Room.isGuest();

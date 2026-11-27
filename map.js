@@ -443,16 +443,18 @@ const Castle = (() => {
   }
 
   let fountain = null;
-  // Şövalye zırhı (16x26, karonun 10 piksel üstünden başlar). o hat, h/l/m/d çelik tonları, s miğfer yarığı, R/r tüy, g altın, w teber sapı, q/p/P kaide
+  // Şövalye zırhı (16x26, karonun 10 piksel üstünden başlar), karakterlerle aynı oranda: iri yuvarlak miğfer, kısa gövde, armalı kırmızı cüppe.
+  // o yumuşak hat, h/l/m/d çelik tonları, s miğfer yarığı, R/r tüy, g altın, t cüppe, b kemer, w teber sapı, q/p/P kaide
   const ARMOR = [
-    '.............o..', '.....oo.....oho.', '....oRro....olo.', '....oRro..ooodo.', '....oggo.ohlldoo',
-    '...ohlmdoohlmdmo', '...ohlmdoolmmdo.', '...osssso.ooowo.', '...olmmdo...owo.', '....omdo....owo.',
-    '.ooooldoooo.owo.', 'ohlmohmommdoowo.', 'olmohlmdoddoowo.', 'ohohllmmdomoowo.', 'olohlmmmdomlldo.',
-    'omoggggggoomddo.', 'ololmmmddo.oowo.', 'ohoolmmdo...owo.', '.oohmoomdo..owo.', '..ohhoohdo..owo.',
-    '..ohmoomdo..owo.', '..olmoomdo..owo.', '.ohlmoomddo.owo.', 'oqqqqqqqqqqqqqo.', 'opppppppppppppo.', 'oPPPPPPPPPPPPPo.',
+    '..............o.', '......oo.....oho', '.....oRro..ooodo', '.....oRro.ollldo', '....ooggooommmdo',
+    '...ohhllmmoooodo', '..ohhlllmmdo.owo', '..ohssssssdo.owo', '..ollmmmmmdo.owo', '...olmmmmdo..owo',
+    '.oooolmmdooooowo', 'ohlmottttommdowo', 'olmdotggtomddowo', 'olohltggtmdomowo', 'omobbbgbbbbohllo',
+    'ololmttttmdoomdo', '.o.omttttdo..owo', '...olttttdo..owo', '...olottodo..owo', '...olmoomdo..owo',
+    '...ohmoohdo..owo', '...olmoomdo..owo', '..ohlmoomddo.owo', '.oqqqqqqqqqqqqqo', '.opppppppppppppo',
+    '.oPPPPPPPPPPPPPo',
   ];
-  const ARMOR_COL = { o: '#2a2632', h: '#e6eaf2', l: '#b4bac6', m: '#8a90a0', d: '#5a5e6e', s: '#16141c', R: '#c0404a', r: '#8e2630',
-    g: '#c9a24a', w: '#7a5a3e', q: '#aaa2ae', p: '#8a8290', P: '#5e5866' };
+  const ARMOR_COL = { o: '#3a3444', h: '#d4d8e0', l: '#aab0bc', m: '#878d9b', d: '#666b7a', s: '#2a2632', R: '#b0464e', r: '#7e3038',
+    g: '#c9a24a', t: '#7a2a36', b: '#5a3e2e', w: '#7a5a3e', q: '#a49cab', p: '#857d8e', P: '#615a6b' };
   function buildBg() {
     bg = document.createElement('canvas');
     bg.width = MW * T; bg.height = (MH + NORTH) * T;
@@ -1384,11 +1386,10 @@ const Castle = (() => {
   ];
   const lockMsg = ch => { const L = LOCKS[ch], need = Levels.need(L.lv()); return `${L.name} kilitli: ${need.name}'a geçince açılır (toplam ${need.h} sa odak).`; };
   // Günde bir kez +2 altın veren keşif noktaları
-  // Kale etkinlikleri (balık, halka yarışı, teleskop, eski kitap): yalnızca gerçek molada ve bir mola hakkıyla
-  // (🎟, her odak oturumunda 1) açılır. Hak, etkinlik başarıyla bitince harcanır; altın her etkinlikte günde bir kez.
+  // Kale etkinlikleri (balık, halka yarışı, teleskop, eski kitap): odak sürmüyorken ve bir mola hakkıyla
+  // (🎟, her odak oturumunda 1) açılır; hak zaten bitmiş bir odak oturumunun kanıtı, mola bitse de geçerli. Hak, etkinlik başarıyla bitince harcanır; altın her etkinlikte günde bir kez.
   function canPlay(what) {
     if (focusing()) return `${what} molaya kalsın; şimdi odak zamanı!`;
-    if (!isBreak()) return `${what} için önce bir odak oturumu bitir, sonra molada gel.`;
     if (!(data.breakTickets > 0)) return 'Mola hakkın kalmadı. Bir odak oturumu bitirince 🎟 kazanırsın.';
     return null;
   }
@@ -1895,7 +1896,7 @@ const Castle = (() => {
   }
   function updateFishing() {
     if (!fishing) return;
-    if (player.moving || !isBreak() || focusing() || !nearTile(DOCK, 16)) { fishing = null; return; }
+    if (player.moving || focusing() || !nearTile(DOCK, 16)) { fishing = null; return; }
     if (fishing.phase === 'wait' && t > fishing.until) { fishing.phase = 'bite'; fishing.until = t + 1.2; }
     else if (fishing.phase === 'bite' && t > fishing.until) { fishing = null; say('İskele', 'Kaçtı! Bir daha dene.', player, 2.5); }
   }
@@ -1932,7 +1933,7 @@ const Castle = (() => {
   }
   function updateRace() {
     if (!race) return;
-    if (focusing() || !isBreak()) { race = null; return; }
+    if (focusing()) { race = null; return; }
     const r = RINGS[race.i], el = t - race.start;
     if (Math.hypot(player.x - r.x, player.y - 8 - r.y) < 11) {
       if (++race.i === RINGS.length) {
