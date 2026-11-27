@@ -292,6 +292,56 @@ const Castle = (() => {
     else if (h > 0.88) { px(c, X + ox, Y + oy, 4, 2, '#6a8a5a'); px(c, X + ox + 1, Y + oy + 2, 2, 1, '#5a7a4a'); }
     else if (h > 0.86) { px(c, X + ox, Y + oy + 2, 4, 1, '#f3ead2'); px(c, X + ox + 3, Y + oy + 1, 2, 1, '#f3ead2'); px(c, X + ox + 4, Y + oy, 1, 1, '#cfc4a8'); }
   }
+  // Yaprak kümelerinden oluşan gölgeli ağaç tepesi: sol üstten ışık, koyu dış hat, hafif doku
+  function canopy(c, X, Y, blobs, pal, seed) {
+    const [line, dark, mid, light, hi] = pal;
+    for (const [bx, by, r] of blobs) for (let dy = -r - 1; dy <= r + 1; dy++) for (let dx = -r - 1; dx <= r + 1; dx++) {
+      if (dx * dx + dy * dy <= (r + 1) * (r + 1) - 1) px(c, X + bx + dx, Y + by + dy, 1, 1, line);
+    }
+    for (const [bx, by, r] of blobs) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      const d2 = dx * dx + dy * dy;
+      if (d2 > r * r) continue;
+      const lit = (-dx - dy * 1.2) / r + (hash(bx * 31 + dx + seed, by * 17 + dy) - 0.5) * 0.6;
+      px(c, X + bx + dx, Y + by + dy, 1, 1, lit > 0.9 ? hi : lit > 0.25 ? light : lit > -0.45 ? mid : dark);
+    }
+  }
+  function trunk(c, X, Y, h) {
+    px(c, X + 6, Y + 16 - h, 4, h, '#7a5234'); px(c, X + 9, Y + 16 - h, 1, h, '#5a3a24'); px(c, X + 6, Y + 16 - h, 1, h, '#946a46');
+    px(c, X + 5, Y + 14, 1, 2, '#6a4a2e'); px(c, X + 10, Y + 14, 1, 2, '#6a4a2e'); px(c, X + 4, Y + 15, 1, 1, '#6a4a2e'); px(c, X + 11, Y + 15, 1, 1, '#6a4a2e');
+    px(c, X + 7, Y + 16 - h + 2, 1, 2, '#5a3a24');
+  }
+  const LEAF = ['#24502c', '#3a7a3a', '#55a04a', '#78c060', '#a8dc80'];
+  const BLOSSOM = ['#8a4a6a', '#c86a92', '#e894b4', '#f6bcd2', '#fff0f6'];
+  // Yuvarlak ağaç ('t'), çiçekli ağaç ('*'), çam ('^'): bir karo yukarı taşar
+  function drawTree(c, x, y) {
+    const ch = at(x, y), X = x * T, Y = y * T, sd = x * 7 + y * 13;
+    if (ch === '^') {
+      px(c, X + 7, Y + 11, 2, 5, '#6a4a30'); px(c, X + 8, Y + 11, 1, 5, '#4a3020');
+      const tiers = [[-12, 3], [-8, 4], [-4, 5], [0, 6], [4, 7]];
+      for (const [ty, w] of tiers) for (let k = 0; k < 5; k++) {
+        const yy = Y + ty + k, half = Math.round(w * (k + 1) / 5) + 1;
+        px(c, X + 8 - half - 1, yy, half * 2 + 2, 1, '#1e4228');
+        for (let dx = -half; dx < half; dx++) {
+          const lit = -dx / half - k / 6 + (hash(sd + dx, yy) - 0.5) * 0.5;
+          px(c, X + 8 + dx, yy, 1, 1, lit > 0.6 ? '#6aae66' : lit > 0 ? '#3e8a4a' : lit > -0.6 ? '#2e6e3e' : '#22542e');
+        }
+        if (k === 4) for (let dx = -half; dx < half; dx += 3) px(c, X + 8 + dx, yy + 1, 1, 1, '#1e4228'); // dişli kenar
+      }
+      px(c, X + 7, Y - 14, 2, 2, '#3e8a4a');
+      return;
+    }
+    const bloom = ch === '*';
+    trunk(c, X, Y, 8);
+    const blobs = [[8, 1, 6], [3, 4, 4], [13, 4, 4], [5, -3, 4], [11, -3, 4], [8, -6, 4], [8, 6, 4]];
+    canopy(c, X, Y - 2, blobs, bloom ? BLOSSOM : LEAF, sd);
+    if (bloom) { // çiçek benekleri ve dipte dökülmüş yapraklar
+      for (let k = 0; k < 9; k++) px(c, X + 2 + Math.floor(hash(sd + k, 3) * 12), Y - 8 + Math.floor(hash(sd, k + 9) * 14), 1, 1, '#ffffff');
+      for (let k = 0; k < 5; k++) px(c, X + 1 + Math.floor(hash(sd + k, 7) * 14), Y + 13 + Math.floor(hash(k, sd) * 3), 1, 1, '#f6bcd2');
+    } else if (hash(x, y) > 0.45) { // elmalar
+      for (const [ax, ay] of [[4, 0], [11, -2], [9, 4], [6, -5]]) { px(c, X + ax, Y + ay, 2, 2, '#d84a4a'); px(c, X + ax, Y + ay, 1, 1, '#f08a8a'); }
+    }
+  }
+
   function grass(c, X, Y, x, y) {
     px(c, X, Y, T, T, '#7fb46e');
     for (let k = 0; k < 8; k++) {
@@ -469,20 +519,6 @@ const Castle = (() => {
           px(c, X + 1, Y + 2, 10, 4, '#c09a6c'); px(c, X, Y + 3, 1, 2, '#c09a6c'); px(c, X + 3, Y + 3, 6, 1, '#7a5a3a');
           px(c, X + 6, Y + 7, 10, 4, '#b08a5e'); px(c, X + 15, Y + 8, 1, 2, '#b08a5e'); px(c, X + 8, Y + 8, 6, 1, '#6a4a2e');
           break;
-        case '*': // çiçekli ağaç (pembe)
-          grass(c, X, Y, x, y);
-          px(c, X + 3, Y + 13, 10, 2, 'rgba(0,0,0,0.22)');
-          px(c, X + 7, Y + 9, 3, 6, '#8a6446');
-          disc(c, X + 8, Y + 6, 7, (d, dx, dy) => (d > 46 ? '#d88aa8' : dx + dy < -3 ? '#ffd0e0' : '#f0a8c4'));
-          for (let k = 0; k < 5; k++) px(c, X + 3 + Math.floor(hash(x + k, y * 2) * 10), Y + 2 + Math.floor(hash(y + k, x * 2) * 8), 1, 1, '#ffffff');
-          break;
-        case '^': // çam
-          grass(c, X, Y, x, y);
-          px(c, X + 4, Y + 14, 8, 2, 'rgba(0,0,0,0.22)');
-          px(c, X + 7, Y + 12, 2, 4, '#6a4a30');
-          for (let k = 0; k < 3; k++) { const w = 6 + k * 3, yy = Y + 1 + k * 4; px(c, X + 8 - w / 2, yy, w, 4, k % 2 ? '#2e6a3e' : '#3a7a48'); px(c, X + 8 - w / 2, yy, Math.ceil(w / 3), 1, '#5a9a5a'); }
-          px(c, X + 7, Y, 2, 2, '#3a7a48');
-          break;
         case 'I': case 'M': { // uçuş sahası: biçilmiş çim şeritleri ve tebeşir çizgileri
           px(c, X, Y, T, T, x % 2 ? '#72ac60' : '#6aa458');
           const inP = (dx, dy) => 'IM'.includes(at(x + dx, y + dy));
@@ -652,12 +688,9 @@ const Castle = (() => {
           if (at(x + 1, y) !== 'H') px(c, X + 15, Y + 2, 1, 12, '#7a5a40');
           px(c, X + 6, Y + 5, 3, 3, '#e3b23c');
           break;
-        case 't':
+        case 't': case '*': case '^': // ağaç: burada zemin ve gölge, ağacın kendisi "uzun eşyalar" aşamasında
           grass(c, X, Y, x, y);
-          px(c, X + 3, Y + 13, 10, 2, 'rgba(0,0,0,0.25)');
-          px(c, X + 6, Y + 9, 4, 6, '#8a6446');
-          disc(c, X + 8, Y + 6, 7, (d, dx, dy) => (d > 46 ? '#5a9a58' : dx + dy < -3 && hash(dx + x, dy + y) > 0.4 ? '#9acc84' : '#78b46a'));
-          if (hash(x, y) > 0.4) { px(c, X + 5, Y + 4, 2, 2, '#f08080'); px(c, X + 10, Y + 7, 2, 2, '#f08080'); }
+          for (let k = 0; k < 4; k++) px(c, X + 1 + k, Y + 11 + (k > 1 ? 1 : 0), 14 - k * 2, 4 - (k > 1 ? 1 : 0), 'rgba(30,50,30,0.1)');
           break;
         case 'o':
           floorStone(c, X, Y, x, y);
@@ -683,15 +716,17 @@ const Castle = (() => {
           }
           break;
         }
-        case 'L':
+        case 'L': { // sera sırası: ahşap saksı kutusu, içinde karışık bitkiler (lahana, filiz, çiçek)
           px(c, X, Y, T, T, '#c4a080');
-          px(c, X, Y + 6, T, 9, '#8a6446'); px(c, X, Y + 6, T, 2, '#5e4632');
-          for (let k = 0; k < 3; k++) {
-            const lx = X + 2 + k * 5;
-            px(c, lx, Y + 1 + (k % 2), 3, 6, '#4a9a4a'); px(c, lx + 1, Y + (k % 2), 1, 2, '#6aba5a');
-            if (hash(x + k, y) > 0.5) px(c, lx + 1, Y + (k % 2), 1, 1, ['#f6a8c8', '#f6e478', '#c8a8f6'][k]);
-          }
+          px(c, X, Y + 8, T, 8, '#8a6446'); px(c, X, Y + 8, T, 1, '#a87c58'); px(c, X, Y + 15, T, 1, '#5e4632');
+          px(c, X, Y + 7, T, 2, '#5a3e2a');
+          if (at(x - 1, y) !== 'L') px(c, X, Y + 8, 1, 8, '#5e4632'); if (at(x + 1, y) !== 'L') px(c, X + 15, Y + 8, 1, 8, '#5e4632');
+          const kind = Math.floor(hash(x, y) * 3);
+          if (kind === 0) canopy(c, X, Y, [[4, 5, 3], [11, 5, 3]], LEAF, x * 3 + y); // yuvarlak yapraklı
+          else if (kind === 1) for (let k = 0; k < 5; k++) { const lx = X + 2 + k * 3; px(c, lx, Y + 2 + (k % 2), 1, 6, '#3a7a3a'); px(c, lx + 1, Y + 1 + (k % 2), 1, 5, '#55a04a'); px(c, lx + 1, Y + 1 + (k % 2), 1, 1, '#a8dc80'); } // ince filizler
+          else { canopy(c, X, Y, [[5, 5, 3], [11, 5, 3]], LEAF, x + y * 3); for (const [fx, fy] of [[4, 3], [10, 2], [12, 5], [6, 6]]) { px(c, X + fx, Y + fy, 2, 2, ['#f6a8c8', '#fff0a0', '#c8a8f6', '#f08a6a'][(fx + fy) % 4]); px(c, X + fx, Y + fy, 1, 1, '#ffffff'); } }
           break;
+        }
         case 'm':
           px(c, X, Y, T, T, '#c4a080');
           px(c, X + 3, Y + 8, 10, 7, '#c06a3a'); px(c, X + 2, Y + 7, 12, 2, '#d07a4a'); px(c, X + 4, Y + 9, 2, 5, '#d8845a');
@@ -734,11 +769,17 @@ const Castle = (() => {
           px(c, X + 5, Y + 4, 6, 10, '#b8bcc8'); px(c, X + 5, Y + 4, 2, 10, '#d8dce6'); px(c, X + 6, Y + 1, 4, 4, '#c8ccd6');
           px(c, X + 6, Y + 2, 4, 1, '#4a4458'); px(c, X + 7, Y, 2, 1, '#d86a6a'); px(c, X + 12, Y + 2, 1, 12, '#8a8494'); px(c, X + 11, Y + 1, 3, 2, '#c8ccd6');
           break;
-        case 'n': // saksı bitkisi
+        case 'n': { // saksı bitkisi: toprak saksı ve sarkan geniş yapraklar
           baseFloor(c, X, Y, x, y);
-          px(c, X + 4, Y + 10, 8, 5, '#c87a52'); px(c, X + 3, Y + 9, 10, 2, '#d88a62');
-          disc(c, X + 8, Y + 6, 4, (d, dx, dy) => (d > 12 ? '#5a9a58' : dx + dy < 0 ? '#9acc84' : '#78b46a'));
+          px(c, X + 3, Y + 14, 10, 2, 'rgba(0,0,0,0.18)');
+          px(c, X + 4, Y + 10, 8, 5, '#b8683e'); px(c, X + 4, Y + 10, 2, 5, '#d08458'); px(c, X + 11, Y + 10, 1, 5, '#8a4a2a');
+          px(c, X + 3, Y + 8, 10, 3, '#d88a62'); px(c, X + 3, Y + 8, 10, 1, '#f0a880'); px(c, X + 4, Y + 9, 8, 1, '#4a3020');
+          const leaf = (lx, ly, dir) => { for (let k = 0; k < 5; k++) { px(c, X + lx + dir * k, Y + ly - Math.round(Math.sin(k / 4 * Math.PI) * 2) , 2, 2, k < 2 ? '#3a7a3a' : '#55a04a'); } px(c, X + lx + dir * 4, Y + ly, 1, 1, '#a8dc80'); };
+          px(c, X + 7, Y + 2, 2, 7, '#3a7a3a');
+          leaf(7, 6, -1); leaf(8, 5, 1); leaf(7, 3, -1); leaf(8, 2, 1);
+          px(c, X + 7, Y + 1, 2, 2, '#78c060'); px(c, X + 7, Y + 1, 1, 1, '#a8dc80');
           break;
+        }
         case 'x': // fıçı
           baseFloor(c, X, Y, x, y);
           px(c, X + 3, Y + 3, 10, 12, '#9a7050'); px(c, X + 3, Y + 3, 10, 2, '#b08462');
@@ -749,11 +790,14 @@ const Castle = (() => {
           px(c, X + 1, Y + 6, 14, 5, '#a87c58'); px(c, X + 1, Y + 6, 14, 1, '#c09470'); px(c, X + 1, Y + 9, 14, 1, '#8a6446');
           px(c, X + 2, Y + 11, 2, 3, '#7a5a40'); px(c, X + 12, Y + 11, 2, 3, '#7a5a40');
           break;
-        case 'e': // çit / çalı
+        case 'e': { // çalı: gölgeli yaprak kümeleri, çiçek ya da böğürtlen
           grass(c, X, Y, x, y);
-          disc(c, X + 8, Y + 8, 7, (d, dx, dy) => (d > 40 ? '#5a9a58' : dx + dy < -2 ? '#9acc84' : '#78b46a'));
-          if (hash(x, y) > 0.3) { px(c, X + 5, Y + 6, 2, 2, '#f6a8c8'); px(c, X + 10, Y + 9, 2, 2, '#f6e478'); }
+          px(c, X + 2, Y + 13, 12, 2, 'rgba(30,50,30,0.15)');
+          canopy(c, X, Y, [[5, 9, 4], [11, 9, 4], [8, 6, 5]], LEAF, x * 5 + y);
+          const fl = hash(x, y);
+          if (fl > 0.3) for (const [fx, fy] of [[4, 6], [10, 5], [7, 10], [12, 9]]) { const col = fl > 0.65 ? '#f6a8c8' : '#fff0a0'; px(c, X + fx, Y + fy, 2, 2, col); px(c, X + fx, Y + fy, 1, 1, '#ffffff'); }
           break;
+        }
         case 'l': // fener direği (alevi ve ışığı dinamik)
           grass(c, X, Y, x, y);
           px(c, X + 7, Y + 5, 2, 10, '#5a5468'); px(c, X + 5, Y + 14, 6, 1, '#4a4458');
@@ -777,6 +821,8 @@ const Castle = (() => {
       if (!SOLID.has(grid[y + 1][x])) { px(c, x * T + 1, (y + 1) * T, T - 1, 3, 'rgba(60,40,30,0.18)'); px(c, x * T + 2, (y + 1) * T + 3, T - 3, 1, 'rgba(60,40,30,0.08)'); }
       if (x + 1 < MW && !SOLID.has(grid[y][x + 1]) && grid[y][x] !== 'B' && grid[y][x] !== 'J') px(c, (x + 1) * T, y * T + 4, 2, T - 3, 'rgba(60,40,30,0.12)');
     }
+    // Ağaçlar: karoların hepsinden sonra, yukarıdan aşağıya (alttaki ağaç üsttekinin önünde kalır)
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if ('t*^'.includes(grid[y][x])) drawTree(c, x, y);
     // Seyirci kuleleri: bina renginde bez, sivri çatı ve bayrak (bir karo yukarı taşar)
     for (const [x, house] of TOWERS) {
       const X = x * T, Y = 23 * T, h = Scene.HOUSES[house];
@@ -2096,12 +2142,12 @@ const Castle = (() => {
     for (const [x, y] of FEST_TREES) {
       const X = x * T - cam.x, Y = y * T - cam.y;
       if (X < -T || X > VW || Y < -T || Y > VH) continue;
-      [[3, 5], [12, 4], [6, 9], [10, 10], [8, 2], [4, 10], [13, 8]].forEach(([dx, dy], i) => {
+      [[3, 1], [12, 0], [6, 5], [10, 6], [8, -5], [4, 6], [13, 3]].forEach(([dx, dy], i) => {
         if (Math.sin(t * 3 + i * 1.7 + x) > -0.3) px(ctx, X + dx, Y + dy, 2, 2, F.lights[(i + x) % 4]);
       });
       if (F.star) {
-        px(ctx, X + 7, Y - 3, 2, 4, '#ffe890'); px(ctx, X + 6, Y - 2, 4, 2, '#ffe890');
-        if (Math.sin(t * 4 + y) > 0) { px(ctx, X + 5, Y - 1, 1, 1, '#fff6c0'); px(ctx, X + 10, Y - 1, 1, 1, '#fff6c0'); px(ctx, X + 7, Y - 4, 2, 1, '#fff6c0'); }
+        px(ctx, X + 7, Y - 13, 2, 4, '#ffe890'); px(ctx, X + 6, Y - 12, 4, 2, '#ffe890');
+        if (Math.sin(t * 4 + y) > 0) { px(ctx, X + 5, Y - 11, 1, 1, '#fff6c0'); px(ctx, X + 10, Y - 11, 1, 1, '#fff6c0'); px(ctx, X + 7, Y - 14, 2, 1, '#fff6c0'); }
       }
       if (F.lantern) { // ağacın dibinde oyma balkabağı feneri
         px(ctx, X + 10, Y + 11, 6, 5, '#e07a2a'); px(ctx, X + 12, Y + 10, 2, 1, '#4a7a3a');

@@ -696,13 +696,20 @@ const Scene = (() => {
       layer: 'front', box: [116, 63, 12, 18],
       draw() {
         if (duo()) { ctx.save(); ctx.translate(2, 0); }
-        px(ctx, 118, 75, 8, 1, '#b8653a'); px(ctx, 119, 76, 6, 4, '#a0522d'); px(ctx, 119, 76, 1, 4, '#c0754a');
-        const s = Math.round(Math.sin(t * 1.2));
-        const leaf = '#4aa05a', dark = '#2f7a40';
-        px(ctx, 121, 69, 2, 6, dark);
-        px(ctx, 117 + s, 70, 4, 2, leaf); px(ctx, 116 + s, 69, 2, 1, leaf);
-        px(ctx, 123 - s, 68, 4, 2, leaf); px(ctx, 126 - s, 67, 2, 1, leaf);
-        px(ctx, 120 + s, 65, 3, 3, leaf); px(ctx, 121 + s, 64, 1, 1, '#f0a0c0');
+        // Toprak saksı: kenar parıltısı, gölgeli yan, içinde toprak
+        px(ctx, 118, 74, 8, 2, '#d88a62'); px(ctx, 118, 74, 8, 1, '#f0a880'); px(ctx, 119, 75, 6, 1, '#4a3020');
+        px(ctx, 119, 76, 6, 4, '#b8683e'); px(ctx, 119, 76, 1, 4, '#d08458'); px(ctx, 124, 76, 1, 4, '#8a4a2a');
+        // Hafifçe salınan, gölgeli yapraklar ve pembe çiçek
+        const s = Math.round(Math.sin(t * 1.2)), s2 = Math.round(Math.sin(t * 1.2 + 1));
+        const D = '#2f6a3a', M = '#4a9a4a', L = '#78c060', H = '#a8dc80';
+        px(ctx, 121, 67, 1, 8, D); px(ctx, 122, 66, 1, 8, M);
+        const leaf = (x, y, dir, len) => {
+          for (let k = 0; k < len; k++) { const yy = y - Math.round(Math.sin(k / (len - 1) * Math.PI) * 1.5); px(ctx, x + dir * k, yy, 1, 2, k < 1 ? D : M); px(ctx, x + dir * k, yy - 1, 1, 1, k > len / 2 ? H : L); }
+        };
+        leaf(120 + s, 72, -1, 5); leaf(123 + s2, 71, 1, 5);
+        leaf(120 + s2, 69, -1, 4); leaf(123 - s, 68, 1, 5);
+        leaf(121 + s, 66, -1, 3); leaf(122 - s2, 65, 1, 3);
+        px(ctx, 121 + s, 63, 2, 2, '#f0a0c0'); px(ctx, 121 + s, 63, 1, 1, '#ffd0e0'); px(ctx, 122 + s, 65, 1, 1, D);
         if (duo()) ctx.restore();
       },
     },
