@@ -1222,6 +1222,14 @@ const Castle = (() => {
       }
       px(c, fx - 2, fy - 6, 4, 4, '#4a4450'); px(c, fx - 1, fy - 7, 2, 5, '#b8b0ba'); px(c, fx - 1, fy - 7, 1, 1, '#e8e0ea'); // fıskiye
     }
+    // Renkleri yumuşat: her pikseli kendi parlaklığına doğru çek; en doygun (neon) renkler en çok yumuşar
+    const soft = c.getImageData(0, 0, BW, BH), sd = soft.data;
+    for (let k = 0; k < sd.length; k += 4) {
+      const r = sd[k], g = sd[k + 1], b = sd[k + 2], L = 0.3 * r + 0.59 * g + 0.11 * b;
+      const keep = 1 - 0.06 - 0.3 * (Math.max(r, g, b) - Math.min(r, g, b)) / 255;
+      sd[k] = L + (r - L) * keep; sd[k + 1] = L + (g - L) * keep; sd[k + 2] = L + (b - L) * keep;
+    }
+    c.putImageData(soft, 0, 0);
   }
 
   // ---------- Karakterler ----------
