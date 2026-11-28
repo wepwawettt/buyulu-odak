@@ -376,7 +376,7 @@ function render() {
   $('coins').textContent = data.coins;
   const tk = data.breakTickets || 0, busy = mode === 'focus' && running;
   $('ticketInfo').textContent = `🎟 Mola hakkın: ${tk}/2 · ` + (busy ? 'Odak sürerken etkinlikler kapalı; oturum bitince 1 hak kazanırsın.'
-    : tk ? 'Etkinlikler açık (balık, halka yarışı, baykuş besleme, kayıp kitaplar, kristal küre, teleskop, eski kitap); her biri 1 hak harcar.' : 'Hak yok: etkinlikler kapalı. Bir odak oturumu bitir.');
+    : tk ? 'Etkinlikler açık (balık, halka yarışı, baykuş besleme, kayıp kitaplar, kristal küre, teleskop, eski kitap, Asa Arenası); her biri 1 hak harcar.' : 'Hak yok: etkinlikler kapalı. Bir odak oturumu bitir.');
   $('coinNext').textContent = `Sonraki altına ${Math.ceil((600 - data.coinAcc) / 60)} dk odak · bugün ${today().pomos} oturum`;
 
   const guest = Room.isGuest();
@@ -820,7 +820,8 @@ $('reset').onclick = reset;
 $('skip').onclick = skip;
 document.querySelectorAll('.tabs button').forEach(b => (b.onclick = () => switchTo(b.dataset.mode, false)));
 
-const spaceIsOurs = e => e.code === 'Space' && !Room.isGuest() && !$('setDlg').open && !$('guideDlg').open &&
+// Asa Arenası sürerken Boşluk atılımdır, zamanlayıcıyı başlatmaz
+const spaceIsOurs = e => e.code === 'Space' && !Arena.on() && !Room.isGuest() && !$('setDlg').open && !$('guideDlg').open &&
   !e.target.closest('input, textarea, select, [contenteditable]');
 document.addEventListener('keydown', e => {
   if (!spaceIsOurs(e)) return;

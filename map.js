@@ -153,8 +153,13 @@ const Castle = (() => {
   put([[14, 21], [18, 21], [26, 23], [4, 23]], 'e');
   put([[6, 22], [26, 22], [10, 22], [36, 21], [2, 23], [19, 22], [24, 23]], 'f');
   put([[18, 22]], '+');
+  //   '9' Asa Arenası'na açılan taş kemer: uzun yolun doğu ucundan doğu ormanına oyulmuş küçük açıklığın dibinde
+  fill(43, 23, 47, 26, 'g'); fill(44, 27, 46, 27, 'g');        // açıklık
+  fill(38, 24, 45, 24, '_');                                   // yol ormana girer, kemerin önünde biter
+  put([[45, 23]], '9'); put([[44, 23], [46, 23]], 'l'); put([[43, 23], [47, 23]], 'e');
+  put([[43, 26], [47, 26]], '^'); put([[44, 26], [46, 25], [45, 27]], 'f');
 
-  const SOLID = new Set(['@', '[', '5', '6', '7', '!', '?', '|', '(', '$', '=', '&', '+', '*', '^', 'E', 'R', 'b', 'M', 'N', 'C', 'Z', '#', 'W', 'P', 'i', 'V', 'G', 'S', 'B', 'd', 'T', 'H', 'h', 'w', 'F', 't', 'o', 'c', 'J', 'L', 'm', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l', 'X', 'O']);
+  const SOLID = new Set(['9', '@', '[', '5', '6', '7', '!', '?', '|', '(', '$', '=', '&', '+', '*', '^', 'E', 'R', 'b', 'M', 'N', 'C', 'Z', '#', 'W', 'P', 'i', 'V', 'G', 'S', 'B', 'd', 'T', 'H', 'h', 'w', 'F', 't', 'o', 'c', 'J', 'L', 'm', 'K', 'Y', 'A', 'n', 'x', 'z', 'e', 'l', 'X', 'O']);
   const LOCKS = { Q: { name: 'Gözlemevi', open: () => Levels.observatory(), lv: () => Levels.OBSERVATORY },
     U: { name: 'Gizli Kütüphane', open: () => Levels.library(), lv: () => Levels.LIBRARY } };
   const isWall = ch => ch === '#' || ch === 'W' || ch === 'P' || ch === 'i' || ch === 'V';
@@ -721,6 +726,20 @@ const Castle = (() => {
           px(c, X + 6, Y + 7, 1, 7, '#b85a1a'); px(c, X + 9, Y + 7, 1, 7, '#b85a1a'); px(c, X + 4, Y + 8, 1, 2, '#f5a547');
           px(c, X + 7, Y + 5, 2, 2, '#4a7a3a'); px(c, X + 9, Y + 4, 3, 2, '#5aaa4a');
           break;
+        case '9': { // Asa Arenası kemeri: yosunlu iki taş sütun, kemer taşı ve rünler; içi drawGrounds'ta girdap
+          grass(c, X, Y, x, y);
+          const L = '#3a3444', S1 = '#a49cab', S2 = '#857d8e', S3 = '#615a6b';
+          for (const sx of [0, 12]) {
+            px(c, X + sx, Y - 9, 4, 25, L); px(c, X + sx + 1, Y - 8, 2, 23, S2); px(c, X + sx + 1, Y - 8, 1, 23, S1);
+            for (let k = 0; k < 4; k++) px(c, X + sx + 1, Y - 4 + k * 5, 2, 1, S3); // taş derzleri
+            px(c, X + sx + 1, Y + 10, 2, 2, '#5a7a4a'); // yosun
+          }
+          px(c, X - 1, Y - 13, 18, 5, L); px(c, X, Y - 12, 16, 3, S2); px(c, X, Y - 12, 16, 1, S1); // üst taş
+          px(c, X + 6, Y - 14, 4, 6, L); px(c, X + 7, Y - 13, 2, 4, S1); // kemer taşı
+          px(c, X + 4, Y - 8, 8, 24, '#1a2420'); // geçidin içi (ormana açılır)
+          px(c, X + 1, Y - 3, 2, 1, '#b8a0f0'); px(c, X + 13, Y + 2, 2, 1, '#b8a0f0'); // rünler
+          break;
+        }
         case 'C': // bahçıvan kulübesi (2x2): üstte saman çatı, altta taş duvar ve kapı
           grass(c, X, Y, x, y);
           if (at(x, y - 1) !== 'C') {
@@ -981,7 +1000,7 @@ const Castle = (() => {
     for (const ch of 'TjoE') PROP_FLOOR[ch] = (c2, X, Y, x, y) => floorStone(c2, X, Y, x, y);
     for (const ch of 'cJ') PROP_FLOOR[ch] = (c2, X, Y, x, y) => (y < 0 ? baseFloor(c2, X, Y, x, y) : floorStone(c2, X, Y, x, y, '#5e566a', '#544c60', '#6a7a62'));
     for (const ch of 'Hh') PROP_FLOOR[ch] = floorWood;
-    for (const ch of 'Rzel=+C@[') PROP_FLOOR[ch] = grass;
+    for (const ch of 'Rzel=+C@[9') PROP_FLOOR[ch] = grass;
     for (const ch of 'N&') PROP_FLOOR[ch] = soil;
     for (const ch of '()') PROP_FLOOR[ch] = (c2, X, Y) => px(c2, X, Y, T, T, '#5a3a62');
     for (const ch of 'Lm') PROP_FLOOR[ch] = (c2, X, Y) => px(c2, X, Y, T, T, '#c4a080');
@@ -1396,7 +1415,7 @@ const Castle = (() => {
   function spendTicket(dayKey, coins, label) {
     data.breakTickets = Math.max(0, (data.breakTickets || 0) - 1);
     let txt = '';
-    if (data[dayKey] !== todayKey()) { data[dayKey] = todayKey(); data.coins += coins; txt = ` +${coins} altın${label ? ` (${label})` : ''}`; }
+    if (coins && data[dayKey] !== todayKey()) { data[dayKey] = todayKey(); data.coins += coins; txt = ` +${coins} altın${label ? ` (${label})` : ''}`; }
     save(); render();
     return txt;
   }
@@ -1547,6 +1566,7 @@ const Castle = (() => {
   function specialNear() {
     if (scope && nearTile(scope)) return { fn: lookScope, d: tileDist(scope) };
     if (nearTile(DOCK, 16)) return { fn: startFishing, d: tileDist(DOCK) };
+    if (nearTile(PORTAL, 22)) return { fn: enterArena, d: 0 };
     // Bekleyen etkinlik varsa yakındaki NPC'den önce gelir (d: 0)
     if (nearTile(bigBall, 24)) return { fn: gazeBall, d: data.ballDay === todayKey() ? tileDist(bigBall) : 0 };
     const pi = perchNear();
@@ -1557,7 +1577,7 @@ const Castle = (() => {
     if (ci >= 0) return { fn: () => readTrophies(ci), d: tileDist(cabTiles[ci]) };
     const mg = magicNear();
     if (mg) return { fn: () => readMagic(mg), d: tileDist(mg) };
-    if (signNear()) return { fn: () => say('Tabela', '← Göl ve iskele (balık) · ↓ Balkabağı tarlası ve kulübe · Uçuş sahası (halka yarışı) →', { x: 18 * T + 8, y: 22 * T }, 5), d: tileDist([18, 22]) };
+    if (signNear()) return { fn: () => say('Tabela', '← Göl ve iskele (balık) · ↓ Balkabağı tarlası ve kulübe · Uçuş sahası (halka yarışı) · yolun sonunda, ormandaki açıklıkta Asa Arenası →', { x: 18 * T + 8, y: 22 * T }, 5), d: tileDist([18, 22]) };
     for (const [x, y] of GLASSES) if (nearTile([x, y], 24)) return { fn: readGlasses, d: tileDist([x, y]) };
     const rm = roamerNear();
     if (rm) return { fn: () => say(rm.name, `${rm.name} ${ROAM_LINES[Math.floor(Math.random() * ROAM_LINES.length)]}`, rm, 3), d: Math.hypot(rm.x - player.x, rm.y - player.y) };
@@ -1886,6 +1906,7 @@ const Castle = (() => {
     { id: 'altin', name: 'Altın Sazan', w: 8, col: '#f0c040', rare: 'Nadir' }, { id: 'murekkep', name: 'Mürekkep Yavrusu', w: 3, col: '#7a5aa0', rare: 'Çok nadir' },
   ];
   const DOCK = [7, 27];
+  const PORTAL = tilesOf('9')[0];
   let fishing = null; // { phase: 'wait' | 'bite', until }
   function startFishing() {
     const no = canPlay('Balık tutmak');
@@ -1893,6 +1914,25 @@ const Castle = (() => {
     fishing = { phase: 'wait', until: t + 2 + Math.random() * 4 };
     player.dir = 'down'; player.path = [];
     say('İskele', 'Oltayı attın… Mantar suya batınca hemen E!', player, 2.5);
+  }
+  // Asa Arenası (arena.js): kale tuvalini devralır; bitince sonucu buraya bildirir
+  function enterArena() {
+    const at0 = { x: PORTAL[0] * T + 8, y: PORTAL[1] * T - 6 };
+    const no = canPlay('Asa Arenası');
+    if (no) return say('Asa Arenası', no, at0, 4);
+    keys.clear(); bubble = null; player.path = []; player.pendingTalk = null;
+    document.getElementById('mapTags').innerHTML = '';
+    document.getElementById('mapBubble').hidden = true;
+    document.getElementById('mapHint').hidden = true;
+    Arena.start({ ctx, look: data.look, focusing, done: (place, why) => {
+      player.dir = 'down';
+      if (why === 'focus') return say('Asa Arenası', 'Odak başladı, maç yarıda kaldı. Hakkın harcanmadı.', player, 5);
+      if (why === 'quit') return say('Asa Arenası', 'Maçtan çıktın. Hakkın harcanmadı.', player, 4);
+      data.duelStats ||= { played: 0, wins: 0 };
+      data.duelStats.played++;
+      if (place === 1) { data.duelStats.wins++; say('Asa Arenası', `Kazandın, son ayakta kalan sensin!${spendTicket('duelDay', 2, 'günün ilk galibiyeti')}`, player, 6); }
+      else { spendTicket('duelTry', 0); say('Asa Arenası', `${place}. oldun. Antrenmandı, borç yok. Bir dahaki sefere!`, player, 5); }
+    } });
   }
   function updateFishing() {
     if (!fishing) return;
@@ -2034,6 +2074,16 @@ const Castle = (() => {
   const forestEyes = tilesOf('Z').filter(([x, y]) => y >= 29 && hash(x, y * 3) > 0.72);
   function drawGrounds() {
     const phase = Scene.skyPhase();
+    { // Asa Arenası kemerinin içinde dönen girdap
+      const X = PORTAL[0] * T - cam.x, Y = PORTAL[1] * T - cam.y;
+      if (X > -T && X < VW && Y > -T && Y < VH + T) {
+        ctx.fillStyle = `rgba(110,80,190,${0.45 + 0.1 * Math.sin(t * 2)})`; ctx.fillRect(Math.round(X + 4), Math.round(Y - 8), 8, 24);
+        for (let k = 0; k < 12; k++) {
+          const a = t * 2.2 + k * 0.52, r = 1 + (k % 4);
+          px(ctx, X + 8 + Math.cos(a) * r, Y + 4 + Math.sin(a) * r * 2.6, 1, 1, k % 2 ? '#e8dcff' : '#9a7ae8');
+        }
+      }
+    }
     for (let i = 0; i < 4; i++) { // baca dumanı
       const k = (t * 0.35 + i / 4) % 1, X = Math.round(hutChimney.x - cam.x + Math.sin(t + i * 2) * 2 + k * 4), Y = Math.round(hutChimney.y - cam.y - k * 18);
       if (X < -6 || X > VW || Y < -6 || Y > VH) continue;
@@ -2285,6 +2335,16 @@ const Castle = (() => {
     const hat = lk ? (lk.outfit === 'kedi' ? 'beanie' : 'hat') : a.hat;
     if (hat === 'hat') sprite(ctx, HAT, pal, x - 6, y - 15, flip);
     if (hat === 'beanie') sprite(ctx, BEANIE, pal, x - 6, y - 14, flip);
+  }
+
+  // Asa Arenası için: bir görünüşü (look) ekran koordinatına çizer; (x, gy) ayak hizası
+  function drawWizard(c, lk, x, gy, dir, step) {
+    const d = dir === 'left' || dir === 'right' ? 'side' : dir, over = {};
+    if (step) Object.assign(over, FEET_B[d]);
+    if (lk.hairStyle !== 'kisa') Object.assign(over, LONG[d]);
+    const pal = lookPal(lk), flip = dir === 'left', y = gy - (step ? 1 : 0), kedi = lk.outfit === 'kedi';
+    sprite(c, d === 'side' ? SIDE : d === 'up' ? UP : DOWN, pal, x - 6, y - 12, flip, over);
+    sprite(c, kedi ? BEANIE : HAT, pal, x - 6, y - (kedi ? 14 : 15), flip);
   }
 
   // Evcil hayvan: oyuncunun yürüdüğü yolu birkaç adım geriden izler (duvarlardan geçmez)
@@ -2739,6 +2799,7 @@ const Castle = (() => {
     last = now;
     if (!visible) return;
     t += dt;
+    if (Arena.on()) return Arena.frame(dt);
     if (Math.floor(t) !== Math.floor(t - dt)) renderQuests();
     update(dt);
     draw();
@@ -2765,7 +2826,7 @@ const Castle = (() => {
   }
 
   function onKey(e, down) {
-    if (!visible || typing(e)) return;
+    if (!visible || typing(e) || Arena.on()) return;
     if (down) lastInput = t;
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
     if (down) keys.add(e.code); else keys.delete(e.code);
@@ -2785,6 +2846,7 @@ const Castle = (() => {
   }
 
   function onClick(e) {
+    if (Arena.on()) return;
     lastInput = t;
     const r = e.currentTarget.getBoundingClientRect();
     const mx = (e.clientX - r.left) / r.width * VW + cam.x, my = (e.clientY - r.top) / r.height * VH + cam.y;
@@ -2830,6 +2892,7 @@ const Castle = (() => {
 
   return {
     init,
+    art: { px, hash, canopy, OAK, FIR, drawWizard },
     show(v) {
       visible = v;
       if (!v) {
