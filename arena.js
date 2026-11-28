@@ -646,7 +646,7 @@ const Arena = (() => {
     const list = [...wizards].sort((a, b) => a.place - b.place);
     msgEl.innerHTML = `<div class="arena-result"><b>${me.place === 1 ? 'Kazandın! 🏆' : `${me.place}. oldun`}</b>`
       + list.map(w => `<div>${w.place}. ${w === me ? 'Sen' : w.name}${w.place === 1 ? ' 🏆' : ''}</div>`).join('')
-      + '<small>Antrenman maçı: düello borcu yok.</small><button class="btn small" type="button">Kaleye dön</button></div>';
+      + '<small>Beta antrenman maçı: borç yok, istediğin kadar oyna.</small><button class="btn small" type="button">Kaleye dön</button></div>';
     msgEl.querySelector('button').onclick = () => finish(me.place);
   }
 

@@ -1915,10 +1915,12 @@ const Castle = (() => {
     player.dir = 'down'; player.path = [];
     say('İskele', 'Oltayı attın… Mantar suya batınca hemen E!', player, 2.5);
   }
-  // Asa Arenası (arena.js): kale tuvalini devralır; bitince sonucu buraya bildirir
+  // Asa Arenası (arena.js): kale tuvalini devralır; bitince sonucu buraya bildirir.
+  // Beta süresince mola hakkı istemez ve harcamaz (odak sırasında yine kapalı); false yapınca diğer etkinlikler gibi hakla oynanır.
+  const ARENA_BETA = true;
   function enterArena() {
     const at0 = { x: PORTAL[0] * T + 8, y: PORTAL[1] * T - 6 };
-    const no = canPlay('Asa Arenası');
+    const no = ARENA_BETA ? (focusing() ? 'Asa Arenası molaya kalsın; şimdi odak zamanı!' : null) : canPlay('Asa Arenası');
     if (no) return say('Asa Arenası', no, at0, 4);
     keys.clear(); bubble = null; player.path = []; player.pendingTalk = null;
     document.getElementById('mapTags').innerHTML = '';
@@ -1926,12 +1928,18 @@ const Castle = (() => {
     document.getElementById('mapHint').hidden = true;
     Arena.start({ ctx, look: data.look, focusing, done: (place, why) => {
       player.dir = 'down';
-      if (why === 'focus') return say('Asa Arenası', 'Odak başladı, maç yarıda kaldı. Hakkın harcanmadı.', player, 5);
-      if (why === 'quit') return say('Asa Arenası', 'Maçtan çıktın. Hakkın harcanmadı.', player, 4);
+      const kept = ARENA_BETA ? '' : ' Hakkın harcanmadı.';
+      if (why === 'focus') return say('Asa Arenası', `Odak başladı, maç yarıda kaldı.${kept}`, player, 5);
+      if (why === 'quit') return say('Asa Arenası', `Maçtan çıktın.${kept}`, player, 4);
       data.duelStats ||= { played: 0, wins: 0 };
       data.duelStats.played++;
-      if (place === 1) { data.duelStats.wins++; say('Asa Arenası', `Kazandın, son ayakta kalan sensin!${spendTicket('duelDay', 2, 'günün ilk galibiyeti')}`, player, 6); }
-      else { spendTicket('duelTry', 0); say('Asa Arenası', `${place}. oldun. Antrenmandı, borç yok. Bir dahaki sefere!`, player, 5); }
+      let bonus = '';
+      if (!ARENA_BETA) bonus = spendTicket(place === 1 ? 'duelDay' : 'duelTry', place === 1 ? 2 : 0, 'günün ilk galibiyeti');
+      else if (place === 1 && data.duelDay !== todayKey()) { data.duelDay = todayKey(); data.coins += 2; bonus = ' +2 altın (günün ilk galibiyeti)'; }
+      if (place === 1) data.duelStats.wins++;
+      save(); render();
+      if (place === 1) say('Asa Arenası', `Kazandın, son ayakta kalan sensin!${bonus}`, player, 6);
+      else say('Asa Arenası', `${place}. oldun. Antrenmandı, borç yok. Bir dahaki sefere!`, player, 5);
     } });
   }
   function updateFishing() {
